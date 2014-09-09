@@ -1,9 +1,11 @@
 Yorm
 ====
 
-[![Build Status](https://travis-ci.org/jacebrowning/yorm.png?branch=master)](https://travis-ci.org/jacebrowning/yorm)
-[![Coverage Status](https://coveralls.io/repos/jacebrowning/yorm/badge.png?branch=master)](https://coveralls.io/r/jacebrowning/yorm?branch=master)
-[![PyPI Version](https://badge.fury.io/py/Yorm.png)](http://badge.fury.io/py/Yorm)
+[![Build Status](http://img.shields.io/travis/jacebrowning/yorm/master.svg)](https://travis-ci.org/jacebrowning/yorm)
+[![Coverage Status](http://img.shields.io/coveralls/jacebrowning/yorm/master.svg)](https://coveralls.io/r/jacebrowning/yorm)
+[![Scrutinizer Code Quality](http://img.shields.io/scrutinizer/g/jacebrowning/yorm.svg)](https://scrutinizer-ci.com/g/jacebrowning/yorm/?branch=master)
+[![PyPI Version](http://img.shields.io/pypi/v/yorm.svg)](https://pypi.python.org/pypi/yorm)
+[![PyPI Downloads](http://img.shields.io/pypi/dm/yorm.svg)](https://pypi.python.org/pypi/yorm)
 
 Yorm is a TBD.
 
@@ -66,24 +68,25 @@ Installation
 
 Create a virtualenv:
 
-    make env
+    $ make env
 
 Run the tests:
 
-    make test
-    make tests  # includes integration tests
+    $ make test
+    $ make tests  # includes integration tests
 
 Build the documentation:
 
-    make doc
+    $ make doc
 
 Run static analysis:
 
-    make pep8
-    make pylint
-    make check  # pep8 and pylint
+    $ make pep8
+    $ make pep257
+    $ make pylint
+    $ make check  # includes all checks
 
 Prepare a release:
 
-    make dist  # dry run
-    make upload
+    $ make dist  # dry run
+    $ make upload

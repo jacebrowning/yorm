@@ -11,7 +11,7 @@ Icon*
 env
 
 # Generated documentation
-*.gen.*
+docs/gen
 apidocs
 docs/*.html
 *.rst
@@ -25,6 +25,7 @@ docs/*.png
 
 # Testing and coverage results
 .coverage
+pyunit.xml
 
 # Build and release directories
 build
@@ -32,3 +33,6 @@ dist
 
 # Sublime Text
 *.sublime-workspace
+
+# Eclipse
+.settings
