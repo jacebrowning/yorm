@@ -1,10 +1,10 @@
 """Integration tests."""
 
 import pytest
-import yaml
 
 from yorm import yormalize, yattr, Yattribute
-from yorm.basic import Dictionary, List, String, Integer, Float, Boolean
+from yorm.standard import Dictionary, List, String, Integer, Float, Boolean
+from yorm.extended import Markdown
 
 integration = pytest.mark.integration
 
@@ -40,9 +40,9 @@ class Level(Yattribute):
 # sample classes ##############################################################
 
 
-class SampleBasic:
+class SampleStandard:
 
-    """Sample class using basic types."""
+    """Sample class using standard attribute types."""
 
     def __init__(self):
         # https://docs.python.org/3.4/library/json.html#json.JSONDecoder
@@ -60,9 +60,9 @@ class SampleBasic:
 @yattr(number_int=Integer, number_real=Float)
 @yattr(true=Boolean, false=Boolean)
 @yormalize("path/to/{directory}", "name", directory="category")
-class SampleBasicDecorated:
+class SampleStandardDecorated:
 
-    """Sample class using basic types."""
+    """Sample class using standard attribute types."""
 
     def __init__(self, name, category='default'):
         self.name = name
@@ -78,10 +78,18 @@ class SampleBasicDecorated:
         self.null = None
 
 
+class SampleExtended:
+
+    """Sample class using extended attribute types."""
+
+    def __init__(self):
+        self.text = ""
+
+
 @yormalize("path/to/directory", "name", attrs={'level': Level})
 class SampleCustomDecorated:
 
-    """Sample class using custom types."""
+    """Sample class using custom attribute types."""
 
     def __init__(self, name):
         self.name = name
@@ -92,12 +100,12 @@ class SampleCustomDecorated:
 
 
 @integration
-class TestBasic:
+class TestStandard:
 
-    """Integration tests for basic attribute types."""
+    """Integration tests for standard attribute types."""
 
     def test_decorator(self):
-        sample = SampleBasicDecorated('sample')
+        sample = SampleStandardDecorated('sample')
 
         # check defaults
         assert sample.object == {}
@@ -158,7 +166,7 @@ class TestBasic:
         assert sample.false is None
 
     def test_function(self):
-        _sample = SampleBasic()
+        _sample = SampleStandard()
         sample = yormalize(_sample, attrs={'object': Dictionary,
                                            'array': List,
                                            'string': String,
@@ -201,6 +209,47 @@ class TestBasic:
         string: Hello, world!
         true: true
         """.strip().replace("        ", "") + '\n'
+
+
+@integration
+class TestExtended:
+
+    """Integration tests for extended attribute types."""
+
+    def test_function(self):
+        _sample = SampleExtended()
+        sample = yormalize(_sample, attrs={'text': Markdown})
+
+        # check defaults
+        assert sample.text == ""
+
+        # change object values
+        sample.text = """
+        This is the first sentence. This is the second sentence.
+        This is the third sentence.
+        """.strip().replace("        ", "")
+
+        # check file values
+        with open(sample.__path__, 'r') as stream:
+            text = stream.read()
+        assert text == """
+        text: |
+          This is the first sentence.
+          This is the second sentence.
+          This is the third sentence.
+        """.strip().replace("        ", "") + '\n'
+
+        # change file values
+        text = """
+        text: |
+          This is a
+          sentence.
+        """.strip().replace("        ", "") + '\n'
+        with open(sample.__path__, 'w') as stream:
+            stream.write(text)
+
+        # check object values
+        assert sample.text == "This is a sentence."
 
 
 @integration
