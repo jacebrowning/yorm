@@ -214,6 +214,34 @@ class TestStandard:
         true: true
         """.strip().replace("        ", "") + '\n'
 
+    def test_with(self):
+        """Verify standard attribute types dump/load correctly (with)."""
+        _sample = SampleStandard()
+        mapping = {'string': String,
+                   'number_real': Float}
+        sample = store(_sample, "path/to/directory/sample.yml", mapping)
+
+        # change object values
+        with sample:
+            sample.string = "abc"
+            sample.number_real = 4.2
+
+            # check for unchanged file values
+            with open(sample.__path__, 'r') as stream:
+                text = stream.read()
+            assert text == """
+            string: ""
+            number_real: 0.0
+            """.strip().replace("            ", "") + '\n'
+
+        # check for cahnged file values
+        with open(sample.__path__, 'r') as stream:
+            text = stream.read()
+        assert text == """
+        string: abc
+        number_real: 4.2
+        """.strip().replace("        ", "") + '\n'
+
 
 @integration
 class TestExtended:
@@ -263,7 +291,7 @@ class TestCustom:
 
     """Integration tests for custom attribute types."""
 
-    def test_custom(self):
+    def test_decorator(self):
         """Verify custom attribute types dump/load correctly."""
         sample = SampleCustomDecorated('sample')
 
