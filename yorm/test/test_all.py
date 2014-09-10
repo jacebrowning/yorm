@@ -2,7 +2,7 @@
 
 import pytest
 
-from yorm import yormalize, yattr, Yattribute
+from yorm import store, store_instances, map_attribute, Converter
 from yorm.standard import Dictionary, List, String, Integer, Float, Boolean
 from yorm.extended import Markdown
 
@@ -12,7 +12,7 @@ integration = pytest.mark.integration
 # custom types ################################################################
 
 
-class Level(Yattribute):
+class Level(Converter):
 
     """Sample custom attribute."""
 
@@ -56,10 +56,10 @@ class SampleStandard:
         self.null = None
 
 
-@yattr(object=Dictionary, array=List, string=String)
-@yattr(number_int=Integer, number_real=Float)
-@yattr(true=Boolean, false=Boolean)
-@yormalize("path/to/{directory}", "name", directory="category")
+@map_attribute(object=Dictionary, array=List, string=String)
+@map_attribute(number_int=Integer, number_real=Float)
+@map_attribute(true=Boolean, false=Boolean)
+@store_instances("path/to/{directory}/{name}.yml", format={"name": "name", "directory": "category"})
 class SampleStandardDecorated:
 
     """Sample class using standard attribute types."""
@@ -86,7 +86,7 @@ class SampleExtended:
         self.text = ""
 
 
-@yormalize("path/to/directory", "name", attrs={'level': Level})
+@store_instances("path/to/directory/{}.yml", format=yorm.UUID, map={'level': Level})
 class SampleCustomDecorated:
 
     """Sample class using custom attribute types."""
@@ -167,13 +167,14 @@ class TestStandard:
 
     def test_function(self):
         _sample = SampleStandard()
-        sample = yormalize(_sample, attrs={'object': Dictionary,
-                                           'array': List,
-                                           'string': String,
-                                           'number_int': Integer,
-                                           'number_real': Float,
-                                           'true': Boolean,
-                                           'false': Boolean})
+        sample = yorm.store(_sample, "path/to/directory/name.yml",
+                            map={'object': Dictionary,
+                                 'array': List,
+                                 'string': String,
+                                 'number_int': Integer,
+                                 'number_real': Float,
+                                 'true': Boolean,
+                                 'false': Boolean})
 
         # check defaults
         assert sample.object == {}
@@ -218,7 +219,7 @@ class TestExtended:
 
     def test_function(self):
         _sample = SampleExtended()
-        sample = yormalize(_sample, attrs={'text': Markdown})
+        sample = store(_sample, "path/to/directory/sample.yml", map={'text': Markdown})
 
         # check defaults
         assert sample.text == ""

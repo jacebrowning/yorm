@@ -3,7 +3,7 @@
 import abc
 
 
-class Yattribute(metaclass=abc.ABCMeta):
+class Converter(metaclass=abc.ABCMeta):
 
     """Object attribute that is dumped as YAML."""
 
