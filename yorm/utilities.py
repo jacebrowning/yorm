@@ -37,7 +37,7 @@ def store_instances(path_format, format_spec=None, mapping=None):
             def __init__(self, *_args, **_kwargs):
                 super().__init__(*_args, **_kwargs)
                 if '{' + UUID + '}' in path_format:
-                    format_spec[UUID] = uuid.uuid4()
+                    format_spec[UUID] = uuid.uuid4().hex
                 self.__path__ = path_format.format(**format_spec)
 
         return Decorated

@@ -3,9 +3,14 @@
 import abc
 
 
+class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
+
+    """Base class for objects with attributes that map to YAML."""
+
+
 class Converter(metaclass=abc.ABCMeta):  # pylint:disable=R0921
 
-    """Object attribute that is dumped as YAML."""
+    """Base class for attribute converters."""
 
     @staticmethod
     @abc.abstractmethod
