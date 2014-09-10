@@ -7,7 +7,7 @@ Yorm
 [![PyPI Version](http://img.shields.io/pypi/v/yorm.svg)](https://pypi.python.org/pypi/yorm)
 [![PyPI Downloads](http://img.shields.io/pypi/dm/yorm.svg)](https://pypi.python.org/pypi/yorm)
 
-Yorm is a TBD.
+Yorm is TBD. The name will change.
 
 
 
