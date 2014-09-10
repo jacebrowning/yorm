@@ -1,10 +1,15 @@
 [MESSAGES CONTROL]
 
-# I0011: Locally disabling %s
+# I0011: Locally disabling ...
 # W0142: Used * or ** magic
 # W0511: TODO in comments
 # R0904: Too many public methods
-disable=I0011,W0142,W0511,R0904
+# E1101: Module ... has not ... memeber
+# C0103: Invalid constant name
+# W0232: Class has not __init__ method
+# R0902: Too many instance attributes
+# R0903: Too few public methods
+disable=I0011,W0142,W0511,R0904,E1101,C0103,W0232,R0902,R0903
 
 [REPORTS]
 
