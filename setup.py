@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Setup script for Yorm.
+Setup script for YORM.
 """
 
 import setuptools
@@ -20,8 +20,8 @@ setuptools.setup(
     name=__project__,
     version=__version__,
 
-    description="Yorm is a TBD.",
-    url='http://pypi.python.org/pypi/Yorm',
+    description="Automatic object YAML mapping for Python.",
+    url='http://pypi.python.org/pypi/YORM',
     author='Jace Browning',
     author_email='jacebrowning@gmail.com',
 
@@ -36,6 +36,7 @@ setuptools.setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
     ],
 
     install_requires=open('requirements.txt').readlines(),

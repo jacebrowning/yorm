@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-"""Package for Yorm."""
+"""Package for YORM."""
 
-__project__ = 'Yorm'
+__project__ = 'YORM'
 __version__ = '0.0.0'
 
 VERSION = __project__ + '-' + __version__
