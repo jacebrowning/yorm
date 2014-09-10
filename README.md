@@ -1,4 +1,4 @@
-Yorm
+YORM
 ====
 
 [![Build Status](http://img.shields.io/travis/jacebrowning/yorm/master.svg)](https://travis-ci.org/jacebrowning/yorm)
@@ -7,7 +7,7 @@ Yorm
 [![PyPI Version](http://img.shields.io/pypi/v/yorm.svg)](https://pypi.python.org/pypi/yorm)
 [![PyPI Downloads](http://img.shields.io/pypi/dm/yorm.svg)](https://pypi.python.org/pypi/yorm)
 
-Yorm is TBD. The name will change.
+YORM provides functions and decorators to enable automatic, bidirectional, and human-friendly mappings of Python object attributes to YAML files.
 
 
 
@@ -23,9 +23,9 @@ Requirements
 Installation
 ------------
 
-Yorm can be installed with 'pip':
+YORM can be installed with 'pip':
 
-    pip install Yorm
+    pip install YORM
 
 Or directly from the source code:
 
@@ -38,13 +38,13 @@ Or directly from the source code:
 Basic Usage
 ===========
 
-After installation, Yorm imported from the package:
+After installation, YORM imported from the package:
 
     python
     >>> import yorm
     yorm.__version__
 
-Yorm doesn't do anything yet.
+YORM doesn't do anything yet.
 
 
 
