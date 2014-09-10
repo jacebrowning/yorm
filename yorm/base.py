@@ -3,14 +3,16 @@
 import abc
 
 
-class Converter(metaclass=abc.ABCMeta):
+class Converter(metaclass=abc.ABCMeta):  # pylint:disable=R0921
 
     """Object attribute that is dumped as YAML."""
 
-    @abc.abstractstaticmethod
+    @staticmethod
+    @abc.abstractmethod
     def to_value(obj):
         """Convert the loaded value back to its original attribute type."""
 
-    @abc.abstractstaticmethod
+    @staticmethod
+    @abc.abstractmethod
     def to_data(obj):
         """Convert the attribute's value for optimal dumping to YAML."""

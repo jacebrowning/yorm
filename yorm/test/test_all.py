@@ -98,7 +98,7 @@ class SampleCustomDecorated:
 
 # tests #######################################################################
 
-# pylint: disable-msg=R0201
+# pylint: disable=R0201
 
 @integration
 class TestStandard:
