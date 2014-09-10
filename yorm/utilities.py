@@ -23,9 +23,8 @@ def yormalize(dirpath, name=None, **kwargs):
 
 
 def yattr(**kwargs):
-
+    """Create a class decorator to mark attributes for serialization."""
     def _decorator(cls):
         return cls
 
     return _decorator
-

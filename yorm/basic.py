@@ -1,17 +1,31 @@
+"""Converter classes for basic types."""
+
+
 class Dictionary:
-    pass
+
+    """Converter for the `dict` type."""
+
 
 class List:
-    pass
+
+    """Converter for the `list` type."""
+
 
 class String:
-    pass
+
+    """Converter for the `str` type."""
+
 
 class Integer:
-    pass
+
+    """Converter for the `int` type."""
+
 
 class Float:
-    pass
+
+    """Converter for the `float` type."""
+
 
 class Boolean:
-    pass
+
+    """Converter for the `bool` type."""

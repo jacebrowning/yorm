@@ -97,7 +97,6 @@ class TestBasic:
     """Integration tests for basic attribute types."""
 
     def test_decorator(self):
-
         sample = SampleBasicDecorated('sample')
 
         # check defaults
@@ -151,7 +150,7 @@ class TestBasic:
 
         # check object values
         assert sample.object == [True, False]
-        assert sample.array == [4,5,6]
+        assert sample.array == [4, 5, 6]
         assert sample.string == "abc"
         assert sample.number_int == 42
         assert sample.number_real == 4.2
@@ -159,13 +158,12 @@ class TestBasic:
         assert sample.false is None
 
     def test_function(self):
-
         _sample = SampleBasic()
         sample = yormalize(_sample, attrs={'object': Dictionary,
                                            'array': List,
                                            'string': String,
                                            'number_int': Integer,
-                                           'number_real':Float,
+                                           'number_real': Float,
                                            'true': Boolean,
                                            'false': Boolean})
 
@@ -211,7 +209,6 @@ class TestCustom:
     """Integration tests for custom attribute types."""
 
     def test_custom(self):
-
         sample = SampleCustomDecorated('sample')
 
         # check defaults
