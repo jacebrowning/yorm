@@ -1,33 +1,58 @@
 """Functions and decorators."""
 
-import os
+import uuid
+
+UUID = 'UUID'
 
 
-def store(dirpath, name=None, **kwargs):
-    """Create a class decorator for YAML serialization."""
-    if name is None:
-        return dirpath
+def store(instance, path, mapping):
+    """Enable YAML mapping on an object.
+
+    :param instance: object to patch with YAML mapping behavior
+    :param path: file path for dump/load
+    :param mapping: dictionary of attribute names mapped to converter classes
+
+    """
+    # TODO: monkey patch base class
+    instance.__path__ = path
+    return instance
+
+
+def store_instances(path_format, format_spec=None, mapping=None):
+    """Class decorator to enable YAML mapping after instantiation.
+
+    :param path_format: formatting string to create file paths for dump/load
+    :param format_spec: dictionary to use for string formatting
+    :param mapping: dictionary of attribute names mapped to converter classes
+
+    """
+    format_spec = format_spec or {}
 
     def decorator(cls):
-
+        """Class decorator."""
         class Decorated(cls):
+
+            """Decorated class."""
 
             def __init__(self, *_args, **_kwargs):
                 super().__init__(*_args, **_kwargs)
-                base = os.path.join(dirpath.format(**kwargs), name)
-                self.__path__ = base + '.yml'
+                if '{' + UUID + '}' in path_format:
+                    format_spec[UUID] = uuid.uuid4()
+                self.__path__ = path_format.format(**format_spec)
 
         return Decorated
 
     return decorator
 
 
-store_instances = store
+def map_attr(**kwargs):
+    """Class decorator to map attributes to converters.
 
+    :param kwargs: keyword arguments mapping attribute name to converter class
 
-def map_attribute(**kwargs):
-    """Create a class decorator to mark attributes for serialization."""
-    def _decorator(cls):
+    """
+    def decorator(cls):
+        """Class decorator."""
         return cls
 
-    return _decorator
+    return decorator

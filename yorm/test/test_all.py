@@ -2,7 +2,7 @@
 
 import pytest
 
-from yorm import store, store_instances, map_attribute, Converter
+from yorm import store, store_instances, map_attr, Converter
 from yorm.standard import Dictionary, List, String, Integer, Float, Boolean
 from yorm.extended import Markdown
 
@@ -56,10 +56,10 @@ class SampleStandard:
         self.null = None
 
 
-@map_attribute(object=Dictionary, array=List, string=String)
-@map_attribute(number_int=Integer, number_real=Float)
-@map_attribute(true=Boolean, false=Boolean)
-@store_instances("path/to/{directory}/{name}.yml", format={"name": "name", "directory": "category"})
+@map_attr(object=Dictionary, array=List, string=String)
+@map_attr(number_int=Integer, number_real=Float)
+@map_attr(true=Boolean, false=Boolean)
+@store_instances("path/to/{d}/{n}.yml", {'n': 'name', 'd': 'category'})
 class SampleStandardDecorated:
 
     """Sample class using standard attribute types."""
@@ -86,7 +86,7 @@ class SampleExtended:
         self.text = ""
 
 
-@store_instances("path/to/directory/{}.yml", format=yorm.UUID, map={'level': Level})
+@store_instances("path/to/directory/{UUID}.yml", mapping={'level': Level})
 class SampleCustomDecorated:
 
     """Sample class using custom attribute types."""
@@ -98,6 +98,7 @@ class SampleCustomDecorated:
 
 # tests #######################################################################
 
+# pylint: disable-msg=R0201
 
 @integration
 class TestStandard:
@@ -105,6 +106,7 @@ class TestStandard:
     """Integration tests for standard attribute types."""
 
     def test_decorator(self):
+        """Verify standard attribute types dump/load correctly (decorator)."""
         sample = SampleStandardDecorated('sample')
 
         # check defaults
@@ -166,15 +168,16 @@ class TestStandard:
         assert sample.false is None
 
     def test_function(self):
+        """Verify standard attribute types dump/load correctly (function)."""
         _sample = SampleStandard()
-        sample = yorm.store(_sample, "path/to/directory/name.yml",
-                            map={'object': Dictionary,
-                                 'array': List,
-                                 'string': String,
-                                 'number_int': Integer,
-                                 'number_real': Float,
-                                 'true': Boolean,
-                                 'false': Boolean})
+        mapping = {'object': Dictionary,
+                   'array': List,
+                   'string': String,
+                   'number_int': Integer,
+                   'number_real': Float,
+                   'true': Boolean,
+                   'false': Boolean}
+        sample = store(_sample, "path/to/directory/sample.yml", mapping)
 
         # check defaults
         assert sample.object == {}
@@ -218,8 +221,10 @@ class TestExtended:
     """Integration tests for extended attribute types."""
 
     def test_function(self):
+        """Verify extended attribute types dump/load correctly."""
         _sample = SampleExtended()
-        sample = store(_sample, "path/to/directory/sample.yml", map={'text': Markdown})
+        mapping = {'text': Markdown}
+        sample = store(_sample, "path/to/directory/sample.yml", mapping)
 
         # check defaults
         assert sample.text == ""
@@ -259,6 +264,7 @@ class TestCustom:
     """Integration tests for custom attribute types."""
 
     def test_custom(self):
+        """Verify custom attribute types dump/load correctly."""
         sample = SampleCustomDecorated('sample')
 
         # check defaults
