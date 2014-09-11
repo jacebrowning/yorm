@@ -21,6 +21,13 @@ class Dictionary(_Standard):
         """Convert data back to a dictionary."""
         if isinstance(data, dict):
             return data
+        elif isinstance(data, str):
+            text = data.strip()
+            parts = text.split('=')
+            if len(parts) == 2:
+                return {parts[0]: parts[1]}
+            else:
+                return {text: None}
         else:
             return {}
 
@@ -99,7 +106,7 @@ class Boolean(_Standard):
 
     """Converter for the `bool` type."""
 
-    FALSY = ('false', 'f', 'no', 'disabled', '0')
+    FALSY = ('false', 'f', 'no', 'n', 'disabled', 'off', '0')
 
     @staticmethod
     def to_value(data):

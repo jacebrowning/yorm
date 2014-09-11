@@ -18,6 +18,9 @@ class TestDictionary:
     data_value = [
         (obj, obj),
         (None, {}),
+        ("key=value", {'key': "value"}),
+        ("key=", {'key': ""}),
+        ("key", {'key': None}),
     ]
 
     value_data = [
@@ -46,6 +49,8 @@ class TestList:
         (None, []),
         ("a b c", ["a", "b", "c"]),
         ("a,b,c", ["a", "b", "c"]),
+        ("abc", ["abc"]),
+        ("a\nb\nc", ["a", "b", "c"]),
     ]
 
     value_data = [
@@ -162,8 +167,18 @@ class TestBoolean:
         ("", False),
         ("True", True),
         ("False", False),
+        ("true", True),
         ("false", False),
-        ("t", True),
+        ("T", True),
+        ("F", False),
+        ("yes", True),
+        ("no", False),
+        ("Y", True),
+        ("N", False),
+        ("enabled", True),
+        ("disabled", False),
+        ("on", True),
+        ("off", False),
         ("Hello, world!", True)
     ]
 
