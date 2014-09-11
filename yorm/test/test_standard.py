@@ -1,7 +1,10 @@
+#!/usr/bin/env python
+# pylint:disable=R0201
+
 """Unit tests for the `standard` module."""
 
+
 import pytest
-# pylint:disable=R0201
 
 from yorm import standard
 
@@ -177,3 +180,7 @@ class TestBoolean:
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
         assert standard.Boolean.to_data(value) == data
+
+
+if __name__ == '__main__':
+    pytest.main()
