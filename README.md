@@ -25,13 +25,13 @@ Installation
 
 YORM can be installed with 'pip':
 
-    pip install YORM
+    $ pip install YORM
 
 Or directly from the source code:
 
-    git clone https://github.com/jacebrowning/yorm.git
-    cd yorm
-    python setup.py install
+    $ git clone https://github.com/jacebrowning/yorm.git
+    $ cd yorm
+    $ python setup.py install
 
 
 
@@ -40,7 +40,7 @@ Basic Usage
 
 After installation, YORM imported from the package:
 
-    python
+    $ python
     >>> import yorm
     yorm.__version__
 
