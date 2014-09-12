@@ -14,35 +14,36 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
 
     """Base class for objects with attributes that map to YAML."""
 
-    auto = True  # set to False to delay automatic save until explicit save
+    auto = False  # set to False to delay automatic save until explicit save
 
-    def __init__(self):
-        self.path = None
-        self.root = None
-        self._data = {}
-        self._exists = True
-        self._loaded = False
-        # Set default values
-        for name, converter in self.__mapping__.items():
-            self._data[name] = converter.to_value(None)
-        self.save()
+    _exists = True
+    _retrieving = False
+    _storing = False
+    _retrieved = False
 
     def __getattribute__(self, name):
-        if name not in ('__mapping__', 'load', '_data') \
-                and name in self.__mapping__:
-            self.load()
-            return self._data[name]
-        else:
+        if name in ('yorm_attrs', 'yorm_mapper', 'auto'):
             return object.__getattribute__(self, name)
+        if name in self.yorm_attrs:
+            if self.auto:
+                log.debug("retrieving: {}".format(name))
+                self.yorm_mapper.retrieve(self)
+        return object.__getattribute__(self, name)
 
     def __setattr__(self, name, value):
-        if name in self.__mapping__:
-            self._data[name] = value
-            self.save()
         super().__setattr__(name, value)
+        if name in self.yorm_attrs:
+            if self.auto:
+                log.debug("storing: {} ({})".format(name, value))
+                self.yorm_mapper.store(self)
+
+
+class Mapper:
+
+    """Utility class to manipulate YAML files."""
 
     @staticmethod
-    def _create(path, name):  # pragma: no cover (integration test)
+    def create(path, name):  # pragma: no cover (integration test)
         """Create a new file for the object.
 
         :param path: path to new file
@@ -57,29 +58,36 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
         common.create_dirname(path)
         common.touch(path)
 
-    def load(self, reload=False):
+    def retrieve(self, obj, reload=False):
         """Load the object's properties from its file."""
-        if self._loaded and not reload:
+        if obj._retrieved and not reload:
             return
-        log.debug("loading {}...".format(repr(self)))
+        if obj._storing:
+            log.trace("storing in process...")
+            return
+        log.debug("retrieving {}...".format(repr(self)))
+        obj._retrieving = True
         # Read text from file
-        text = self._read(self.path)
+        text = self.read(obj)
         # Parse YAML data from text
-        data = self._load(text, self.path)
+        data = self.load(text, obj.yorm_path)
+        log.trace("loaded: {}".format(data))
         # Store parsed data
         for key, data in data.items():
             try:
-                converter = self.__mapping__[key]
-            # TODO: remove this block after deleting self._data
+                converter = obj.yorm_attrs[key]
+            # TODO: add new attributes from the file (#12)
             except KeyError:  # pragma: no cover (temporary)
                 continue
             else:
                 value = converter.to_value(data)
-                self._data[key] = value
+                setattr(obj, key, value)
         # Set meta attributes
-        self._loaded = True
+        obj._retrieving = False
+        obj._retrieved = True
 
-    def _read(self, path):  # pragma: no cover (integration test)
+    @staticmethod
+    def read(obj):  # pragma: no cover (integration test)
         """Read text from the object's file.
 
         :param path: path to a text file
@@ -87,13 +95,13 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
         :return: contexts of text file
 
         """
-        if not self._exists:
-            msg = "cannot read from deleted: {}".format(self.path)
+        if not obj._exists:
+            msg = "cannot read from deleted: {}".format(obj.yorm_path)
             raise FileNotFoundError(msg)
-        return common.read_text(path)
+        return common.read_text(obj.yorm_path)
 
     @staticmethod
-    def _load(text, path):
+    def load(text, path):
         """Load YAML data from text.
 
         :param text: text read from a file
@@ -104,41 +112,31 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
         """
         return common.load_yaml(text, path)
 
-    def save(self):
+    def store(self, obj):
         """Format and save the object's properties to its file."""
-        log.debug("saving {}...".format(repr(self)))
+        if obj._retrieving:
+            log.trace("retrieving in process...")
+            return
+        obj._storing = True
+        log.debug("storing {}...".format(repr(self)))
         # Format the data items
         data = {}
-        for key, value in self._data.items():
-            try:
-                converter = self.__mapping__[key]
-            # TODO: remove this block after deleting self._data
-            except KeyError:  # pragma: no cover (temporary)
-                continue
-            else:
-                data2 = converter.to_data(value)
-                data[key] = data2
+        for name, converter in obj.yorm_attrs.items():
+            value = getattr(obj, name)
+            data2 = converter.to_data(value)
+            data[name] = data2
+        log.debug("data to store: {}".format(data))
         # Dump the data to YAML
-        text = self._dump(data)
+        text = self.dump(data)
         # Save the YAML to file
-        self._write(text, self.path)
+        self.write(obj, text)
         # Set meta attributes
-        self._loaded = False
-        self.auto = True
-
-    def _write(self, text, path):  # pragma: no cover (integration test)
-        """Write text to the object's file.
-
-        :param text: text to write to a file
-        :param path: path to the file
-
-        """
-        if not self._exists:
-            raise FileNotFoundError("cannot save to deleted: {}".format(self))
-        common.write_text(text, path)
+        obj._storing = False
+        obj._retrieved = False
+        obj.auto = True
 
     @staticmethod
-    def _dump(data):
+    def dump(data):
         """Dump YAML data to text.
 
         :param data: dictionary of YAML data
@@ -147,6 +145,29 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
 
         """
         return yaml.dump(data, default_flow_style=False, allow_unicode=True)
+
+    @staticmethod
+    def write(obj, text):  # pragma: no cover (integration test)
+        """Write text to the object's file.
+
+        :param text: text to write to a file
+        :param path: path to the file
+
+        """
+        if not obj._exists:
+            raise FileNotFoundError("cannot save to deleted: {}".format(obj))
+        common.write_text(text, obj.yorm_path)
+
+    # TODO: add a test for delete
+    def delete(self, obj):  # pragma: no cover (integration test)
+        """Delete the object's file from the file system."""
+        if obj._exists:
+            log.info("deleting {}...".format(self))
+            common.delete(obj.yorm_path)
+            obj._retrieved = False  # force the object to reload
+            obj._exists = False  # but, prevent future access
+        else:
+            log.warning("already deleted: {}".format(self))
 
 
 class Converter(metaclass=abc.ABCMeta):  # pylint:disable=R0921
