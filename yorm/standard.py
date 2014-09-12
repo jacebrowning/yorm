@@ -47,6 +47,8 @@ class List(_Standard):
                 return text.split(',')
             else:
                 return text.split()
+        elif data is not None:
+            return [data]
         else:
             return []
 

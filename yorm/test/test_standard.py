@@ -51,6 +51,7 @@ class TestList:
         ("a,b,c", ["a", "b", "c"]),
         ("abc", ["abc"]),
         ("a\nb\nc", ["a", "b", "c"]),
+        (4.2, [4.2]),
     ]
 
     value_data = [
@@ -119,6 +120,11 @@ class TestInteger:
         """Verify input data is converted to values."""
         assert standard.Integer.to_value(data) == value
 
+    def test_to_value_error(self):
+        """Verify an exception is raised for unconvertible values."""
+        with pytest.raises(ValueError):
+            standard.Integer.to_value("abc")
+
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
@@ -146,6 +152,11 @@ class TestFloat:
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
         assert standard.Float.to_value(data) == value
+
+    def test_to_value_error(self):
+        """Verify an exception is raised for unconvertible values."""
+        with pytest.raises(ValueError):
+            standard.Integer.to_value("abc")
 
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
