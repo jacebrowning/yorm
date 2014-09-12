@@ -38,7 +38,7 @@ Or directly from the source code:
 Basic Usage
 ===========
 
-After installation, YORM imported from the package:
+After installation, YORM can be imported from the package:
 
     $ python
     >>> import yorm

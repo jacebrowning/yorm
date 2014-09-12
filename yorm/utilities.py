@@ -5,7 +5,7 @@ import uuid
 UUID = 'UUID'
 
 
-def store(instance, path, mapping):
+def store(instance, path, mapping=None):
     """Enable YAML mapping on an object.
 
     :param instance: object to patch with YAML mapping behavior
@@ -13,8 +13,10 @@ def store(instance, path, mapping):
     :param mapping: dictionary of attribute names mapped to converter classes
 
     """
+    mapping = mapping or {}
     # TODO: monkey patch base class
-    instance.__path__ = path
+    instance.yorm_path = path
+    instance.yorm_attrs = mapping
     return instance
 
 
@@ -27,9 +29,15 @@ def store_instances(path_format, format_spec=None, mapping=None):
 
     """
     format_spec = format_spec or {}
+    mapping = mapping or {}
 
     def decorator(cls):
         """Class decorator."""
+        if hasattr(cls, 'yorm_attrs'):
+            cls.yorm_attrs.update(mapping)
+        else:
+            cls.yorm_attrs = mapping
+
         class Decorated(cls):
 
             """Decorated class."""
@@ -38,7 +46,7 @@ def store_instances(path_format, format_spec=None, mapping=None):
                 super().__init__(*_args, **_kwargs)
                 if '{' + UUID + '}' in path_format:
                     format_spec[UUID] = uuid.uuid4().hex
-                self.__path__ = path_format.format(**format_spec)
+                self.yorm_path = path_format.format(**format_spec)
 
         return Decorated
 
@@ -53,6 +61,10 @@ def map_attr(**kwargs):
     """
     def decorator(cls):
         """Class decorator."""
+        if not hasattr(cls, 'yorm_attrs'):
+            cls.yorm_attrs = {}
+        for name, converter in kwargs.items():
+            cls.yorm_attrs[name] = converter
         return cls
 
     return decorator
