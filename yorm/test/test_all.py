@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# pylint:disable=R0201
+
 """Integration tests."""
 
 import pytest
@@ -98,7 +101,6 @@ class SampleCustomDecorated:
 
 # tests #######################################################################
 
-# pylint: disable=R0201
 
 @integration
 class TestStandard:
@@ -317,3 +319,7 @@ class TestCustom:
 
         # check object values
         assert sample.level == '1'
+
+
+if __name__ == '__main__':
+    pytest.main()

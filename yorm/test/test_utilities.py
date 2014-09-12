@@ -1,5 +1,9 @@
+#!/usr/bin/env python
+# pylint:disable=R0201
+
 """Unit tests for the `utilities` module."""
 
+import pytest
 from unittest.mock import patch, Mock
 
 from yorm import utilities
@@ -43,3 +47,7 @@ class TestStoreInstances:
         """Verify UUIDs can be used for filename."""
         sample = self.SampleDecoratedUUID()
         assert sample.__path__ == "abc123.yml"
+
+
+if __name__ == '__main__':
+    pytest.main()
