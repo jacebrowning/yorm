@@ -1,5 +1,6 @@
 """Base classes."""
 
+import os
 import abc
 
 import yaml
@@ -13,33 +14,35 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
 
     """Base class for objects with attributes that map to YAML."""
 
-    @abc.abstractproperty
-    def yorm_path(self):
-        """Path to store/retrieve YAML."""
-
-    @abc.abstractproperty
-    def yorm_attrs(self):
-        """Dictionary of attribute names mapped to converter classes."""
-
-    @abc.abstractproperty
-    def yorm_mapper(self):
-        """Instance of `Mapper` to store/retrieve YAML."""
-
     def __getattribute__(self, name):
         if name in ('yorm_mapper', 'yorm_attrs'):
             return object.__getattribute__(self, name)
-        if self.yorm_mapper.auto:
-            if name in self.yorm_attrs:
-                log.debug("retrieving: {}".format(name))
-                self.yorm_mapper.retrieve(self)
+        log.trace("getting attribute '{}'...".format(name))
+        if name in self.yorm_attrs:
+            self.yorm_mapper.retrieve(self)
+        else:
+            log.trace("unmapped: {}".format(name))
+
         return object.__getattribute__(self, name)
 
     def __setattr__(self, name, value):
-        super().__setattr__(name, value)
-        if self.yorm_mapper.auto:
-            if name in self.yorm_attrs:
-                log.debug("storing: {} ({})".format(name, value))
+        log.trace("setting attribute '{}' to {}...".format(name, repr(value)))
+        object.__setattr__(self, name, value)
+        if hasattr(self, 'yorm_attrs') and name in self.yorm_attrs:
+            if hasattr(self, 'yorm_mapper') and self.yorm_mapper.auto:
                 self.yorm_mapper.store(self)
+            else:
+                log.trace("automatic storage is off")
+        else:
+            log.trace("unmapped: {}".format(name))
+
+    def __enter__(self):
+        log.debug("turning off automatic storage...")
+        self.yorm_mapper.auto = False
+
+    def __exit__(self, *_):
+        log.debug("turning on automatic storage...")
+        self.yorm_mapper.store(self)
 
 
 class Mapper:
@@ -50,11 +53,19 @@ class Mapper:
         self.path = path
         self.auto = True
         self.exists = True
+        # TODO: determine if these variables are needed
         self.retrieving = False
         self.storing = False
 
     def __str__(self):
         return str(self.path)
+
+    def create(self, obj):  # pragma: no cover (integration test)
+        """Create a new file for the object."""
+        if not os.path.exists(self.path):
+            log.debug("creating '{}' for {}...".format(self, repr(obj)))
+            common.create_dirname(self.path)
+            common.touch(self.path)
 
     def retrieve(self, obj):
         """Load the object's properties from its file."""

@@ -107,19 +107,20 @@ class TestStandard:
 
     """Integration tests for standard attribute types."""
 
-    def test_decorator(self):
+    def test_decorator(self, tmpdir):
         """Verify standard attribute types dump/load correctly (decorator)."""
+        tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
 
         # check defaults
-        assert sample.object == {}
-        assert sample.array == []
-        assert sample.string == ""
-        assert sample.number_int == 0
-        assert sample.number_real == 0.0
-        assert sample.true is True
-        assert sample.false is False
-        assert sample.null is None
+        assert {} == sample.object
+        assert [] == sample.array
+        assert "" == sample.string
+        assert 0 == sample.number_int
+        assert 0.0 == sample.number_real
+        assert True is sample.true
+        assert False is sample.false
+        assert None is sample.null
 
         # change object values
         sample.object = {'key': 'value'}
@@ -127,50 +128,52 @@ class TestStandard:
         sample.string = "Hello, world!"
         sample.number_int = 42
         sample.number_real = 4.2
-        sample.true = None
-        sample.false = None
+        sample.true = False
+        sample.false = True
 
         # check file values
-        with open(sample.__path__, 'r') as stream:
+        with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert text == """
+        assert """
         array:
+        - 0
         - 1
         - 2
-        - 3
-        false: false
-        number_int: 0
-        number_reaL: 0.0
+        'false': true
+        number_int: 42
+        number_real: 4.2
         object:
           key: value
         string: Hello, world!
-        true: true
-        """.strip().replace("        ", "") + '\n'
+        'true': false
+        """.strip().replace("        ", "") + '\n' == text
 
         # change file values
         text = """
         array: [4, 5, 6]
-        false: none
+        'false': null
         number_int: 42
         number_real: 4.2
-        object: [true, false]
+        object: {'status': false}
         string: "abc"
-        true: none
+        'true': null
         """.strip().replace("        ", "") + '\n'
-        with open(sample.__path__, 'w') as stream:
+        with open(sample.yorm_path, 'w') as stream:
             stream.write(text)
 
         # check object values
-        assert sample.object == [True, False]
-        assert sample.array == [4, 5, 6]
-        assert sample.string == "abc"
-        assert sample.number_int == 42
-        assert sample.number_real == 4.2
-        assert sample.true is None
-        assert sample.false is None
+        assert {'status': False} == sample.object
+        assert [4, 5, 6] == sample.array
+        assert "abc" == sample.string
+        assert 42 == sample.number_int
+        assert 4.2 == sample.number_real
+        assert False is sample.true
+        assert False is sample.false
 
-    def test_function(self):
+    @pytest.mark.xfail
+    def test_function(self, tmpdir):
         """Verify standard attribute types dump/load correctly (function)."""
+        tmpdir.chdir()
         _sample = SampleStandard()
         mapping = {'object': Dictionary,
                    'array': List,
@@ -182,17 +185,18 @@ class TestStandard:
         sample = store(_sample, "path/to/directory/sample.yml", mapping)
 
         # check defaults
-        assert sample.object == {}
-        assert sample.array == []
-        assert sample.number_int == 0
-        assert sample.number_real == 0.0
-        assert sample.true is True
-        assert sample.false is False
-        assert sample.null is None
+        assert {} == sample.object
+        assert [] == sample.array
+        assert "" == sample.string
+        assert 0 == sample.number_int
+        assert 0.0 == sample.number_real
+        assert True is sample.true
+        assert False is sample.false
+        assert None is sample.null
 
         # change object values
         sample.object = {'key': 'value'}
-        sample.array = [0, 1, 2]
+        sample.array = [1, 2, 3]
         sample.string = "Hello, world!"
         sample.number_int = 42
         sample.number_real = 4.2
@@ -200,9 +204,9 @@ class TestStandard:
         sample.false = None
 
         # check file values
-        with open(sample.__path__, 'r') as stream:
+        with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert text == """
+        assert """
         array:
         - 1
         - 2
@@ -214,10 +218,11 @@ class TestStandard:
           key: value
         string: Hello, world!
         true: true
-        """.strip().replace("        ", "") + '\n'
+        """.strip().replace("        ", "") + '\n' == text
 
-    def test_with(self):
+    def test_with(self, tmpdir):
         """Verify standard attribute types dump/load correctly (with)."""
+        tmpdir.chdir()
         _sample = SampleStandard()
         mapping = {'string': String,
                    'number_real': Float}
@@ -229,20 +234,20 @@ class TestStandard:
             sample.number_real = 4.2
 
             # check for unchanged file values
-            with open(sample.__path__, 'r') as stream:
+            with open(sample.yorm_path, 'r') as stream:
                 text = stream.read()
-            assert text == """
+            assert """
             string: ""
             number_real: 0.0
-            """.strip().replace("            ", "") + '\n'
+            """.strip().replace("            ", "") + '\n' == text
 
         # check for cahnged file values
-        with open(sample.__path__, 'r') as stream:
+        with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert text == """
+        assert """
         string: abc
         number_real: 4.2
-        """.strip().replace("        ", "") + '\n'
+        """.strip().replace("        ", "") + '\n' == text
 
 
 @integration
@@ -250,14 +255,16 @@ class TestExtended:
 
     """Integration tests for extended attribute types."""
 
-    def test_function(self):
+    @pytest.mark.xfail
+    def test_function(self, tmpdir):
         """Verify extended attribute types dump/load correctly."""
+        tmpdir.chdir()
         _sample = SampleExtended()
         mapping = {'text': Markdown}
         sample = store(_sample, "path/to/directory/sample.yml", mapping)
 
         # check defaults
-        assert sample.text == ""
+        assert "" == sample.text
 
         # change object values
         sample.text = """
@@ -266,14 +273,14 @@ class TestExtended:
         """.strip().replace("        ", "")
 
         # check file values
-        with open(sample.__path__, 'r') as stream:
+        with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert text == """
+        assert """
         text: |
           This is the first sentence.
           This is the second sentence.
           This is the third sentence.
-        """.strip().replace("        ", "") + '\n'
+        """.strip().replace("        ", "") + '\n' == text
 
         # change file values
         text = """
@@ -281,11 +288,11 @@ class TestExtended:
           This is a
           sentence.
         """.strip().replace("        ", "") + '\n'
-        with open(sample.__path__, 'w') as stream:
+        with open(sample.yorm_path, 'w') as stream:
             stream.write(text)
 
         # check object values
-        assert sample.text == "This is a sentence."
+        assert "This is a sentence." == sample.text
 
 
 @integration
@@ -293,32 +300,33 @@ class TestCustom:
 
     """Integration tests for custom attribute types."""
 
-    def test_decorator(self):
+    def test_decorator(self, tmpdir):
         """Verify custom attribute types dump/load correctly."""
+        tmpdir.chdir()
         sample = SampleCustomDecorated('sample')
 
         # check defaults
-        assert sample.level == '1.0'
+        assert '1.0' == sample.level
 
         # change values
         sample.level = '1.2.3'
 
         # check file values
-        with open(sample.__path__, 'r') as stream:
+        with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert text == """
+        assert """
         level: 1.2.3
-        """.strip().replace("        ", "") + '\n'
+        """.strip().replace("        ", "") + '\n' == text
 
         # change file values
         text = """
         level: 1
         """.strip().replace("        ", "") + '\n'
-        with open(sample.__path__, 'w') as stream:
+        with open(sample.yorm_path, 'w') as stream:
             stream.write(text)
 
         # check object values
-        assert sample.level == '1'
+        assert '1' == sample.level
 
 
 if __name__ == '__main__':
