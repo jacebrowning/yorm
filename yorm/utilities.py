@@ -1,6 +1,5 @@
 """Functions and decorators."""
 
-import types
 import uuid
 
 from .base import Mappable, Mapper

@@ -61,12 +61,12 @@ class TestList:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert standard.List.to_value(data) == value
+        assert value == standard.List.to_value(data)
 
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert standard.List.to_data(value) == data
+        assert data == standard.List.to_data(value)
 
 
 class TestString:
@@ -90,12 +90,12 @@ class TestString:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert standard.String.to_value(data) == value
+        assert value == standard.String.to_value(data)
 
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert standard.String.to_data(value) == data
+        assert data == standard.String.to_data(value)
 
 
 class TestInteger:
@@ -118,7 +118,7 @@ class TestInteger:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert standard.Integer.to_value(data) == value
+        assert value == standard.Integer.to_value(data)
 
     def test_to_value_error(self):
         """Verify an exception is raised for unconvertible values."""
@@ -128,7 +128,7 @@ class TestInteger:
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert standard.Integer.to_data(value) == data
+        assert data == standard.Integer.to_data(value)
 
 
 class TestFloat:
@@ -151,7 +151,7 @@ class TestFloat:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert standard.Float.to_value(data) == value
+        assert value == standard.Float.to_value(data)
 
     def test_to_value_error(self):
         """Verify an exception is raised for unconvertible values."""
@@ -161,7 +161,7 @@ class TestFloat:
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert standard.Float.to_data(value) == data
+        assert data == standard.Float.to_data(value)
 
 
 class TestBoolean:
@@ -200,12 +200,12 @@ class TestBoolean:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert standard.Boolean.to_value(data) == value
+        assert value == standard.Boolean.to_value(data)
 
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert standard.Boolean.to_data(value) == data
+        assert data == standard.Boolean.to_data(value)
 
 
 if __name__ == '__main__':

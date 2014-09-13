@@ -21,15 +21,15 @@ class TestStore:
     def test_no_attrs(self):
         """Verify mapping can be enabled with no attributes."""
         sample = utilities.store(self.Sample(), "sample.yml")
-        assert sample.yorm_path == "sample.yml"
-        assert sample.yorm_attrs == {}
+        assert "sample.yml" == sample.yorm_path
+        assert {} == sample.yorm_attrs
 
     def test_with_attrs(self):
         """Verify mapping can be enabled with with attributes."""
         mapping = {'var1': 'Mock'}
         sample = utilities.store(self.Sample(), "sample.yml", mapping)
-        assert sample.yorm_path == "sample.yml"
-        assert sample.yorm_attrs == {'var1': 'Mock'}
+        assert "sample.yml" == sample.yorm_path
+        assert {'var1': 'Mock'} == sample.yorm_attrs
 
     def test_store(self):
         """Verify store is called when setting an attribute."""
@@ -73,21 +73,21 @@ class TestStoreInstances:
     def test_no_attrs(self):
         """Verify mapping can be enabled with no attributes."""
         sample = self.SampleDecorated()
-        assert sample.yorm_path == "sample.yml"
-        assert sample.yorm_attrs == {}
+        assert "sample.yml" == sample.yorm_path
+        assert {} == sample.yorm_attrs
 
     def test_with_attrs(self):
         """Verify mapping can be enabled with with attributes."""
         sample = self.SampleDecoratedWithAttributes()
-        assert sample.yorm_path == "sample.yml"
-        assert sample.yorm_attrs == {'var1': 'Mock'}
+        assert "sample.yml" == sample.yorm_path
+        assert {'var1': 'Mock'} == sample.yorm_attrs
 
     @patch('uuid.uuid4', Mock(return_value=Mock(hex='abc123')))
     def test_uuid(self):
         """Verify UUIDs can be used for filename."""
         sample = self.SampleDecoratedIdentifiers()
-        assert sample.yorm_path == "abc123.yml"
-        assert sample.yorm_attrs == {}
+        assert "abc123.yml" == sample.yorm_path
+        assert {} == sample.yorm_attrs
 
     def test_store(self):
         """Verify store is called when setting an attribute."""
@@ -142,29 +142,33 @@ class TestMapAttr:
     def test_single(self):
         """Verify `map_attr` can be applied once."""
         sample = self.SampleDecoratedSingle()
-        assert sample.yorm_attrs == {'var1': 'Var1',
-                                     'var2': 'Var2'}
+        expected = {'var1': 'Var1',
+                    'var2': 'Var2'}
+        assert expected == sample.yorm_attrs
 
     def test_multiple(self):
         """Verify `map_attr` can be applied many times."""
         sample = self.SampleDecoratedMultiple()
-        assert sample.yorm_attrs == {'var1': 'Var1',
-                                     'var2': 'Var2',
-                                     'var3': 'Var3'}
+        expected = {'var1': 'Var1',
+                    'var2': 'Var2',
+                    'var3': 'Var3'}
+        assert expected == sample.yorm_attrs
 
     def test_combo(self):
         """Verify `map_attr` can be applied an existing mapping."""
         sample = self.SampleDecoratedCombo()
-        assert sample.yorm_attrs == {'var0': 'Var0',
-                                     'var1': 'Var1',
-                                     'var2': 'Var2',
-                                     'var3': 'Var3'}
+        expected = {'var0': 'Var0',
+                    'var1': 'Var1',
+                    'var2': 'Var2',
+                    'var3': 'Var3'}
+        assert expected == sample.yorm_attrs
 
     def test_backwards(self):
         """Verify `map_attr` can be applied before `store_instances`."""
         sample = self.SampleDecoratedBackwards()
-        assert sample.yorm_attrs == {'var0': 'Var0',
-                                     'var1': 'Var1'}
+        expected = {'var0': 'Var0',
+                    'var1': 'Var1'}
+        assert expected == sample.yorm_attrs
 
 
 if __name__ == '__main__':

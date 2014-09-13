@@ -72,11 +72,11 @@ class TestMappable:
         self.sample.var2 = 1
         self.sample.var3 = True
         text = self.sample.yorm_mapper.read()
-        assert text == """
+        assert """
         var1: abc123
         var2: 1
         var3: true
-        """.strip().replace("        ", "") + '\n'
+        """.strip().replace("        ", "") + '\n' == text
 
     def test_load(self):
         """Verify the file is read from before getting an attribute."""
@@ -86,9 +86,9 @@ class TestMappable:
         var3: off
         """.strip().replace("        ", "") + '\n'
         self.sample.yorm_mapper.write(text)
-        assert self.sample.var1 == "def456"
-        assert self.sample.var2 == 42
-        assert self.sample.var3 is False
+        assert"def456" == self.sample.var1
+        assert 42 == self.sample.var2
+        assert False is self.sample.var3
 
     def test_error_invalid_yaml(self):
         """Verify an exception is raised on invalid YAML."""
