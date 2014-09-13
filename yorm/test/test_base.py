@@ -4,7 +4,6 @@
 """Unit tests for the `base` module."""
 
 import pytest
-from unittest.mock import patch
 import logging
 
 from yorm.base import Mappable, Mapper
@@ -15,18 +14,18 @@ class MockMapper(Mapper):
 
     """Mapped file with stubbed file IO."""
 
-    _mock_file = ""
+    def __init__(self, path):
+        super().__init__(path)
+        self._mock_file = ""
 
-    @staticmethod
-    def read(obj):
-        text = MockMapper._mock_file
+    def read(self):
+        text = self._mock_file
         logging.debug("mock read:\n{}".format(text.strip()))
         return text
 
-    @staticmethod
-    def write(obj, text):
+    def write(self, text):
         logging.debug("mock write:\n{}".format(text.strip()))
-        MockMapper._mock_file = text
+        self._mock_file = text
 
 
 class Sample(Mappable):
@@ -37,18 +36,17 @@ class Sample(Mappable):
     yorm_attrs = {'var1': String,
                   'var2': Integer,
                   'var3': Boolean}
-
-    yorm_mapper = MockMapper()
+    yorm_mapper = MockMapper(yorm_path)
 
     def __init__(self):
         logging.debug("initializing sample...")
-        self.var1 = ""
-        self.var2 = 0
-        self.var3 = False
-
-        self.auto = True
-        self.yorm_mapper.store(self)
+        self.var1 = None
+        self.var2 = None
+        self.var3 = None
         logging.debug("sample initialized")
+
+    def __repr__(self):
+        return "<sample {}>".format(id(self))
 
 
 class TestMappable:
@@ -61,11 +59,11 @@ class TestMappable:
 
     def test_init(self):
         """Verify files are created after initialized."""
-        text = self.sample.yorm_mapper.read(self.sample)
+        text = self.sample.yorm_mapper.read()
         assert text == """
-        var1: ''
-        var2: 0
-        var3: false
+        var1: null
+        var2: null
+        var3: null
         """.strip().replace("        ", "") + '\n'
 
     def test_save(self):
@@ -73,7 +71,7 @@ class TestMappable:
         self.sample.var1 = "abc123"
         self.sample.var2 = 1
         self.sample.var3 = True
-        text = self.sample.yorm_mapper.read(self.sample)
+        text = self.sample.yorm_mapper.read()
         assert text == """
         var1: abc123
         var2: 1
@@ -87,7 +85,7 @@ class TestMappable:
         var2: 42
         var3: off
         """.strip().replace("        ", "") + '\n'
-        self.sample.yorm_mapper.write(self.sample, text)
+        self.sample.yorm_mapper.write(text)
         assert self.sample.var1 == "def456"
         assert self.sample.var2 == 42
         assert self.sample.var3 is False
@@ -97,7 +95,7 @@ class TestMappable:
         text = """
         invalid: -
         """.strip().replace("        ", "") + '\n'
-        self.sample.yorm_mapper.write(self.sample, text)
+        self.sample.yorm_mapper.write(text)
         with pytest.raises(ValueError):
             print(self.sample.var1)
 
@@ -106,7 +104,7 @@ class TestMappable:
         text = """
         not a dictionary
         """.strip().replace("        ", "") + '\n'
-        self.sample.yorm_mapper.write(self.sample, text)
+        self.sample.yorm_mapper.write(text)
         with pytest.raises(ValueError):
             print(self.sample.var1)
 
