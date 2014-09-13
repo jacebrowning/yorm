@@ -17,28 +17,32 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
     def __getattribute__(self, name):
         if name in ('yorm_mapper', 'yorm_attrs'):
             return object.__getattribute__(self, name)
-        log.trace("get attribute: {}".format(name))
-        if hasattr(self, 'yorm_mapper') and self.yorm_mapper.auto:
-            if name in self.yorm_attrs:
-                log.debug("retrieving: {}".format(name))
-                self.yorm_mapper.retrieve(self)
-            else:
-                log.trace("unmapped: {}".format(name))
+        log.trace("getting attribute '{}'...".format(name))
+        if name in self.yorm_attrs:
+            self.yorm_mapper.retrieve(self)
         else:
-            log.trace("auto off")
+            log.trace("unmapped: {}".format(name))
+
         return object.__getattribute__(self, name)
 
     def __setattr__(self, name, value):
-        log.trace("set attribute: {}={}".format(name, value))
+        log.trace("setting attribute '{}' to {}...".format(name, repr(value)))
         object.__setattr__(self, name, value)
-        if hasattr(self, 'yorm_mapper') and self.yorm_mapper.auto:
-            if name in self.yorm_attrs:
-                log.debug("storing: {} ({})".format(name, value))
+        if hasattr(self, 'yorm_attrs') and name in self.yorm_attrs:
+            if hasattr(self, 'yorm_mapper') and self.yorm_mapper.auto:
                 self.yorm_mapper.store(self)
             else:
-                log.trace("unmapped: {}".format(name))
+                log.trace("automatic storage is off")
         else:
-            log.trace("auto off")
+            log.trace("unmapped: {}".format(name))
+
+    def __enter__(self):
+        log.debug("turning off automatic storage...")
+        self.yorm_mapper.auto = False
+
+    def __exit__(self, *_):
+        log.debug("turning on automatic storage...")
+        self.yorm_mapper.store(self)
 
 
 class Mapper:
@@ -49,6 +53,7 @@ class Mapper:
         self.path = path
         self.auto = True
         self.exists = True
+        # TODO: determine if these variables are needed
         self.retrieving = False
         self.storing = False
 
@@ -58,7 +63,7 @@ class Mapper:
     def create(self, obj):  # pragma: no cover (integration test)
         """Create a new file for the object."""
         if not os.path.exists(self.path):
-            log.debug("creating {} for {}...".format(self, repr(obj)))
+            log.debug("creating '{}' for {}...".format(self, repr(obj)))
             common.create_dirname(self.path)
             common.touch(self.path)
 

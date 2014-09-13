@@ -18,11 +18,16 @@ def store(instance, path, mapping=None):
     """
     mapping = mapping or {}
 
-    instance.__getattribute__ = types.MethodType(Mappable.__getattribute__, instance)
-    instance.__setattr__ = types.MethodType(Mappable.__setattr__, instance)
+    class Mapped(instance.__class__, Mappable):
+
+        """Original class with `Mappable` as the base."""
+
+    instance.__class__ = Mapped
+
     instance.yorm_attrs = mapping
     instance.yorm_path = path
     instance.yorm_mapper = Mapper(instance.yorm_path)
+
     instance.yorm_mapper.create(instance)
 
     return instance
@@ -46,19 +51,21 @@ def store_instances(path_format, format_spec=None, mapping=None):
         else:
             cls.yorm_attrs = mapping
 
-        class Decorated(cls, Mappable):
+        class Mapped(cls, Mappable):
 
-            """Decorated class."""
+            """Original class with `Mappable` as the base."""
 
             def __init__(self, *_args, **_kwargs):
                 super().__init__(*_args, **_kwargs)
+
                 if '{' + UUID + '}' in path_format:
                     format_spec[UUID] = uuid.uuid4().hex
                 self.yorm_path = path_format.format(**format_spec)
                 self.yorm_mapper = Mapper(self.yorm_path)
+
                 self.yorm_mapper.create(self)
 
-        return Decorated
+        return Mapped
 
     return decorator
 

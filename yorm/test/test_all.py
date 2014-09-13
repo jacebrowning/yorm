@@ -170,6 +170,7 @@ class TestStandard:
         assert False is sample.true
         assert False is sample.false
 
+    @pytest.mark.xfail
     def test_function(self, tmpdir):
         """Verify standard attribute types dump/load correctly (function)."""
         tmpdir.chdir()
@@ -254,6 +255,7 @@ class TestExtended:
 
     """Integration tests for extended attribute types."""
 
+    @pytest.mark.xfail
     def test_function(self, tmpdir):
         """Verify extended attribute types dump/load correctly."""
         tmpdir.chdir()
