@@ -9,6 +9,6 @@ VERSION = __project__ + '-' + __version__
 
 try:
     from .utilities import UUID, store, store_instances, map_attr
-    from .base import Converter
+    from .base import Mappable, Converter
 except ImportError:  # pragma: no cover (manual test)
     pass

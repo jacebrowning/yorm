@@ -91,7 +91,7 @@ depends: .depends-ci .depends-dev
 .PHONY: .depends-ci
 .depends-ci: env Makefile $(DEPENDS_CI)
 $(DEPENDS_CI): Makefile
-	$(PIP) install --upgrade pep8 pep257 $(TEST_RUNNER) coverage
+	$(PIP) install --upgrade pep8 pep257 nose pytest pytest-capturelog coverage
 	touch $(DEPENDS_CI)  # flag to indicate dependencies are installed
 
 .PHONY: .depends-dev
@@ -144,7 +144,7 @@ pep8: .depends-ci
 
 .PHONY: pep257
 pep257: .depends-ci
-	$(PEP257) $(PACKAGE)
+	$(PEP257) $(PACKAGE) --ignore=D102
 
 .PHONY: pylint
 pylint: .depends-dev
@@ -172,12 +172,12 @@ tests-nose: .depends-ci
 
 .PHONY: test-py.test
 test-pytest: .depends-ci
-	$(COVERAGE) run --source $(PACKAGE) -m py.test $(PACKAGE)
+	$(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE)
 	$(COVERAGE) report --show-missing --fail-under=100
 
 .PHONY: tests-py.test
 tests-pytest: .depends-ci
-	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) -m py.test $(PACKAGE)
+	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE)
 	$(COVERAGE) report --show-missing --fail-under=100
 
 # Cleanup ####################################################################

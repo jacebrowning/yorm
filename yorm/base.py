@@ -2,10 +2,154 @@
 
 import abc
 
+import yaml
+
+from . import common
+
+log = common.logger(__name__)
+
 
 class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
 
     """Base class for objects with attributes that map to YAML."""
+
+    @abc.abstractproperty
+    def yorm_path(self):
+        """Path to store/retrieve YAML."""
+
+    @abc.abstractproperty
+    def yorm_attrs(self):
+        """Dictionary of attribute names mapped to converter classes."""
+
+    @abc.abstractproperty
+    def yorm_mapper(self):
+        """Instance of `Mapper` to store/retrieve YAML."""
+
+    def __getattribute__(self, name):
+        if name in ('yorm_mapper', 'yorm_attrs'):
+            return object.__getattribute__(self, name)
+        if self.yorm_mapper.auto:
+            if name in self.yorm_attrs:
+                log.debug("retrieving: {}".format(name))
+                self.yorm_mapper.retrieve(self)
+        return object.__getattribute__(self, name)
+
+    def __setattr__(self, name, value):
+        super().__setattr__(name, value)
+        if self.yorm_mapper.auto:
+            if name in self.yorm_attrs:
+                log.debug("storing: {} ({})".format(name, value))
+                self.yorm_mapper.store(self)
+
+
+class Mapper:
+
+    """Utility class to manipulate YAML files."""
+
+    def __init__(self, path):
+        self.path = path
+        self.auto = True
+        self.exists = True
+        self.retrieving = False
+        self.storing = False
+
+    def __str__(self):
+        return str(self.path)
+
+    def retrieve(self, obj):
+        """Load the object's properties from its file."""
+        if self.storing:
+            log.trace("storing in process...")
+            return
+        log.debug("retrieving {} from {}...".format(repr(obj), self))
+        self.retrieving = True
+        # Read text from file
+        text = self.read()
+        # Parse YAML data from text
+        data = self.load(text, self.path)
+        log.trace("loaded: {}".format(data))
+        # Store parsed data
+        for key, data in data.items():
+            try:
+                converter = obj.yorm_attrs[key]
+            # TODO: add new attributes from the file (#12)
+            except KeyError:  # pragma: no cover (temporary)
+                continue
+            else:
+                value = converter.to_value(data)
+                setattr(obj, key, value)
+        # Set meta attributes
+        self.retrieving = False
+
+    def read(self):  # pragma: no cover (integration test)
+        """Read text from the object's file.
+
+        :param path: path to a text file
+
+        :return: contexts of text file
+
+        """
+        if not self.exists:
+            msg = "cannot read from deleted: {}".format(self.path)
+            raise FileNotFoundError(msg)
+        return common.read_text(self.path)
+
+    @staticmethod
+    def load(text, path):
+        """Load YAML data from text.
+
+        :param text: text read from a file
+        :param path: path to the file (for displaying errors)
+
+        :return: dictionary of YAML data
+
+        """
+        return common.load_yaml(text, path)
+
+    def store(self, obj):
+        """Format and save the object's properties to its file."""
+        if self.retrieving:
+            log.trace("retrieving in process...")
+            return
+        log.debug("storing {} to {}...".format(repr(obj), self))
+        self.storing = True
+        # Format the data items
+        data = {}
+        for name, converter in obj.yorm_attrs.items():
+            value = getattr(obj, name, None)
+            data2 = converter.to_data(value)
+            data[name] = data2
+        log.debug("data to store: {}".format(data))
+        # Dump the data to YAML
+        text = self.dump(data)
+        # Save the YAML to file
+        self.write(text)
+        # Set meta attributes
+        self.storing = False
+        self.auto = True
+
+    @staticmethod
+    def dump(data):
+        """Dump YAML data to text.
+
+        :param data: dictionary of YAML data
+
+        :return: text to write to a file
+
+        """
+        return yaml.dump(data, default_flow_style=False, allow_unicode=True)
+
+    def write(self, text):  # pragma: no cover (integration test)
+        """Write text to the object's file.
+
+        :param text: text to write to a file
+        :param path: path to the file
+
+        """
+        if not self.exists:
+            msg = "cannot save to deleted: {}".format(self.path)
+            raise FileNotFoundError(msg)
+        common.write_text(text, self.path)
 
 
 class Converter(metaclass=abc.ABCMeta):  # pylint:disable=R0921
