@@ -170,7 +170,6 @@ class TestStandard:
         assert False is sample.true
         assert False is sample.false
 
-    @pytest.mark.xfail
     def test_function(self, tmpdir):
         """Verify standard attribute types dump/load correctly (function)."""
         tmpdir.chdir()
@@ -211,13 +210,13 @@ class TestStandard:
         - 1
         - 2
         - 3
-        false: false
-        number_int: 0
-        number_reaL: 0.0
+        'false': null
+        number_int: 42
+        number_real: 4.2
         object:
           key: value
         string: Hello, world!
-        true: true
+        'true': null
         """.strip().replace("        ", "") + '\n' == text
 
     def test_with(self, tmpdir):
@@ -236,17 +235,14 @@ class TestStandard:
             # check for unchanged file values
             with open(sample.yorm_path, 'r') as stream:
                 text = stream.read()
-            assert """
-            string: ""
-            number_real: 0.0
-            """.strip().replace("            ", "") + '\n' == text
+            assert "" == text
 
         # check for cahnged file values
         with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
         assert """
-        string: abc
         number_real: 4.2
+        string: abc
         """.strip().replace("        ", "") + '\n' == text
 
 

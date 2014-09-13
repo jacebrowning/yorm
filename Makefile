@@ -69,8 +69,7 @@ $(ALL): $(SOURCES)
 	touch $(ALL)  # flag to indicate all setup steps were successful
 
 .PHONY: ci
-# TODO: enable integration tests after implementation
-ci: pep8 pep257 test # tests
+ci: pep8 pep257 test tests
 
 # Development Installation ###################################################
 
