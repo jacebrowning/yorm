@@ -15,8 +15,7 @@ MAX_VERBOSITY = 4  # maximum verbosity level implemented
 def _trace(self, message, *args, **kws):  # pragma: no cover (manual test)
     """Handler for a new TRACE logging level."""
     if self.isEnabledFor(logging.DEBUG - 1):
-        self._log(  # pylint: disable=W0212
-            logging.DEBUG - 1, message, args, **kws)
+        self._log(logging.DEBUG - 1, message, args, **kws)  # pylint: disable=W0212
 
 
 logging.addLevelName(logging.DEBUG - 1, "TRACE")
@@ -32,7 +31,7 @@ log = logger(__name__)
 # disk helper functions ######################################################
 
 
-def create_dirname(path):  # pragma: no cover (integration test)
+def create_dirname(path):
     """Ensure a parent directory exists for a path."""
     dirpath = os.path.dirname(path)
     if dirpath and not os.path.isdir(dirpath):
@@ -40,22 +39,7 @@ def create_dirname(path):  # pragma: no cover (integration test)
         os.makedirs(dirpath)
 
 
-def read_lines(path, encoding='utf-8'):  # pragma: no cover (integration test)
-    """Read lines of text from a file.
-
-    :param path: file to write lines
-    :param encoding: output file encoding
-
-    :return: path of new file
-
-    """
-    log.trace("reading lines from '{}'...".format(path))
-    with open(path, 'r', encoding=encoding) as stream:
-        for line in stream:
-            yield line
-
-
-def read_text(path, encoding='utf-8'):  # pragma: no cover (integration test)
+def read_text(path, encoding='utf-8'):
     """Read text from a file.
 
     :param path: file path to read from
@@ -93,26 +77,7 @@ def load_yaml(text, path):
     return data
 
 
-def write_lines(lines, path, end='\n', encoding='utf-8'):  # pragma: no cover (integration test)
-    """Write lines of text to a file.
-
-    :param lines: iterator of strings
-    :param path: file to write lines
-    :param end: string to end lines
-    :param encoding: output file encoding
-
-    :return: path of new file
-
-    """
-    log.trace("writing lines to '{}'...".format(path))
-    with open(path, 'wb') as stream:
-        for line in lines:
-            data = (line + end).encode(encoding)
-            stream.write(data)
-    return path
-
-
-def write_text(text, path, encoding='utf-8'):  # pragma: no cover (integration test)
+def write_text(text, path, encoding='utf-8'):
     """Write text to a file.
 
     :param text: string
@@ -130,16 +95,17 @@ def write_text(text, path, encoding='utf-8'):  # pragma: no cover (integration t
     return path
 
 
-def touch(path):  # pragma: no cover (integration test)
+def touch(path):
     """Ensure a file exists."""
     if not os.path.exists(path):
         log.trace("creating empty '{}'...".format(path))
         write_text('', path)
 
 
-def delete(path):  # pragma: no cover (integration test)
+def delete(path):
     """Delete a file or directory with error handling."""
-    if os.path.isdir(path):
+    # TODO: determine if directory deletion should be part of this library
+    if os.path.isdir(path):  # pragma: no cover (unused)
         try:
             log.trace("deleting '{}'...".format(path))
             shutil.rmtree(path)

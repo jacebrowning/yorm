@@ -59,12 +59,13 @@ class Mapper:
     def __str__(self):
         return str(self.path)
 
-    def create(self, obj):  # pragma: no cover (integration test)
+    def create(self, obj):
         """Create a new file for the object."""
         if not os.path.exists(self.path):
             log.debug("creating '{}' for {}...".format(self, repr(obj)))
             common.create_dirname(self.path)
             common.touch(self.path)
+            self.exists = True
 
     def retrieve(self, obj):
         """Load the object's properties from its file."""
@@ -90,7 +91,7 @@ class Mapper:
         # Set meta attributes
         self.retrieved = True
 
-    def read(self):  # pragma: no cover (integration test)
+    def read(self):
         """Read text from the object's file.
 
         :param path: path to a text file
@@ -145,7 +146,7 @@ class Mapper:
         """
         return yaml.dump(data, default_flow_style=False, allow_unicode=True)
 
-    def write(self, text):  # pragma: no cover (integration test)
+    def write(self, text):
         """Write text to the object's file.
 
         :param text: text to write to a file
@@ -156,6 +157,16 @@ class Mapper:
             msg = "cannot save to deleted: {}".format(self.path)
             raise FileNotFoundError(msg)
         common.write_text(text, self.path)
+
+    def delete(self):
+        """Delete the object's file from the file system."""
+        if self.exists:
+            log.info("deleting '{}'...".format(self))
+            common.delete(self.path)
+            self.retrieved = False
+            self.exists = False
+        else:
+            log.warning("already deleted: {}".format(self))
 
 
 class Converter(metaclass=abc.ABCMeta):  # pylint:disable=R0921

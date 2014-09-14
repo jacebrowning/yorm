@@ -324,5 +324,39 @@ class TestCustom:
         assert '1' == sample.level
 
 
+@integration
+class TestDelete:
+
+    """Integration tests for deleting files."""
+
+    def test_read(self, tmpdir):
+        """Verify a deleted file cannot be read from."""
+        tmpdir.chdir()
+        sample = SampleStandardDecorated('sample')
+        sample.yorm_mapper.delete()
+
+        with pytest.raises(FileNotFoundError):
+            print(sample.string)
+
+        with pytest.raises(FileNotFoundError):
+            sample.string = "def456"
+
+    def test_write(self, tmpdir):
+        """Verify a deleted file cannot be written to."""
+        tmpdir.chdir()
+        sample = SampleStandardDecorated('sample')
+        sample.yorm_mapper.delete()
+
+        with pytest.raises(FileNotFoundError):
+            sample.string = "def456"
+
+    def test_multiple(self, tmpdir):
+        """Verify a deleted file can be deleted again."""
+        tmpdir.chdir()
+        sample = SampleStandardDecorated('sample')
+        sample.yorm_mapper.delete()
+        sample.yorm_mapper.delete()
+
+
 if __name__ == '__main__':
     pytest.main()

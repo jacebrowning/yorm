@@ -7,7 +7,7 @@ import yaml
 from .standard import String
 
 
-class _Literal(str):  # pragma: no cover (integration test)
+class _Literal(str):
 
     """Custom type for strings which should be dumped in the literal style."""
 
