@@ -53,8 +53,7 @@ class Mapper:
         self.path = path
         self.auto = True
         self.exists = True
-        # TODO: determine if these variables are needed
-        self.retrieving = False
+        self.retrieved = False
         self.storing = False
 
     def __str__(self):
@@ -73,7 +72,6 @@ class Mapper:
             log.trace("storing in process...")
             return
         log.debug("retrieving {} from {}...".format(repr(obj), self))
-        self.retrieving = True
         # Read text from file
         text = self.read()
         # Parse YAML data from text
@@ -90,7 +88,7 @@ class Mapper:
                 value = converter.to_value(data)
                 setattr(obj, key, value)
         # Set meta attributes
-        self.retrieving = False
+        self.retrieved = True
 
     def read(self):  # pragma: no cover (integration test)
         """Read text from the object's file.
@@ -119,9 +117,6 @@ class Mapper:
 
     def store(self, obj):
         """Format and save the object's properties to its file."""
-        if self.retrieving:
-            log.trace("retrieving in process...")
-            return
         log.debug("storing {} to {}...".format(repr(obj), self))
         self.storing = True
         # Format the data items

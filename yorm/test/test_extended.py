@@ -17,8 +17,6 @@ class TestMarkdown:
     data_value = [
         (obj, obj),
         (None, ""),
-        (1, "1"),
-        (4.2, "4.2"),
         (['a', 'b', 'c'], "a, b, c"),
         ("This is\na sentence.", "This is a sentence."),
         ("Sentence one.\nSentence two.", "Sentence one. Sentence two."),
