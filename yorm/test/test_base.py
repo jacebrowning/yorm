@@ -127,6 +127,25 @@ class TestMappable:
         var3: null
         """.strip().replace("        ", "") + '\n' == text
 
+    def test_new(self):
+        """Verify new attributes are added to the object."""
+        text = """
+        new: 42
+        """.strip().replace("        ", "") + '\n'
+        self.sample.yorm_mapper.write(text)
+        # TODO: currently, another attribute must be read first to call retrieve
+        assert None == self.sample.var1
+        assert 42 == self.sample.new
+
+    def test_new_unknown(self):
+        """Verify an exception is raised on new attributes w/ unknown types"""
+        text = """
+        new: !!timestamp 2001-12-15T02:59:43.1Z
+        """.strip().replace("        ", "") + '\n'
+        self.sample.yorm_mapper.write(text)
+        with pytest.raises(ValueError):
+            print(self.sample.var1)
+
 
 if __name__ == '__main__':
     pytest.main()

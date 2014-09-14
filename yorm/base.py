@@ -82,12 +82,14 @@ class Mapper:
         for key, data in data.items():
             try:
                 converter = obj.yorm_attrs[key]
-            # TODO: add new attributes from the file (#12)
-            except KeyError:  # pragma: no cover (temporary)
-                continue
-            else:
-                value = converter.to_value(data)
-                setattr(obj, key, value)
+            except KeyError:
+                # TODO: determine if this runtime import is the best way to do this
+                from . import standard
+                converter = standard.match(data)
+                log.info("new attribute: {}".format(key))
+                obj.yorm_attrs[key] = converter
+            value = converter.to_value(data)
+            setattr(obj, key, value)
         # Set meta attributes
         self.retrieved = True
 
@@ -172,6 +174,8 @@ class Mapper:
 class Converter(metaclass=abc.ABCMeta):  # pylint:disable=R0921
 
     """Base class for attribute converters."""
+
+    type = None
 
     @staticmethod
     @abc.abstractmethod
