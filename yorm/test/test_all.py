@@ -251,7 +251,6 @@ class TestExtended:
 
     """Integration tests for extended attribute types."""
 
-    @pytest.mark.xfail
     def test_function(self, tmpdir):
         """Verify extended attribute types dump/load correctly."""
         tmpdir.chdir()

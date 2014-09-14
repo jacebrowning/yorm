@@ -30,12 +30,12 @@ class TestDictionary:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert standard.Dictionary.to_value(data) == value
+        assert value == standard.Dictionary.to_value(data)
 
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert standard.Dictionary.to_data(value) == data
+        assert data == standard.Dictionary.to_data(value)
 
 
 class TestList:

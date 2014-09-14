@@ -119,16 +119,16 @@ class Boolean(_Standard):
     def to_bool(obj):
         """Convert a boolean-like object to a boolean.
 
-        >>> to_bool(1)
+        >>> Boolean.to_bool(1)
         True
 
-        >>> to_bool(0)
+        >>> Boolean.to_bool(0)
         False
 
-        >>> to_bool(' True ')
+        >>> Boolean.to_bool(' True ')
         True
 
-        >>> to_bool('F')
+        >>> Boolean.to_bool('F')
         False
 
         """
