@@ -102,6 +102,19 @@ class SampleCustomDecorated:
 # tests #######################################################################
 
 
+def test_imports():
+    """Verify the package namespace is mapped correctly."""
+    # pylint: disable=W0404,W0612,W0621
+    from yorm import UUID, store, store_instances, map_attr
+    from yorm import Mappable, Converter
+    import yorm
+
+    assert store
+    assert Converter
+    assert yorm.standard.Boolean
+    assert yorm.extended.Markdown
+
+
 @integration
 class TestStandard:
 
