@@ -113,7 +113,7 @@ class Mapper:
         """
         if not self.exists:
             msg = "cannot read from deleted: {}".format(self.path)
-            raise FileNotFoundError(msg)
+            raise common.FileError(msg)
         return common.read_text(self.path)
 
     @staticmethod
@@ -169,7 +169,7 @@ class Mapper:
         """
         if not self.exists:
             msg = "cannot save to deleted: {}".format(self.path)
-            raise FileNotFoundError(msg)
+            raise common.FileError(msg)
         common.write_text(text, self.path)
 
     def delete(self):

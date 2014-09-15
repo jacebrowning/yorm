@@ -160,4 +160,4 @@ def match(data):
     for converter in converters:
         if converter.type and isinstance(data, converter.type):
             return converter
-    raise ValueError("no converter available for: {}".format(data))
+    raise common.ConversionError("no converter available for: {}".format(data))

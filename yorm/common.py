@@ -28,6 +28,34 @@ log = logger(__name__)
 # exception classes ##########################################################
 
 
+class YORMException(Exception):
+
+    """Base class for all YORM exceptions."""
+
+    pass
+
+
+class FileError(YORMException, FileNotFoundError):
+
+    """Raised when text cannot be read from a file."""
+
+    pass
+
+
+class ContentError(YORMException, yaml.error.YAMLError, ValueError):
+
+    """Raised when YAML cannot be parsed from text."""
+
+    pass
+
+
+class ConversionError(YORMException, ValueError):
+
+    """Raised when a value cannot be converted to the specified type."""
+
+    pass
+
+
 # disk helper functions ######################################################
 
 
@@ -68,11 +96,11 @@ def load_yaml(text, path):
         data = yaml.load(text) or {}
     except yaml.error.YAMLError as exc:
         msg = "invalid contents: {}:\n{}".format(path, exc)
-        raise ValueError(msg) from None
+        raise ContentError(msg) from None
     # Ensure data is a dictionary
     if not isinstance(data, dict):
         msg = "invalid contents: {}".format(path)
-        raise ValueError(msg)
+        raise ContentError(msg)
     # Return the parsed data
     return data
 
