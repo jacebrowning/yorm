@@ -17,6 +17,7 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
     def __getattribute__(self, name):
         if name in ('yorm_mapper', 'yorm_attrs'):
             return object.__getattribute__(self, name)
+
         log.trace("getting attribute '{}'...".format(name))
         if name in self.yorm_attrs:
             self.yorm_mapper.retrieve(self)
@@ -28,6 +29,7 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
     def __setattr__(self, name, value):
         log.trace("setting attribute '{}' to {}...".format(name, repr(value)))
         object.__setattr__(self, name, value)
+
         if hasattr(self, 'yorm_attrs') and name in self.yorm_attrs:
             if hasattr(self, 'yorm_mapper') and self.yorm_mapper.auto:
                 self.yorm_mapper.store(self)
@@ -72,13 +74,14 @@ class Mapper:
         if self.storing:
             log.trace("storing in process...")
             return
+
+        # Parse data from file
         log.debug("retrieving {} from {}...".format(repr(obj), self))
-        # Read text from file
         text = self.read()
-        # Parse YAML data from text
         data = self.load(text, self.path)
         log.trace("loaded: {}".format(data))
-        # Store parsed data
+
+        # Update attributes
         for key, data in data.items():
             try:
                 converter = obj.yorm_attrs[key]
@@ -90,6 +93,7 @@ class Mapper:
                 obj.yorm_attrs[key] = converter
             value = converter.to_value(data)
             setattr(obj, key, value)
+
         # Set meta attributes
         self.retrieved = True
 
@@ -122,6 +126,7 @@ class Mapper:
         """Format and save the object's properties to its file."""
         log.debug("storing {} to {}...".format(repr(obj), self))
         self.storing = True
+
         # Format the data items
         data = {}
         for name, converter in obj.yorm_attrs.items():
@@ -129,10 +134,11 @@ class Mapper:
             data2 = converter.to_data(value)
             data[name] = data2
         log.debug("data to store: {}".format(data))
-        # Dump the data to YAML
+
+        # Dump data to file
         text = self.dump(data)
-        # Save the YAML to file
         self.write(text)
+
         # Set meta attributes
         self.storing = False
         self.auto = True

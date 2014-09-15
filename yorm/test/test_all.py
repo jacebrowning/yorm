@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # pylint:disable=R0201
 
-"""Integration tests."""
+"""Integration tests for the `yorm` package."""
 
 import pytest
 

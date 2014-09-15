@@ -1,3 +1,3 @@
 #!/usr/bin/env python
 
-"""Tests for the yorm package."""
+"""Tests for the `yorm` package."""

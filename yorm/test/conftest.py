@@ -1,4 +1,4 @@
-""""pytest configuration."""
+"""pytest configuration."""
 
 import os
 import pytest
