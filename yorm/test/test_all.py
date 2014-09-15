@@ -215,7 +215,7 @@ class TestStandard:
         sample.number_int = 42
         sample.number_real = 4.2
         sample.true = None
-        sample.false = None
+        sample.false = 1
 
         # check file values
         with open(sample.yorm_path, 'r') as stream:
@@ -225,13 +225,13 @@ class TestStandard:
         - 1
         - 2
         - 3
-        'false': null
+        'false': true
         number_int: 42
         number_real: 4.2
         object:
           key: value
         string: Hello, world!
-        'true': null
+        'true': false
         """.strip().replace("        ", "") + '\n' == text
 
     def test_with(self, tmpdir):

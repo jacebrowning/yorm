@@ -19,6 +19,7 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
             return object.__getattribute__(self, name)
 
         log.trace("getting attribute '{}'...".format(name))
+
         if name in self.yorm_attrs:
             self.yorm_mapper.retrieve(self)
         else:
@@ -28,6 +29,11 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
 
     def __setattr__(self, name, value):
         log.trace("setting attribute '{}' to {}...".format(name, repr(value)))
+
+        if hasattr(self, 'yorm_attrs') and name in self.yorm_attrs:
+            converter = self.yorm_attrs[name]
+            value = converter.to_value(value)
+
         object.__setattr__(self, name, value)
 
         if hasattr(self, 'yorm_attrs') and name in self.yorm_attrs:

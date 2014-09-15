@@ -33,7 +33,7 @@ class TestStore:
 
     def test_store(self):
         """Verify store is called when setting an attribute."""
-        mapping = {'var1': 'Mock'}
+        mapping = {'var1': Mock()}
         sample = utilities.store(self.Sample(), "sample.yml", mapping)
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             setattr(sample, 'var1', None)
@@ -73,7 +73,7 @@ class TestStoreInstances:
         def __init__(self, name):
             self.name = name
 
-    @utilities.store_instances("sample.yml", mapping={'var1': 'Mock'})
+    @utilities.store_instances("sample.yml", mapping={'var1': Mock()})
     class SampleDecoratedWithAttributes:
 
         """Sample decorated class using a single path."""
@@ -88,7 +88,7 @@ class TestStoreInstances:
         """Verify mapping can be enabled with with attributes."""
         sample = self.SampleDecoratedWithAttributes()
         assert "sample.yml" == sample.yorm_path
-        assert {'var1': 'Mock'} == sample.yorm_attrs
+        assert ['var1'] == list(sample.yorm_attrs.keys())
 
     @patch('uuid.uuid4', Mock(return_value=Mock(hex='abc123')))
     def test_filename_uuid(self):

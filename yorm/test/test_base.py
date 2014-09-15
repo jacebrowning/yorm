@@ -66,7 +66,7 @@ class TestMappable:
         var3: null
         """.strip().replace("        ", "") + '\n' == text
 
-    def test_save(self):
+    def test_set(self):
         """Verify the file is written to after setting an attribute."""
         self.sample.var1 = "abc123"
         self.sample.var2 = 1
@@ -78,7 +78,24 @@ class TestMappable:
         var3: true
         """.strip().replace("        ", "") + '\n' == text
 
-    def test_load(self):
+    def test_set_converted(self):
+        """Verify conversion occurs when setting attributes."""
+        self.sample.var1 = 42
+        self.sample.var2 = "1"
+        self.sample.var3 = 'off'
+        text = self.sample.yorm_mapper.read()
+        assert """
+        var1: '42'
+        var2: 1
+        var3: false
+        """.strip().replace("        ", "") + '\n' == text
+
+    def test_set_error(self):
+        """Verify an exception is raised when a value cannot be converted."""
+        with pytest.raises(ValueError):
+            self.sample.var2 = "abc"
+
+    def test_get(self):
         """Verify the file is read from before getting an attribute."""
         text = """
         var1: def456
