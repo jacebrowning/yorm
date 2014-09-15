@@ -48,6 +48,7 @@ EASY_INSTALL := $(BIN)/easy_install
 RST2HTML := $(PYTHON) $(BIN)/rst2html.py
 PDOC := $(PYTHON) $(BIN)/pdoc
 PEP8 := $(BIN)/pep8
+PEP8RADIUS := $(BIN)/pep8radius
 PEP257 := $(BIN)/pep257
 PYLINT := $(BIN)/pylint
 PYREVERSE := $(BIN)/pyreverse
@@ -96,7 +97,7 @@ $(DEPENDS_CI): Makefile
 .PHONY: .depends-dev
 .depends-dev: env Makefile $(DEPENDS_DEV)
 $(DEPENDS_DEV): Makefile
-	$(PIP) install --upgrade docutils pdoc pylint wheel
+	$(PIP) install --upgrade pep8radius docutils pdoc pylint wheel
 	touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
 
 # Documentation ##############################################################
@@ -149,6 +150,10 @@ pep257: .depends-ci
 pylint: .depends-dev
 	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc
 
+.PHONY: fix
+fix: .depends-dev
+	$(PEP8RADIUS) --docformatter --in-place
+
 # Testing ####################################################################
 
 .PHONY: test
@@ -172,7 +177,7 @@ tests-nose: .depends-ci
 .PHONY: test-py.test
 test-pytest: .depends-ci
 	$(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
-	$(COVERAGE) report --show-missing --fail-under=89
+	$(COVERAGE) report --show-missing --fail-under=90
 
 .PHONY: tests-py.test
 tests-pytest: .depends-ci

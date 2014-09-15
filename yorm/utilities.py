@@ -2,7 +2,10 @@
 
 import uuid
 
+from . import common
 from .base import Mappable, Mapper
+
+log = common.logger(__name__)
 
 UUID = 'UUID'
 
@@ -57,9 +60,13 @@ def store_instances(path_format, format_spec=None, mapping=None):
             def __init__(self, *_args, **_kwargs):
                 super().__init__(*_args, **_kwargs)
 
+                format_spec2 = {}
+                for key, value in format_spec.items():
+                    format_spec2[key] = getattr(self, value)
                 if '{' + UUID + '}' in path_format:
-                    format_spec[UUID] = uuid.uuid4().hex
-                self.yorm_path = path_format.format(**format_spec)
+                    format_spec2[UUID] = uuid.uuid4().hex
+
+                self.yorm_path = path_format.format(**format_spec2)
                 self.yorm_mapper = Mapper(self.yorm_path)
 
                 self.yorm_mapper.create(self)

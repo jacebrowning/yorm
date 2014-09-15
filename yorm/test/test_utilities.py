@@ -65,6 +65,14 @@ class TestStoreInstances:
 
         """Sample decorated class using UUIDs for paths."""
 
+    @utilities.store_instances("path/to/{n}.yml", {'n': 'name'})
+    class SampleDecoratedAttributes:
+
+        """Sample decorated class using an attribute value for paths."""
+
+        def __init__(self, name):
+            self.name = name
+
     @utilities.store_instances("sample.yml", mapping={'var1': 'Mock'})
     class SampleDecoratedWithAttributes:
 
@@ -83,11 +91,18 @@ class TestStoreInstances:
         assert {'var1': 'Mock'} == sample.yorm_attrs
 
     @patch('uuid.uuid4', Mock(return_value=Mock(hex='abc123')))
-    def test_uuid(self):
+    def test_filename_uuid(self):
         """Verify UUIDs can be used for filename."""
         sample = self.SampleDecoratedIdentifiers()
         assert "abc123.yml" == sample.yorm_path
         assert {} == sample.yorm_attrs
+
+    def test_filename_attributes(self):
+        """Verify attributes can be used to determine filename."""
+        sample1 = self.SampleDecoratedAttributes('one')
+        sample2 = self.SampleDecoratedAttributes('two')
+        assert "path/to/one.yml" == sample1.yorm_path
+        assert "path/to/two.yml" == sample2.yorm_path
 
     def test_store(self):
         """Verify store is called when setting an attribute."""

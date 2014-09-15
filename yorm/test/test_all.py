@@ -124,6 +124,7 @@ class TestStandard:
         """Verify standard attribute types dump/load correctly (decorator)."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
+        assert "path/to/default/sample.yml" == sample.yorm_path
 
         # check defaults
         assert {} == sample.object
@@ -195,6 +196,7 @@ class TestStandard:
                    'true': Boolean,
                    'false': Boolean}
         sample = store(_sample, "path/to/directory/sample.yml", mapping)
+        assert "path/to/directory/sample.yml" == sample.yorm_path
 
         # check defaults
         assert {} == sample.object
