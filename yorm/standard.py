@@ -2,32 +2,78 @@
 
 from . import common
 from .base import Converter
+from pydoc import classname
 
 log = common.logger(__name__)
 
 
-class _Standard(Converter):  # pylint: disable=W0223
+class Object(Converter):  # pylint: disable=W0223
 
     """Base class for standard types (mapped directly to YAML)."""
 
-    @staticmethod
-    def to_data(value):
+    @classmethod
+    def to_value(self, data):
+        return data
+
+    @classmethod
+    def to_data(cls, value):
         return value
 
 
-class Dictionary(_Standard):
+class Dictionary(Object):
 
     """Converter for the `dict` type."""
 
     type = dict
+    yorm_attrs = {}
+
+    @classmethod
+    def to_value(cls, data):
+        """Convert data back to a dictionary."""
+        value = {}
+
+        for name, data in cls.to_dict(data).items():
+            try:
+                converter = cls.yorm_attrs[name]
+            except KeyError:
+                converter = match(data)
+                log.info("new attribute: {}".format(name))
+                cls.yorm_attrs[name] = converter
+            value[name] = converter.to_value(data)
+
+        return value
+
+    @classmethod
+    def to_data(cls, value):
+        """Convert value to a dictionary."""
+        data = {}
+
+        for name, converter in cls.yorm_attrs.items():
+            data[name] = converter.to_data(value.get(name, None))
+
+        return data
 
     @staticmethod
-    def to_value(data):
-        """Convert data back to a dictionary."""
-        if isinstance(data, Dictionary.type):
-            return data
-        elif isinstance(data, str):
-            text = data.strip()
+    def to_dict(obj):
+        """Convert a dictionary-like object to a dictionary.
+
+        >>> Dictionary.to_dict({'key': 42})
+        {'key': 42}
+
+        >>> Dictionary.to_dict("key=42")
+        {'key': '42'}
+
+        >>> Dictionary.to_dict("key")
+        {'key': None}
+
+        >>> Dictionary.to_dict(None)
+        {}
+
+        """
+        if isinstance(obj, Dictionary.type):
+            return obj
+        elif isinstance(obj, str):
+            text = obj.strip()
             parts = text.split('=')
             if len(parts) == 2:
                 return {parts[0]: parts[1]}
@@ -37,14 +83,14 @@ class Dictionary(_Standard):
             return {}
 
 
-class List(_Standard):
+class List(Object):
 
     """Converter for the `list` type."""
 
     type = list
 
-    @staticmethod
-    def to_value(data):
+    @classmethod
+    def to_value(cls, data):
         """Convert data back to a list."""
         if isinstance(data, List.type):
             return data
@@ -60,14 +106,14 @@ class List(_Standard):
             return []
 
 
-class String(_Standard):
+class String(Object):
 
     """Converter for the `str` type."""
 
     type = str
 
-    @staticmethod
-    def to_value(data):
+    @classmethod
+    def to_value(cls, data):
         """Convert data back to a string."""
         if isinstance(data, String.type):
             return data
@@ -80,14 +126,14 @@ class String(_Standard):
             return ""
 
 
-class Integer(_Standard):
+class Integer(Object):
 
     """Converter for the `int` type."""
 
     type = int
 
-    @staticmethod
-    def to_value(data):
+    @classmethod
+    def to_value(cls, data):
         """Convert data back to an integer."""
         if isinstance(data, Integer.type):
             return data
@@ -100,14 +146,14 @@ class Integer(_Standard):
             return 0
 
 
-class Float(_Standard):
+class Float(Object):
 
     """Converter for the `float` type."""
 
     type = float
 
-    @staticmethod
-    def to_value(data):
+    @classmethod
+    def to_value(cls, data):
         """Convert data back to a float."""
         if isinstance(data, Float.type):
             return data
@@ -117,7 +163,7 @@ class Float(_Standard):
             return 0.0
 
 
-class Boolean(_Standard):
+class Boolean(Object):
 
     """Converter for the `bool` type."""
 
@@ -125,8 +171,8 @@ class Boolean(_Standard):
 
     FALSY = ('false', 'f', 'no', 'n', 'disabled', 'off', '0')
 
-    @staticmethod
-    def to_value(data):
+    @classmethod
+    def to_value(cls, data):
         """Convert data back to a boolean."""
         return Boolean.to_bool(data)
 
@@ -155,9 +201,17 @@ class Boolean(_Standard):
 
 def match(data):
     """Determine the appropriate convert for new data."""
-    converters = _Standard.__subclasses__()
+    log.trace("determining converter for: {}".format(repr(data)))
+    converters = Object.__subclasses__()
+
     log.trace("converter options: {}".format(converters))
     for converter in converters:
         if converter.type and isinstance(data, converter.type):
+            log.trace("matched: {}".format(converter))
             return converter
+
+    if data is None:
+        log.trace("default: {}".format(Object))
+        return Object
+
     raise common.ConversionError("no converter available for: {}".format(data))

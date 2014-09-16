@@ -181,7 +181,7 @@ test-pytest: .depends-ci
 
 .PHONY: tests-py.test
 tests-pytest: .depends-ci
-	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
+	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules --verbose
 	$(COVERAGE) report --show-missing --fail-under=100
 
 # Cleanup ####################################################################

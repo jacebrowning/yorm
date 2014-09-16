@@ -27,6 +27,10 @@ class TestDictionary:
         (obj, obj),
     ]
 
+    def setup_method(self, _):
+        """Reset the class' mapped attributes before each test."""
+        standard.Dictionary.yorm_attrs = {'abc': standard.Integer}
+
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
