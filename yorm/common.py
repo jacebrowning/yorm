@@ -63,7 +63,7 @@ def create_dirname(path):
     """Ensure a parent directory exists for a path."""
     dirpath = os.path.dirname(path)
     if dirpath and not os.path.isdir(dirpath):
-        log.info("creating directory {}...".format(dirpath))
+        log.trace("creating directory {}...".format(dirpath))
         os.makedirs(dirpath)
 
 

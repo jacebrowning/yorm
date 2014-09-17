@@ -177,11 +177,11 @@ tests-nose: .depends-ci
 .PHONY: test-py.test
 test-pytest: .depends-ci
 	$(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
-	$(COVERAGE) report --show-missing --fail-under=90
+	$(COVERAGE) report --show-missing --fail-under=92
 
 .PHONY: tests-py.test
 tests-pytest: .depends-ci
-	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules --verbose
+	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
 	$(COVERAGE) report --show-missing --fail-under=100
 
 # Cleanup ####################################################################

@@ -19,8 +19,8 @@ class Level(Converter):
 
     """Sample custom attribute."""
 
-    @staticmethod
-    def to_value(obj):
+    @classmethod
+    def to_value(cls, obj):
         if obj:
             if isinstance(obj, str):
                 return obj
@@ -29,8 +29,8 @@ class Level(Converter):
         else:
             return ""
 
-    @staticmethod
-    def to_data(obj):
+    @classmethod
+    def to_data(cls, obj):
         count = obj.split('.')
         if count == 0:
             return int(obj)
@@ -58,6 +58,9 @@ class SampleStandard:
         self.false = False
         self.null = None
 
+    def __repr__(self):
+        return "<standard {}>".format(id(self))
+
 
 @map_attr(object=Dictionary, array=List, string=String)
 @map_attr(number_int=Integer, number_real=Float)
@@ -80,6 +83,9 @@ class SampleStandardDecorated:
         self.false = False
         self.null = None
 
+    def __repr__(self):
+        return "<decorated {}>".format(id(self))
+
 
 class SampleExtended:
 
@@ -87,6 +93,9 @@ class SampleExtended:
 
     def __init__(self):
         self.text = ""
+
+    def __repr__(self):
+        return "<extended {}>".format(id(self))
 
 
 @store_instances("path/to/directory/{UUID}.yml", mapping={'level': Level})
@@ -97,6 +106,9 @@ class SampleCustomDecorated:
     def __init__(self, name):
         self.name = name
         self.level = '1.0'
+
+    def __repr__(self):
+        return "<custom {}>".format(id(self))
 
 
 # tests #######################################################################
@@ -167,7 +179,7 @@ class TestStandard:
         array: [4, 5, 6]
         'false': null
         number_int: 42
-        number_real: 4.2
+        number_real: '4.2'
         object: {'status': false}
         string: "abc"
         'true': null

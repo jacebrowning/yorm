@@ -2,7 +2,6 @@
 
 from . import common
 from .base import Converter
-from pydoc import classname
 
 log = common.logger(__name__)
 
@@ -12,7 +11,7 @@ class Object(Converter):  # pylint: disable=W0223
     """Base class for standard types (mapped directly to YAML)."""
 
     @classmethod
-    def to_value(self, data):
+    def to_value(cls, data):
         return data
 
     @classmethod
