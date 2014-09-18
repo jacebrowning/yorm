@@ -6,7 +6,8 @@
 import pytest
 import logging
 
-from yorm.base import Mappable, Mapper, Dictionary, List
+from yorm.base import Mappable, Dictionary, List
+from yorm.mapper import Mapper
 from yorm.standard import String, Integer, Boolean
 
 

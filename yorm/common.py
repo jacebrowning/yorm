@@ -56,6 +56,20 @@ class ConversionError(YORMException, ValueError):
     pass
 
 
+# decorators #################################################################
+
+
+class classproperty(object):
+
+    """Read-only class property decorator."""
+
+    def __init__(self, getter):
+        self.getter = getter
+
+    def __get__(self, instance, owner):
+        return self.getter(owner)
+
+
 # disk helper functions ######################################################
 
 

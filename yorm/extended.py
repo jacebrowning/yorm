@@ -61,8 +61,8 @@ class Markdown(String):
 
     """, re.VERBOSE)
 
-    @classmethod
-    def to_value(cls, data):
+    @staticmethod
+    def to_value(data):
         """Join non-meaningful line breaks."""
         value = String.to_value(data)
         return Markdown.join(value)
@@ -83,8 +83,8 @@ class Markdown(String):
         """
         return Markdown.REGEX_MARKDOWN_SPACES.sub(r'\1 \3', text).strip()
 
-    @classmethod
-    def to_data(cls, value):
+    @staticmethod
+    def to_data(value):
         """Break a string at sentences and dump as a literal string."""
         data = String.to_data(value)
         split = Markdown.split(data)
