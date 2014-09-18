@@ -87,8 +87,6 @@ def map_attr(**kwargs):
         if not hasattr(cls, 'yorm_attrs'):
             cls.yorm_attrs = {}
         for name, converter in kwargs.items():
-            if hasattr(converter, 'copy'):  # TODO: for unit testing with mocks
-                converter = converter.copy()
             cls.yorm_attrs[name] = converter
         return cls
 

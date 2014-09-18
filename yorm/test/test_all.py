@@ -6,21 +6,22 @@
 import pytest
 
 from yorm import store, store_instances, map_attr, Converter
-from yorm.standard import Dictionary, List, String, Integer, Float, Boolean
+from yorm.base import Dictionary, List
+from yorm.standard import String, Integer, Float, Boolean
 from yorm.extended import Markdown
 
 integration = pytest.mark.integration
 
 
-# custom types ################################################################
+# custom converters ###########################################################
 
 
 class Level(Converter):
 
     """Sample custom attribute."""
 
-    @classmethod
-    def to_value(cls, obj):
+    @staticmethod
+    def to_value(obj):
         if obj:
             if isinstance(obj, str):
                 return obj
@@ -29,8 +30,8 @@ class Level(Converter):
         else:
             return ""
 
-    @classmethod
-    def to_data(cls, obj):
+    @staticmethod
+    def to_data(obj):
         count = obj.split('.')
         if count == 0:
             return int(obj)
@@ -38,6 +39,24 @@ class Level(Converter):
             return float(obj)
         else:
             return obj
+
+
+@map_attr(key2=String)
+class Dictionary2(Dictionary):
+
+    pass
+
+
+@map_attr(key3=String)
+class Dictionary3(Dictionary):
+
+    pass
+
+
+@map_attr(all=Integer)
+class List2(List):
+
+    pass
 
 
 # sample classes ##############################################################
@@ -62,7 +81,7 @@ class SampleStandard:
         return "<standard {}>".format(id(self))
 
 
-@map_attr(object=Dictionary, array=List, string=String)
+@map_attr(object=Dictionary2, array=List2, string=String)
 @map_attr(number_int=Integer, number_real=Float)
 @map_attr(true=Boolean, false=Boolean)
 @store_instances("path/to/{d}/{n}.yml", {'n': 'name', 'd': 'category'})
@@ -139,7 +158,7 @@ class TestStandard:
         assert "path/to/default/sample.yml" == sample.yorm_path
 
         # check defaults
-        assert {} == sample.object
+        assert {'key2': ''} == sample.object
         assert [] == sample.array
         assert "" == sample.string
         assert 0 == sample.number_int
@@ -149,7 +168,7 @@ class TestStandard:
         assert None is sample.null
 
         # change object values
-        sample.object = {'key': 'value'}
+        sample.object = {'key2': 'value'}
         sample.array = [0, 1, 2]
         sample.string = "Hello, world!"
         sample.number_int = 42
@@ -169,7 +188,7 @@ class TestStandard:
         number_int: 42
         number_real: 4.2
         object:
-          key: value
+          key2: value
         string: Hello, world!
         'true': false
         """.strip().replace("        ", "") + '\n' == text
@@ -188,7 +207,8 @@ class TestStandard:
             stream.write(text)
 
         # check object values
-        assert {'status': False} == sample.object
+        assert {'key2': "",
+                'status': False} == sample.object
         assert [4, 5, 6] == sample.array
         assert "abc" == sample.string
         assert 42 == sample.number_int
@@ -200,8 +220,8 @@ class TestStandard:
         """Verify standard attribute types dump/load correctly (function)."""
         tmpdir.chdir()
         _sample = SampleStandard()
-        mapping = {'object': Dictionary,
-                   'array': List,
+        mapping = {'object': Dictionary3,
+                   'array': List2,
                    'string': String,
                    'number_int': Integer,
                    'number_real': Float,
@@ -221,7 +241,7 @@ class TestStandard:
         assert None is sample.null
 
         # change object values
-        sample.object = {'key': 'value'}
+        sample.object = {'key3': 'value'}
         sample.array = [1, 2, 3]
         sample.string = "Hello, world!"
         sample.number_int = 42
@@ -241,7 +261,7 @@ class TestStandard:
         number_int: 42
         number_real: 4.2
         object:
-          key: value
+          key3: value
         string: Hello, world!
         'true': false
         """.strip().replace("        ", "") + '\n' == text

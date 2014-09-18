@@ -6,7 +6,7 @@
 import pytest
 import logging
 
-from yorm.base import Mappable, Mapper
+from yorm.base import Mappable, Mapper, Dictionary, List
 from yorm.standard import String, Integer, Boolean
 
 
@@ -47,6 +47,16 @@ class Sample(Mappable):
 
     def __repr__(self):
         return "<sample {}>".format(id(self))
+
+
+class Dictionary2(Dictionary):
+
+    yorm_attrs = {'abc': Integer}
+
+
+class List2(List):
+
+    item_type = String
 
 
 class TestMappable:
@@ -162,6 +172,70 @@ class TestMappable:
         self.sample.yorm_mapper.write(text)
         with pytest.raises(ValueError):
             print(self.sample.var1)
+
+
+class TestDictionary:
+
+    """Unit tests for the `Dictionary` container."""
+
+    obj = {'abc': 123}
+
+    data_value = [
+        (obj, obj),
+        (None, {'abc': 0}),
+        ("key=value", {'key': "value", 'abc': 0}),
+        ("key=", {'key': "", 'abc': 0}),
+        ("key", {'key': None, 'abc': 0}),
+    ]
+
+    value_data = [
+        (obj, obj),
+    ]
+
+    def setup_method(self, _):
+        """Reset the class' mapped attributes before each test."""
+        Dictionary2.yorm_attrs = {'abc': Integer}
+
+    @pytest.mark.parametrize("data,value", data_value)
+    def test_to_value(self, data, value):
+        """Verify input data is converted to values."""
+        assert value == Dictionary2.to_value(data)
+
+    @pytest.mark.parametrize("value,data", value_data)
+    def test_to_data(self, value, data):
+        """Verify values are converted to output data."""
+        assert data == Dictionary2.to_data(value)
+
+
+class TestList:
+
+    """Unit tests for the `List` container."""
+
+    obj = ["a", "b", "c"]
+
+    data_value = [
+        (obj, obj),
+        (None, []),
+        ("a b c", ["a", "b", "c"]),
+        ("a,b,c", ["a", "b", "c"]),
+        ("abc", ["abc"]),
+        ("a\nb\nc", ["a", "b", "c"]),
+        (4.2, [4.2]),
+    ]
+
+    value_data = [
+        (obj, obj),
+    ]
+
+    @pytest.mark.parametrize("data,value", data_value)
+    def test_to_value(self, data, value):
+        """Verify input data is converted to values."""
+        assert value == List2.to_value(data)
+
+    @pytest.mark.parametrize("value,data", value_data)
+    def test_to_data(self, value, data):
+        """Verify values are converted to output data."""
+        assert data == List2.to_data(value)
 
 
 if __name__ == '__main__':

@@ -208,18 +208,151 @@ class Converter(metaclass=abc.ABCMeta):  # pylint:disable=R0921
 
     type = None
 
-    @classmethod
-    def copy(cls):
-        """Return a copy of the class with internal attributes reset."""
-        dictionary = cls.__dict__.copy()
-        if 'yorm_attrs' in dictionary:
-            dictionary['yorm_attrs'] = {}
-        return type(cls.__name__, cls.__bases__, dictionary)
-
-    @abc.abstractclassmethod
-    def to_value(cls, data):  # pylint: disable=E0213
+    @staticmethod
+    @abc.abstractmethod
+    def to_value(data):  # pylint: disable=E0213
         """Convert the loaded value back to its original attribute type."""
+        raise NotImplementedError("method must be implemneted in subclasses")
 
-    @abc.abstractclassmethod
-    def to_data(cls, value):  # pylint: disable=E0213
+    @staticmethod
+    @abc.abstractmethod
+    def to_data(value):  # pylint: disable=E0213
         """Convert the attribute's value for optimal dumping to YAML."""
+        raise NotImplementedError("method must be implemneted in subclasses")
+
+
+class ContainerMeta(type):
+
+    """Metaclass to initialize `yorm_attrs` on class declaration."""
+
+    def __init__(cls, name, bases, nmspc):
+        super().__init__(name, bases, nmspc)
+        cls.yorm_attrs = {}
+
+
+class Dictionary(metaclass=ContainerMeta):
+
+    """Base class for a dictionary of attribute converters."""
+
+    @classmethod
+    def to_value(cls, data):  # pylint: disable=E0213
+        """Convert all loaded values back to its original attribute types."""
+        if cls is Dictionary:
+            msg = "Dictionary class must be subclassed to use"
+            raise NotImplementedError(msg)
+
+        value = {}
+
+        yorm_attrs = cls.yorm_attrs.copy()
+
+        for name, data in cls.to_dict(data).items():
+            try:
+                converter = yorm_attrs.pop(name)
+            except KeyError:
+                from . import standard
+                converter = standard.match(data)
+                log.info("new attribute: {}".format(name))
+                cls.yorm_attrs[name] = converter
+            value[name] = converter.to_value(data)
+
+        for name, converter in yorm_attrs.items():
+            log.debug("adding deleted '{}'...".format(name))
+            value[name] = converter.to_value(None)
+
+        return value
+
+    @classmethod
+    def to_data(cls, value):  # pylint: disable=E0213
+        """Convert all attribute values for optimal dumping to YAML."""
+        if cls is Dictionary:
+            msg = "Dictionary class must be subclassed to use"
+            raise NotImplementedError(msg)
+
+        data = {}
+
+        for name, converter in cls.yorm_attrs.items():
+            data[name] = converter.to_data(value.get(name, None))
+
+        return data
+
+    @staticmethod
+    def to_dict(obj):
+        """Convert a dictionary-like object to a dictionary.
+
+        >>> Dictionary.to_dict({'key': 42})
+        {'key': 42}
+
+        >>> Dictionary.to_dict("key=42")
+        {'key': '42'}
+
+        >>> Dictionary.to_dict("key")
+        {'key': None}
+
+        >>> Dictionary.to_dict(None)
+        {}
+
+        """
+        if isinstance(obj, dict):
+            return obj
+        elif isinstance(obj, str):
+            text = obj.strip()
+            parts = text.split('=')
+            if len(parts) == 2:
+                return {parts[0]: parts[1]}
+            else:
+                return {text: None}
+        else:
+            return {}
+
+
+class classproperty(object):
+
+    """Read-only class property decorator."""
+
+    def __init__(self, getter):
+        self.getter = getter
+
+    def __get__(self, instance, owner):
+        return self.getter(owner)
+
+
+class List(metaclass=ContainerMeta):
+
+    """Base class for a homogeneous list of attribute converters."""
+
+    ALL = 'all'
+
+    @classproperty
+    def item_type(cls):
+        return cls.yorm_attrs.get(cls.ALL)
+
+    @classmethod
+    def to_value(cls, data):  # pylint: disable=E0213
+        """Convert all loaded values back to the original attribute type."""
+        if cls is List:
+            raise NotImplementedError("List class must be subclassed to use")
+        if not cls.item_type:
+            raise NotImplementedError("List subclass must specify item type")
+
+        if isinstance(data, list):
+            return data
+        elif isinstance(data, str):
+            text = data.strip()
+            if ',' in text and ' ' not in text:
+                return text.split(',')
+            else:
+                return text.split()
+        elif data is not None:
+            return [data]
+        else:
+            return []
+
+    @classmethod
+    def to_data(cls, value):  # pylint: disable=E0213
+        """Convert all attribute values for optimal dumping to YAML."""
+        if cls is List:
+            raise NotImplementedError("List class must be subclassed to use")
+        if not cls.item_type:
+            raise NotImplementedError("List subclass must specify item type")
+
+        return value
