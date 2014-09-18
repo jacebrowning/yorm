@@ -54,7 +54,19 @@ class Dictionary3(Dictionary):
 
 
 @map_attr(all=Integer)
-class List2(List):
+class IntegerList(List):
+
+    """Sample list container."""
+
+
+@map_attr(status=Boolean, label=String)
+class StatusDictionary(Dictionary):
+
+    """Sample dictionary container."""
+
+
+@map_attr(all=StatusDictionary)
+class StatusDictionaryList(List):
 
     """Sample list container."""
 
@@ -81,7 +93,19 @@ class SampleStandard:
         return "<standard {}>".format(id(self))
 
 
-@map_attr(object=Dictionary2, array=List2, string=String)
+class SampleNested:
+
+    """Sample class using nested attribute types."""
+
+    def __init__(self):
+        self.count = 0
+        self.results = {}
+
+    def __repr__(self):
+        return "<nested {}>".format(id(self))
+
+
+@map_attr(object=Dictionary2, array=IntegerList, string=String)
 @map_attr(number_int=Integer, number_real=Float)
 @map_attr(true=Boolean, false=Boolean)
 @store_instances("path/to/{d}/{n}.yml", {'n': 'name', 'd': 'category'})
@@ -221,7 +245,7 @@ class TestStandard:
         tmpdir.chdir()
         _sample = SampleStandard()
         mapping = {'object': Dictionary3,
-                   'array': List2,
+                   'array': IntegerList,
                    'string': String,
                    'number_int': Integer,
                    'number_real': Float,
@@ -265,6 +289,64 @@ class TestStandard:
         string: Hello, world!
         'true': false
         """.strip().replace("        ", "") + '\n' == text
+
+    def test_nesting(self, tmpdir):
+        """Verify standard attribute types can be nested."""
+        tmpdir.chdir()
+        _sample = SampleNested()
+        mapping = {'count': Integer,
+                   'results': StatusDictionaryList}
+        sample = store(_sample, "sample.yml", mapping)
+
+        # check defaults
+        assert 0 == sample.count
+        assert {} == sample.results
+
+        # change object values
+        sample.count = 5
+        sample.results = [{'status': False, 'label': "abc"},
+                          {'status': None, 'label': None},
+                          {'label': "def"},
+                          {'status': True},
+                          {}]
+
+        # check file values
+        with open(sample.yorm_path, 'r') as stream:
+            text = stream.read()
+        assert """
+        count: 5
+        results:
+        - label: abc
+          status: false
+        - label: ''
+          status: false
+        - label: def
+          status: false
+        - label: ''
+          status: true
+        - label: ''
+          status: false
+        """.strip().replace("        ", "") + '\n' == text
+
+        # change file values
+        text = """
+        count: 3
+        other: 4.2
+        results:
+        - label: abc
+        - label: null
+          status: false
+        - status: true
+        """.strip().replace("        ", "") + '\n'
+        with open(sample.yorm_path, 'w') as stream:
+            stream.write(text)
+
+        # check object values
+        assert 3 == sample.count
+        assert 4.2 == sample.other
+        assert [{'label': 'abc', 'status': False},
+                {'label': '', 'status': False},
+                {'label': '', 'status': True}] == sample.results
 
     def test_with(self, tmpdir):
         """Verify standard attribute types dump/load correctly (with)."""

@@ -81,9 +81,9 @@ class TestMappable:
         """Verify files are created after initialized."""
         text = self.sample.yorm_mapper.read()
         assert """
-        var1: null
-        var2: null
-        var3: null
+        var1: ''
+        var2: 0
+        var3: false
         """.strip().replace("        ", "") + '\n' == text
 
     def test_set(self):
@@ -152,16 +152,16 @@ class TestMappable:
 
             text = self.sample.yorm_mapper.read()
             assert """
-            var1: null
-            var2: null
-            var3: null
+            var1: ''
+            var2: 0
+            var3: false
             """.strip().replace("            ", "") + '\n' == text
 
         text = self.sample.yorm_mapper.read()
         assert """
         var1: abc123
-        var2: null
-        var3: null
+        var2: 0
+        var3: false
         """.strip().replace("        ", "") + '\n' == text
 
     def test_new(self):
@@ -242,7 +242,7 @@ class TestList:
         ("a,b,c", ["a", "b", "c"]),
         ("abc", ["abc"]),
         ("a\nb\nc", ["a", "b", "c"]),
-        (4.2, [4.2]),
+        (4.2, ['4.2']),
     ]
 
     value_data = [

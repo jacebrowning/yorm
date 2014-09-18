@@ -28,13 +28,22 @@ class String(Object):
     @staticmethod
     def to_value(data):
         """Convert data back to a string."""
-        if isinstance(data, String.type):
-            return data
-        elif data:
+        return String.to_str(data)
+
+    @staticmethod
+    def to_data(value):
+        """Convert a string into data."""
+        return String.to_str(value)
+
+    @staticmethod
+    def to_str(obj):
+        if isinstance(obj, String.type):
+            return obj
+        elif obj:
             try:
-                return ', '.join(str(item) for item in data)
+                return ', '.join(str(item) for item in obj)
             except TypeError:
-                return str(data)
+                return str(obj)
         else:
             return ""
 
@@ -48,13 +57,22 @@ class Integer(Object):
     @staticmethod
     def to_value(data):
         """Convert data back to an integer."""
-        if isinstance(data, Integer.type):
-            return data
-        elif data:
+        return Integer.to_int(data)
+
+    @staticmethod
+    def to_data(value):
+        """Convert an integer into data."""
+        return Integer.to_int(value)
+
+    @staticmethod
+    def to_int(obj):
+        if isinstance(obj, Integer.type):
+            return obj
+        elif obj:
             try:
-                return int(data)
+                return int(obj)
             except ValueError:
-                return int(float(data))
+                return int(float(obj))
         else:
             return 0
 
@@ -68,10 +86,19 @@ class Float(Object):
     @staticmethod
     def to_value(data):
         """Convert data back to a float."""
-        if isinstance(data, Float.type):
-            return data
-        elif data:
-            return float(data)
+        return Float.to_float(data)
+
+    @staticmethod
+    def to_data(value):
+        """Convert a float into data."""
+        return Float.to_float(value)
+
+    @staticmethod
+    def to_float(obj):
+        if isinstance(obj, Float.type):
+            return obj
+        elif obj:
+            return float(obj)
         else:
             return 0.0
 
@@ -88,6 +115,11 @@ class Boolean(Object):
     def to_value(data):
         """Convert data back to a boolean."""
         return Boolean.to_bool(data)
+
+    @staticmethod
+    def to_data(value):
+        """Convert a boolean into data."""
+        return Boolean.to_bool(value)
 
     @staticmethod
     def to_bool(obj):

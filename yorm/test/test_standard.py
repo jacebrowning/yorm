@@ -9,13 +9,44 @@ import pytest
 from yorm import standard
 
 
+class TestObject:
+
+    """Unit tests for the `Object` converter."""
+
+    obj = None
+
+    common = [
+        (obj, obj),
+        (None, None),
+        (1, 1),
+        (4.2, 4.2),
+        (['a', 'b', 'c'], ['a', 'b', 'c']),
+    ]
+
+    data_value = [
+    ] + common
+
+    value_data = [
+    ] + common
+
+    @pytest.mark.parametrize("data,value", data_value)
+    def test_to_value(self, data, value):
+        """Verify input data is converted to values."""
+        assert value == standard.Object.to_value(data)
+
+    @pytest.mark.parametrize("value,data", value_data)
+    def test_to_data(self, value, data):
+        """Verify values are converted to output data."""
+        assert data == standard.Object.to_data(value)
+
+
 class TestString:
 
     """Unit tests for the `String` converter."""
 
     obj = "Hello, world!"
 
-    data_value = [
+    common = [
         (obj, obj),
         (None, ""),
         (1, "1"),
@@ -23,9 +54,11 @@ class TestString:
         (['a', 'b', 'c'], "a, b, c"),
     ]
 
+    data_value = [
+    ] + common
+
     value_data = [
-        (obj, obj),
-    ]
+    ] + common
 
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
@@ -44,16 +77,18 @@ class TestInteger:
 
     obj = 42
 
-    data_value = [
+    common = [
         (obj, obj),
         (None, 0),
         ("1", 1),
         ("1.1", 1),
     ]
 
+    data_value = [
+    ] + common
+
     value_data = [
-        (obj, obj),
-    ]
+    ] + common
 
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
@@ -77,16 +112,18 @@ class TestFloat:
 
     obj = 4.2
 
-    data_value = [
+    common = [
         (obj, obj),
         (None, 0.0),
         ("1.0", 1.0),
         ("1.1", 1.1),
     ]
 
+    data_value = [
+    ] + common
+
     value_data = [
-        (obj, obj),
-    ]
+    ] + common
 
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
@@ -110,7 +147,7 @@ class TestBoolean:
 
     obj = True
 
-    data_value = [
+    common = [
         (obj, obj),
         (None, False),
         (0, False),
@@ -133,9 +170,11 @@ class TestBoolean:
         ("Hello, world!", True)
     ]
 
+    data_value = [
+    ] + common
+
     value_data = [
-        (obj, obj),
-    ]
+    ] + common
 
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):

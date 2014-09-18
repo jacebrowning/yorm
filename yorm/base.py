@@ -175,18 +175,12 @@ class List(metaclass=ContainerMeta):
         if not cls.item_type:  # pragma: no cover
             raise NotImplementedError("List subclass must specify item type")
 
-        if isinstance(data, list):
-            return data
-        elif isinstance(data, str):
-            text = data.strip()
-            if ',' in text and ' ' not in text:
-                return text.split(',')
-            else:
-                return text.split()
-        elif data is not None:
-            return [data]
-        else:
-            return []
+        value = []
+
+        for item in cls.to_list(data):
+            value.append(cls.item_type.to_value(item))
+
+        return value
 
     @classmethod
     def to_data(cls, value):  # pylint: disable=E0213
@@ -197,4 +191,24 @@ class List(metaclass=ContainerMeta):
         if not cls.item_type:  # pragma: no cover
             raise NotImplementedError("List subclass must specify item type")
 
-        return value
+        data = []
+
+        for item in value:
+            data.append(cls.item_type.to_data(item))
+
+        return data
+
+    @staticmethod
+    def to_list(obj):
+        if isinstance(obj, list):
+            return obj
+        elif isinstance(obj, str):
+            text = obj.strip()
+            if ',' in text and ' ' not in text:
+                return text.split(',')
+            else:
+                return text.split()
+        elif obj is not None:
+            return [obj]
+        else:
+            return []
