@@ -6,7 +6,7 @@
 import pytest
 import logging
 
-from yorm.base import Mappable, Dictionary, List
+from yorm.base import Mappable, Converter, Dictionary, List
 from yorm.mapper import Mapper
 from yorm.standard import String, Integer, Boolean
 
@@ -52,12 +52,21 @@ class Sample(Mappable):
 
 class Dictionary2(Dictionary):
 
+    """Sample dictionary container."""
+
     yorm_attrs = {'abc': Integer}
 
 
-class List2(List):
+class StringList(List):
+
+    """Sample list container."""
 
     item_type = String
+
+
+class UnknownList(List):
+
+    """Sample list container."""
 
 
 class TestMappable:
@@ -175,6 +184,18 @@ class TestMappable:
             print(self.sample.var1)
 
 
+class TestConverter:
+
+    """Unit tests for the `Converter` class."""
+
+    def test_not_implemented(self):
+        """Verify `Converter` cannot be used directly."""
+        with pytest.raises(NotImplementedError):
+            Converter.to_value(None)
+        with pytest.raises(NotImplementedError):
+            Converter.to_data(None)
+
+
 class TestDictionary:
 
     """Unit tests for the `Dictionary` container."""
@@ -231,12 +252,20 @@ class TestList:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert value == List2.to_value(data)
+        assert value == StringList.to_value(data)
 
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert data == List2.to_data(value)
+        assert data == StringList.to_data(value)
+
+    def test_item_type(self):
+        """Verify list item type can be determined."""
+        assert String == StringList.item_type
+
+    def test_item_type_none(self):
+        """Verify list item type defaults to None."""
+        assert None == UnknownList.item_type
 
 
 if __name__ == '__main__':

@@ -85,7 +85,8 @@ class Dictionary(metaclass=ContainerMeta):
     @classmethod
     def to_value(cls, data):  # pylint: disable=E0213
         """Convert all loaded values back to its original attribute types."""
-        if cls is Dictionary:
+        # TODO: determine if plain dictionaries should be allowed, remove pragma
+        if cls is Dictionary:  # pragma: no cover
             msg = "Dictionary class must be subclassed to use"
             raise NotImplementedError(msg)
 
@@ -112,7 +113,8 @@ class Dictionary(metaclass=ContainerMeta):
     @classmethod
     def to_data(cls, value):  # pylint: disable=E0213
         """Convert all attribute values for optimal dumping to YAML."""
-        if cls is Dictionary:
+        # TODO: determine if plain dictionaries should be allowed, remove pragma
+        if cls is Dictionary:  # pragma: no cover
             msg = "Dictionary class must be subclassed to use"
             raise NotImplementedError(msg)
 
@@ -167,9 +169,10 @@ class List(metaclass=ContainerMeta):
     @classmethod
     def to_value(cls, data):  # pylint: disable=E0213
         """Convert all loaded values back to the original attribute type."""
-        if cls is List:
+        # TODO: determine if plain lists should be allowed, remove pragma
+        if cls is List:  # pragma: no cover
             raise NotImplementedError("List class must be subclassed to use")
-        if not cls.item_type:
+        if not cls.item_type:  # pragma: no cover
             raise NotImplementedError("List subclass must specify item type")
 
         if isinstance(data, list):
@@ -188,9 +191,10 @@ class List(metaclass=ContainerMeta):
     @classmethod
     def to_data(cls, value):  # pylint: disable=E0213
         """Convert all attribute values for optimal dumping to YAML."""
-        if cls is List:
+        # TODO: determine if plain lists should be allowed, remove pragma
+        if cls is List:  # pragma: no cover
             raise NotImplementedError("List class must be subclassed to use")
-        if not cls.item_type:
+        if not cls.item_type:  # pragma: no cover
             raise NotImplementedError("List subclass must specify item type")
 
         return value

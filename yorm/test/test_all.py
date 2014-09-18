@@ -44,19 +44,19 @@ class Level(Converter):
 @map_attr(key2=String)
 class Dictionary2(Dictionary):
 
-    """Sample dictionary converter."""
+    """Sample dictionary container."""
 
 
 @map_attr(key3=String)
 class Dictionary3(Dictionary):
 
-    """Sample dictionary converter."""
+    """Sample dictionary container."""
 
 
 @map_attr(all=Integer)
 class List2(List):
 
-    """Sample list converter."""
+    """Sample list container."""
 
 
 # sample classes ##############################################################
