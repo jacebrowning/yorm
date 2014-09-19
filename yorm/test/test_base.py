@@ -29,7 +29,10 @@ class MockMapper(Mapper):
         self._mock_file = text
 
 
-class Sample(Mappable):
+# sample classes ##############################################################
+
+
+class SampleMappable(Mappable):
 
     """Sample mappable class with hard-coded settings."""
 
@@ -50,7 +53,7 @@ class Sample(Mappable):
         return "<sample {}>".format(id(self))
 
 
-class Dictionary2(Dictionary):
+class SampleDictionary(Dictionary):
 
     """Sample dictionary container."""
 
@@ -68,6 +71,11 @@ class UnknownList(List):
 
     """Sample list container."""
 
+    item_type = None
+
+
+# tests #######################################################################
+
 
 class TestMappable:
 
@@ -75,7 +83,7 @@ class TestMappable:
 
     def setup_method(self, method):
         """Create an mappable instance for tests."""
-        self.sample = Sample()
+        self.sample = SampleMappable()
 
     def test_init(self):
         """Verify files are created after initialized."""
@@ -216,17 +224,24 @@ class TestDictionary:
 
     def setup_method(self, _):
         """Reset the class' mapped attributes before each test."""
-        Dictionary2.yorm_attrs = {'abc': Integer}
+        SampleDictionary.yorm_attrs = {'abc': Integer}
 
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert value == Dictionary2.to_value(data)
+        assert value == SampleDictionary.to_value(data)
 
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert data == Dictionary2.to_data(value)
+        assert data == SampleDictionary.to_data(value)
+
+    def test_not_implemented(self):
+        """Verify `Dictionary` cannot be used directly."""
+        with pytest.raises(NotImplementedError):
+            Dictionary.to_value(None)
+        with pytest.raises(NotImplementedError):
+            Dictionary.to_data(None)
 
 
 class TestList:
@@ -266,6 +281,17 @@ class TestList:
     def test_item_type_none(self):
         """Verify list item type defaults to None."""
         assert None == UnknownList.item_type
+
+    def test_not_implemented(self):
+        """Verify `List` cannot be used directly."""
+        with pytest.raises(NotImplementedError):
+            List.to_value(None)
+        with pytest.raises(NotImplementedError):
+            List.to_data(None)
+        with pytest.raises(NotImplementedError):
+            UnknownList.to_value(None)
+        with pytest.raises(NotImplementedError):
+            UnknownList.to_data(None)
 
 
 if __name__ == '__main__':

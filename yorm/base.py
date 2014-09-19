@@ -84,8 +84,7 @@ class Dictionary(metaclass=ContainerMeta):
     @classmethod
     def to_value(cls, obj):  # pylint: disable=E0213
         """Convert all loaded values back to its original attribute types."""
-        # TODO: determine if plain dictionaries should be allowed, remove pragma
-        if cls is Dictionary:  # pragma: no cover
+        if cls is Dictionary:
             msg = "Dictionary class must be subclassed to use"
             raise NotImplementedError(msg)
 
@@ -165,10 +164,9 @@ class List(metaclass=ContainerMeta):
     @classmethod
     def to_value(cls, obj):  # pylint: disable=E0213
         """Convert all loaded values back to the original attribute type."""
-        # TODO: determine if plain lists should be allowed, remove pragma
-        if cls is List:  # pragma: no cover
+        if cls is List:
             raise NotImplementedError("List class must be subclassed to use")
-        if not cls.item_type:  # pragma: no cover
+        if not cls.item_type:
             raise NotImplementedError("List subclass must specify item type")
 
         value = []
@@ -192,6 +190,21 @@ class List(metaclass=ContainerMeta):
 
     @staticmethod
     def to_list(obj):
+        """Convert a list-like object to a list.
+
+        >>> List.to_list([1, 2, 3])
+        [1, 2, 3]
+
+        >>> List.to_list("a,b,c")
+        ['a', 'b', 'c']
+
+        >>> List.to_list("item")
+        ['item']
+
+        >>> List.to_list(None)
+        []
+
+        """
         if isinstance(obj, list):
             return obj
         elif isinstance(obj, str):
