@@ -6,158 +6,111 @@ from .base import Converter
 log = common.logger(__name__)
 
 
-class _Standard(Converter):  # pylint: disable=W0223
+class Object(Converter):  # pylint: disable=W0223
 
     """Base class for standard types (mapped directly to YAML)."""
 
-    @staticmethod
-    def to_data(value):
-        return value
+    @classmethod
+    def to_value(cls, obj):
+        return obj
+
+    @classmethod
+    def to_data(cls, obj):
+        return cls.to_value(obj)
 
 
-class Dictionary(_Standard):
-
-    """Converter for the `dict` type."""
-
-    type = dict
-
-    @staticmethod
-    def to_value(data):
-        """Convert data back to a dictionary."""
-        if isinstance(data, Dictionary.type):
-            return data
-        elif isinstance(data, str):
-            text = data.strip()
-            parts = text.split('=')
-            if len(parts) == 2:
-                return {parts[0]: parts[1]}
-            else:
-                return {text: None}
-        else:
-            return {}
-
-
-class List(_Standard):
-
-    """Converter for the `list` type."""
-
-    type = list
-
-    @staticmethod
-    def to_value(data):
-        """Convert data back to a list."""
-        if isinstance(data, List.type):
-            return data
-        elif isinstance(data, str):
-            text = data.strip()
-            if ',' in text and ' ' not in text:
-                return text.split(',')
-            else:
-                return text.split()
-        elif data is not None:
-            return [data]
-        else:
-            return []
-
-
-class String(_Standard):
+class String(Object):
 
     """Converter for the `str` type."""
 
-    type = str
+    TYPE = str
+    DEFAULT = ""
 
-    @staticmethod
-    def to_value(data):
-        """Convert data back to a string."""
-        if isinstance(data, String.type):
-            return data
-        elif data:
+    @classmethod
+    def to_value(cls, obj):
+        if isinstance(obj, cls.TYPE):
+            return obj
+        elif obj:
             try:
-                return ', '.join(str(item) for item in data)
+                return ', '.join(str(item) for item in obj)
             except TypeError:
-                return str(data)
+                return str(obj)
         else:
-            return ""
+            return cls.DEFAULT
 
 
-class Integer(_Standard):
+class Integer(Object):
 
     """Converter for the `int` type."""
 
-    type = int
+    TYPE = int
+    DEFAULT = 0
 
-    @staticmethod
-    def to_value(data):
-        """Convert data back to an integer."""
-        if isinstance(data, Integer.type):
-            return data
-        elif data:
+    @classmethod
+    def to_value(cls, obj):
+        if isinstance(obj, cls.TYPE):
+            return obj
+        elif obj:
             try:
-                return int(data)
+                return int(obj)
             except ValueError:
-                return int(float(data))
+                return int(float(obj))
         else:
-            return 0
+            return cls.DEFAULT
 
 
-class Float(_Standard):
+class Float(Object):
 
     """Converter for the `float` type."""
 
-    type = float
+    TYPE = float
+    DEFAULT = 0.0
 
-    @staticmethod
-    def to_value(data):
-        """Convert data back to a float."""
-        if isinstance(data, Float.type):
-            return data
-        elif data:
-            return float(data)
+    @classmethod
+    def to_value(cls, obj):
+        if isinstance(obj, cls.TYPE):
+            return obj
+        elif obj:
+            return float(obj)
         else:
-            return 0.0
+            return cls.DEFAULT
 
 
-class Boolean(_Standard):
+class Boolean(Object):
 
     """Converter for the `bool` type."""
 
-    type = bool
+    TYPE = bool
+    DEFAULT = False
 
     FALSY = ('false', 'f', 'no', 'n', 'disabled', 'off', '0')
 
-    @staticmethod
-    def to_value(data):
-        """Convert data back to a boolean."""
-        return Boolean.to_bool(data)
-
-    @staticmethod
-    def to_bool(obj):
-        """Convert a boolean-like object to a boolean.
-
-        >>> Boolean.to_bool(1)
-        True
-
-        >>> Boolean.to_bool(0)
-        False
-
-        >>> Boolean.to_bool(' True ')
-        True
-
-        >>> Boolean.to_bool('F')
-        False
-
-        """
-        if isinstance(obj, str) and obj.lower().strip() in Boolean.FALSY:
+    @classmethod
+    def to_value(cls, obj):
+        if isinstance(obj, str) and obj.lower().strip() in cls.FALSY:
             return False
-        else:
+        elif obj is not None:
             return bool(obj)
+        else:
+            return cls.DEFAULT
 
 
-def match(data):
-    """Determine the appropriate convert for new data."""
-    converters = _Standard.__subclasses__()
+def match(name, data):
+    """Determine the appropriate converter for new data."""
+    log.debug("determining '{}' converter: {}".format(name, repr(data)))
+
+    converters = Object.__subclasses__()
     log.trace("converter options: {}".format(converters))
+
     for converter in converters:
-        if converter.type and isinstance(data, converter.type):
+        if converter.TYPE and isinstance(data, converter.TYPE):
+            log.debug("matched converter: {}".format(converter))
+            log.info("new attribute: {}".format(name))
             return converter
+
+    if data is None or isinstance(data, (dict, list)):
+        log.info("default converter: {}".format(Object))
+        log.warn("new attribute with unknown type: {}".format(name))
+        return Object
+
     raise common.ConversionError("no converter available for: {}".format(data))

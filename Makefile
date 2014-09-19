@@ -7,6 +7,8 @@ ifndef TEST_RUNNER
 	# options are: nose, pytest
 	TEST_RUNNER := pytest
 endif
+UNIT_TEST_COVERAGE := 92
+INTEGRATION_TEST_COVERAGE := 100
 
 # Project settings (automatically detected from files/directories)
 PROJECT := $(patsubst ./%.sublime-project,%, $(shell find . -type f -name '*.sublime-p*'))
@@ -177,12 +179,12 @@ tests-nose: .depends-ci
 .PHONY: test-py.test
 test-pytest: .depends-ci
 	$(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
-	$(COVERAGE) report --show-missing --fail-under=90
+	$(COVERAGE) report --show-missing --fail-under=$(UNIT_TEST_COVERAGE)
 
 .PHONY: tests-py.test
 tests-pytest: .depends-ci
 	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
-	$(COVERAGE) report --show-missing --fail-under=100
+	$(COVERAGE) report --show-missing --fail-under=$(INTEGRATION_TEST_COVERAGE)
 
 # Cleanup ####################################################################
 

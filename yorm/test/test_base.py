@@ -6,7 +6,8 @@
 import pytest
 import logging
 
-from yorm.base import Mappable, Mapper
+from yorm.base import Mappable, Converter, Dictionary, List
+from yorm.mapper import Mapper
 from yorm.standard import String, Integer, Boolean
 
 
@@ -28,7 +29,10 @@ class MockMapper(Mapper):
         self._mock_file = text
 
 
-class Sample(Mappable):
+# sample classes ##############################################################
+
+
+class SampleMappable(Mappable):
 
     """Sample mappable class with hard-coded settings."""
 
@@ -49,21 +53,45 @@ class Sample(Mappable):
         return "<sample {}>".format(id(self))
 
 
+class SampleDictionary(Dictionary):
+
+    """Sample dictionary container."""
+
+    yorm_attrs = {'abc': Integer}
+
+
+class StringList(List):
+
+    """Sample list container."""
+
+    item_type = String
+
+
+class UnknownList(List):
+
+    """Sample list container."""
+
+    item_type = None
+
+
+# tests #######################################################################
+
+
 class TestMappable:
 
     """Unit tests for the `Mappable` class."""
 
     def setup_method(self, method):
         """Create an mappable instance for tests."""
-        self.sample = Sample()
+        self.sample = SampleMappable()
 
     def test_init(self):
         """Verify files are created after initialized."""
         text = self.sample.yorm_mapper.read()
         assert """
-        var1: null
-        var2: null
-        var3: null
+        var1: ''
+        var2: 0
+        var3: false
         """.strip().replace("        ", "") + '\n' == text
 
     def test_set(self):
@@ -132,16 +160,16 @@ class TestMappable:
 
             text = self.sample.yorm_mapper.read()
             assert """
-            var1: null
-            var2: null
-            var3: null
+            var1: ''
+            var2: 0
+            var3: false
             """.strip().replace("            ", "") + '\n' == text
 
         text = self.sample.yorm_mapper.read()
         assert """
         var1: abc123
-        var2: null
-        var3: null
+        var2: 0
+        var3: false
         """.strip().replace("        ", "") + '\n' == text
 
     def test_new(self):
@@ -162,6 +190,108 @@ class TestMappable:
         self.sample.yorm_mapper.write(text)
         with pytest.raises(ValueError):
             print(self.sample.var1)
+
+
+class TestConverter:
+
+    """Unit tests for the `Converter` class."""
+
+    def test_not_implemented(self):
+        """Verify `Converter` cannot be used directly."""
+        with pytest.raises(NotImplementedError):
+            Converter.to_value(None)  # pylint: disable=E1120
+        with pytest.raises(NotImplementedError):
+            Converter.to_data(None)  # pylint: disable=E1120
+
+
+class TestDictionary:
+
+    """Unit tests for the `Dictionary` container."""
+
+    obj = {'abc': 123}
+
+    data_value = [
+        (obj, obj),
+        (None, {'abc': 0}),
+        ("key=value", {'key': "value", 'abc': 0}),
+        ("key=", {'key': "", 'abc': 0}),
+        ("key", {'key': None, 'abc': 0}),
+    ]
+
+    value_data = [
+        (obj, obj),
+    ]
+
+    def setup_method(self, _):
+        """Reset the class' mapped attributes before each test."""
+        SampleDictionary.yorm_attrs = {'abc': Integer}
+
+    @pytest.mark.parametrize("data,value", data_value)
+    def test_to_value(self, data, value):
+        """Verify input data is converted to values."""
+        assert value == SampleDictionary.to_value(data)
+
+    @pytest.mark.parametrize("value,data", value_data)
+    def test_to_data(self, value, data):
+        """Verify values are converted to output data."""
+        assert data == SampleDictionary.to_data(value)
+
+    def test_not_implemented(self):
+        """Verify `Dictionary` cannot be used directly."""
+        with pytest.raises(NotImplementedError):
+            Dictionary.to_value(None)
+        with pytest.raises(NotImplementedError):
+            Dictionary.to_data(None)
+
+
+class TestList:
+
+    """Unit tests for the `List` container."""
+
+    obj = ["a", "b", "c"]
+
+    data_value = [
+        (obj, obj),
+        (None, []),
+        ("a b c", ["a", "b", "c"]),
+        ("a,b,c", ["a", "b", "c"]),
+        ("abc", ["abc"]),
+        ("a\nb\nc", ["a", "b", "c"]),
+        (4.2, ['4.2']),
+    ]
+
+    value_data = [
+        (obj, obj),
+    ]
+
+    @pytest.mark.parametrize("data,value", data_value)
+    def test_to_value(self, data, value):
+        """Verify input data is converted to values."""
+        assert value == StringList.to_value(data)
+
+    @pytest.mark.parametrize("value,data", value_data)
+    def test_to_data(self, value, data):
+        """Verify values are converted to output data."""
+        assert data == StringList.to_data(value)
+
+    def test_item_type(self):
+        """Verify list item type can be determined."""
+        assert String == StringList.item_type
+
+    def test_item_type_none(self):
+        """Verify list item type defaults to None."""
+        assert None == UnknownList.item_type
+
+    def test_not_implemented(self):
+        """Verify `List` cannot be used directly."""
+        with pytest.raises(NotImplementedError):
+            List.to_value(None)
+        with pytest.raises(NotImplementedError):
+            List.to_data(None)
+        with pytest.raises(NotImplementedError):
+            UnknownList.to_value(None)
+        with pytest.raises(NotImplementedError):
+            UnknownList.to_data(None)
 
 
 if __name__ == '__main__':
