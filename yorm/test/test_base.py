@@ -191,9 +191,9 @@ class TestConverter:
     def test_not_implemented(self):
         """Verify `Converter` cannot be used directly."""
         with pytest.raises(NotImplementedError):
-            Converter.to_value(None)
+            Converter.to_value(None)  # pylint: disable=E1120
         with pytest.raises(NotImplementedError):
-            Converter.to_data(None)
+            Converter.to_data(None)  # pylint: disable=E1120
 
 
 class TestDictionary:

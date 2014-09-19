@@ -54,17 +54,16 @@ class Converter(metaclass=abc.ABCMeta):  # pylint:disable=R0921
 
     """Base class for attribute converters."""
 
-    type = None  # set in subclasses, used in dynamic converter inference
+    TYPE = None  # type for inferred converters (set in subclasses)
+    DEFAULT = None  # default value for conversion (set in subclasses)
 
-    @staticmethod
-    @abc.abstractmethod
-    def to_value(data):  # pylint: disable=E0213
+    @abc.abstractclassmethod
+    def to_value(cls, obj):  # pylint: disable=E0213
         """Convert the loaded value back to its original attribute type."""
         raise NotImplementedError("method must be implemented in subclasses")
 
-    @staticmethod
-    @abc.abstractmethod
-    def to_data(value):  # pylint: disable=E0213
+    @abc.abstractclassmethod
+    def to_data(cls, obj):  # pylint: disable=E0213
         """Convert the attribute's value for optimal dumping to YAML."""
         raise NotImplementedError("method must be implemented in subclasses")
 
@@ -83,7 +82,7 @@ class Dictionary(metaclass=ContainerMeta):
     """Base class for a dictionary of attribute converters."""
 
     @classmethod
-    def to_value(cls, data):  # pylint: disable=E0213
+    def to_value(cls, obj):  # pylint: disable=E0213
         """Convert all loaded values back to its original attribute types."""
         # TODO: determine if plain dictionaries should be allowed, remove pragma
         if cls is Dictionary:  # pragma: no cover
@@ -94,7 +93,7 @@ class Dictionary(metaclass=ContainerMeta):
 
         yorm_attrs = cls.yorm_attrs.copy()
 
-        for name, data in cls.to_dict(data).items():
+        for name, data in cls.to_dict(obj).items():
             try:
                 converter = yorm_attrs.pop(name)
             except KeyError:
@@ -111,12 +110,9 @@ class Dictionary(metaclass=ContainerMeta):
         return value
 
     @classmethod
-    def to_data(cls, value):  # pylint: disable=E0213
+    def to_data(cls, obj):  # pylint: disable=E0213
         """Convert all attribute values for optimal dumping to YAML."""
-        # TODO: determine if plain dictionaries should be allowed, remove pragma
-        if cls is Dictionary:  # pragma: no cover
-            msg = "Dictionary class must be subclassed to use"
-            raise NotImplementedError(msg)
+        value = cls.to_value(obj)
 
         data = {}
 
@@ -167,7 +163,7 @@ class List(metaclass=ContainerMeta):
         return cls.yorm_attrs.get(cls.ALL)
 
     @classmethod
-    def to_value(cls, data):  # pylint: disable=E0213
+    def to_value(cls, obj):  # pylint: disable=E0213
         """Convert all loaded values back to the original attribute type."""
         # TODO: determine if plain lists should be allowed, remove pragma
         if cls is List:  # pragma: no cover
@@ -177,19 +173,15 @@ class List(metaclass=ContainerMeta):
 
         value = []
 
-        for item in cls.to_list(data):
+        for item in cls.to_list(obj):
             value.append(cls.item_type.to_value(item))
 
         return value
 
     @classmethod
-    def to_data(cls, value):  # pylint: disable=E0213
+    def to_data(cls, obj):  # pylint: disable=E0213
         """Convert all attribute values for optimal dumping to YAML."""
-        # TODO: determine if plain lists should be allowed, remove pragma
-        if cls is List:  # pragma: no cover
-            raise NotImplementedError("List class must be subclassed to use")
-        if not cls.item_type:  # pragma: no cover
-            raise NotImplementedError("List subclass must specify item type")
+        value = cls.to_value(obj)
 
         data = []
 

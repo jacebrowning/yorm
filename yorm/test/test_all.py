@@ -20,8 +20,8 @@ class Level(Converter):
 
     """Sample custom attribute."""
 
-    @staticmethod
-    def to_value(obj):
+    @classmethod
+    def to_value(cls, obj):
         if obj:
             if isinstance(obj, str):
                 return obj
@@ -30,15 +30,16 @@ class Level(Converter):
         else:
             return ""
 
-    @staticmethod
-    def to_data(obj):
-        count = obj.split('.')
+    @classmethod
+    def to_data(cls, obj):
+        value = cls.to_value(obj)
+        count = value.split('.')
         if count == 0:
-            return int(obj)
+            return int(value)
         elif count == 1:
-            return float(obj)
+            return float(value)
         else:
-            return obj
+            return value
 
 
 @map_attr(key2=String)

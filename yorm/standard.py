@@ -10,34 +10,25 @@ class Object(Converter):  # pylint: disable=W0223
 
     """Base class for standard types (mapped directly to YAML)."""
 
-    @staticmethod
-    def to_value(data):
-        return data
+    @classmethod
+    def to_value(cls, obj):
+        return obj
 
-    @staticmethod
-    def to_data(value):
-        return value
+    @classmethod
+    def to_data(cls, obj):
+        return cls.to_value(obj)
 
 
 class String(Object):
 
     """Converter for the `str` type."""
 
-    type = str
+    TYPE = str
+    DEFAULT = ""
 
-    @staticmethod
-    def to_value(data):
-        """Convert data back to a string."""
-        return String.to_str(data)
-
-    @staticmethod
-    def to_data(value):
-        """Convert a string into data."""
-        return String.to_str(value)
-
-    @staticmethod
-    def to_str(obj):
-        if isinstance(obj, String.type):
+    @classmethod
+    def to_value(cls, obj):
+        if isinstance(obj, cls.TYPE):
             return obj
         elif obj:
             try:
@@ -45,28 +36,19 @@ class String(Object):
             except TypeError:
                 return str(obj)
         else:
-            return ""
+            return cls.DEFAULT
 
 
 class Integer(Object):
 
     """Converter for the `int` type."""
 
-    type = int
+    TYPE = int
+    DEFAULT = 0
 
-    @staticmethod
-    def to_value(data):
-        """Convert data back to an integer."""
-        return Integer.to_int(data)
-
-    @staticmethod
-    def to_data(value):
-        """Convert an integer into data."""
-        return Integer.to_int(value)
-
-    @staticmethod
-    def to_int(obj):
-        if isinstance(obj, Integer.type):
+    @classmethod
+    def to_value(cls, obj):
+        if isinstance(obj, cls.TYPE):
             return obj
         elif obj:
             try:
@@ -74,84 +56,53 @@ class Integer(Object):
             except ValueError:
                 return int(float(obj))
         else:
-            return 0
+            return cls.DEFAULT
 
 
 class Float(Object):
 
     """Converter for the `float` type."""
 
-    type = float
+    TYPE = float
+    DEFAULT = 0.0
 
-    @staticmethod
-    def to_value(data):
-        """Convert data back to a float."""
-        return Float.to_float(data)
-
-    @staticmethod
-    def to_data(value):
-        """Convert a float into data."""
-        return Float.to_float(value)
-
-    @staticmethod
-    def to_float(obj):
-        if isinstance(obj, Float.type):
+    @classmethod
+    def to_value(cls, obj):
+        if isinstance(obj, cls.TYPE):
             return obj
         elif obj:
             return float(obj)
         else:
-            return 0.0
+            return cls.DEFAULT
 
 
 class Boolean(Object):
 
     """Converter for the `bool` type."""
 
-    type = bool
+    TYPE = bool
+    DEFAULT = False
 
     FALSY = ('false', 'f', 'no', 'n', 'disabled', 'off', '0')
 
-    @staticmethod
-    def to_value(data):
-        """Convert data back to a boolean."""
-        return Boolean.to_bool(data)
-
-    @staticmethod
-    def to_data(value):
-        """Convert a boolean into data."""
-        return Boolean.to_bool(value)
-
-    @staticmethod
-    def to_bool(obj):
-        """Convert a boolean-like object to a boolean.
-
-        >>> Boolean.to_bool(1)
-        True
-
-        >>> Boolean.to_bool(0)
-        False
-
-        >>> Boolean.to_bool(' True ')
-        True
-
-        >>> Boolean.to_bool('F')
-        False
-
-        """
-        if isinstance(obj, str) and obj.lower().strip() in Boolean.FALSY:
+    @classmethod
+    def to_value(cls, obj):
+        if isinstance(obj, str) and obj.lower().strip() in cls.FALSY:
             return False
-        else:
+        elif obj is not None:
             return bool(obj)
+        else:
+            return cls.DEFAULT
 
 
 def match(data):
-    """Determine the appropriate convert for new data."""
+    """Determine the appropriate converter for new data."""
     log.trace("determining converter for: {}".format(repr(data)))
     converters = Object.__subclasses__()
 
     log.trace("converter options: {}".format(converters))
     for converter in converters:
-        if converter.type and isinstance(data, converter.type):
+        if converter.TYPE and isinstance(data, converter.TYPE):
             log.trace("matched: {}".format(converter))
             return converter
 
