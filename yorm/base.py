@@ -97,8 +97,7 @@ class Dictionary(metaclass=ContainerMeta):
                 converter = yorm_attrs.pop(name)
             except KeyError:
                 from . import standard
-                converter = standard.match(data)
-                log.info("new attribute: {}".format(name))
+                converter = standard.match(name, data)
                 cls.yorm_attrs[name] = converter
             value[name] = converter.to_value(data)
 

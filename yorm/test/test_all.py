@@ -7,7 +7,7 @@ import pytest
 
 from yorm import store, store_instances, map_attr, Converter
 from yorm.base import Dictionary, List
-from yorm.standard import String, Integer, Float, Boolean
+from yorm.standard import Object, String, Integer, Float, Boolean
 from yorm.extended import Markdown
 
 integration = pytest.mark.integration
@@ -129,6 +129,15 @@ class SampleStandardDecorated:
 
     def __repr__(self):
         return "<decorated {}>".format(id(self))
+
+
+@store_instances("sample.yml")
+class SampleEmptyDecorated:
+
+    """Sample class using standard attribute types."""
+
+    def __repr__(self):
+        return "<empty {}>".format(id(self))
 
 
 class SampleExtended:
@@ -291,6 +300,38 @@ class TestStandard:
         'true': false
         """.strip().replace("        ", "") + '\n' == text
 
+    def test_with(self, tmpdir):
+        """Verify standard attribute types dump/load correctly (with)."""
+        tmpdir.chdir()
+        _sample = SampleStandard()
+        mapping = {'string': String,
+                   'number_real': Float}
+        sample = store(_sample, "path/to/directory/sample.yml", mapping)
+
+        # change object values
+        with sample:
+            sample.string = "abc"
+            sample.number_real = 4.2
+
+            # check for unchanged file values
+            with open(sample.yorm_path, 'r') as stream:
+                text = stream.read()
+            assert "" == text
+
+            # check for cahnged file values
+        with open(sample.yorm_path, 'r') as stream:
+            text = stream.read()
+        assert """
+        number_real: 4.2
+        string: abc
+        """.strip().replace("        ", "") + '\n' == text
+
+
+@integration
+class TestContainers:
+
+    """Integration tests for attribute containers."""
+
     def test_nesting(self, tmpdir):
         """Verify standard attribute types can be nested."""
         tmpdir.chdir()
@@ -349,30 +390,40 @@ class TestStandard:
                 {'label': '', 'status': False},
                 {'label': '', 'status': True}] == sample.results
 
-    def test_with(self, tmpdir):
-        """Verify standard attribute types dump/load correctly (with)."""
+    def test_objects(self, tmpdir):
+        """Verify containers are treated as objects when added."""
         tmpdir.chdir()
-        _sample = SampleStandard()
-        mapping = {'string': String,
-                   'number_real': Float}
-        sample = store(_sample, "path/to/directory/sample.yml", mapping)
+        sample = SampleEmptyDecorated()
+
+        # change file values
+        text = """
+        object: {'key': 'value'}
+        array: [1, '2', '3.0']
+        """.strip().replace("        ", "") + '\n'
+        with open(sample.yorm_path, 'w') as stream:
+            stream.write(text)
+
+            # (a mapped attribute must be read first to trigger retrieving)
+        sample.yorm_mapper.retrieve(sample)
+
+        # check object values
+        assert {'key': 'value'} == sample.object
+        assert [1, '2', '3.0'] == sample.array
+
+        # check object types
+        assert Object == sample.yorm_attrs['object']
+        assert Object == sample.yorm_attrs['array']
 
         # change object values
-        with sample:
-            sample.string = "abc"
-            sample.number_real = 4.2
+        sample.object = None  # pylint: disable=W0201
+        sample.array = "abc"  # pylint: disable=W0201
 
-            # check for unchanged file values
-            with open(sample.yorm_path, 'r') as stream:
-                text = stream.read()
-            assert "" == text
-
-        # check for cahnged file values
+        # check file values
         with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
         assert """
-        number_real: 4.2
-        string: abc
+        array: abc
+        object: null
         """.strip().replace("        ", "") + '\n' == text
 
 

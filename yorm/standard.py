@@ -95,19 +95,22 @@ class Boolean(Object):
             return cls.DEFAULT
 
 
-def match(data):
+def match(name, data):
     """Determine the appropriate converter for new data."""
-    log.trace("determining converter for: {}".format(repr(data)))
-    converters = Object.__subclasses__()
+    log.debug("determining '{}' converter: {}".format(name, repr(data)))
 
+    converters = Object.__subclasses__()
     log.trace("converter options: {}".format(converters))
+
     for converter in converters:
         if converter.TYPE and isinstance(data, converter.TYPE):
-            log.trace("matched: {}".format(converter))
+            log.debug("matched converter: {}".format(converter))
+            log.info("new attribute: {}".format(name))
             return converter
 
-    if data is None:
-        log.trace("default: {}".format(Object))
+    if data is None or isinstance(data, (dict, list)):
+        log.info("default converter: {}".format(Object))
+        log.warn("new attribute with unknown type: {}".format(name))
         return Object
 
     raise common.ConversionError("no converter available for: {}".format(data))

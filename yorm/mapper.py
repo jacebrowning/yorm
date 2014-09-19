@@ -80,18 +80,17 @@ class Mapper:
         log.trace("loaded: {}".format(data))
 
         # Update attributes
-        for key, data in data.items():
+        for name, data in data.items():
             try:
-                converter = obj.yorm_attrs[key]
+                converter = obj.yorm_attrs[name]
             except KeyError:
                 # TODO: determine if this runtime import is the best way to do this
                 from . import standard
-                converter = standard.match(data)
-                log.info("new attribute: {}".format(key))
-                obj.yorm_attrs[key] = converter
+                converter = standard.match(name, data)
+                obj.yorm_attrs[name] = converter
             value = converter.to_value(data)
-            log.trace("value retrieved: {} = {}".format(key, repr(value)))
-            setattr(obj, key, value)
+            log.trace("value retrieved: {} = {}".format(name, repr(value)))
+            setattr(obj, name, value)
 
         # Set meta attributes
         self.retrieving = False
