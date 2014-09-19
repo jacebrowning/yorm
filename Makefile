@@ -74,6 +74,12 @@ $(ALL): $(SOURCES)
 .PHONY: ci
 ci: pep8 pep257 test tests
 
+.PHONY: demo
+demo: env
+	$(PIP) install --upgrade ipython[notebook]
+	cd examples/students; $(OPEN) .
+	$(BIN)/ipython notebook examples/demo.ipynb
+
 # Development Installation ###################################################
 
 .PHONY: env
