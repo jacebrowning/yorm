@@ -1,5 +1,6 @@
 """Functions and decorators."""
 
+import os
 import uuid
 
 from . import common
@@ -31,7 +32,11 @@ def store(instance, path, mapping=None):
     instance.yorm_path = path
     instance.yorm_mapper = Mapper(instance.yorm_path)
 
-    instance.yorm_mapper.create(instance)
+    if not os.path.exists(instance.yorm_path):
+        instance.yorm_mapper.create(instance)
+        instance.yorm_mapper.store(instance)
+    else:
+        instance.yorm_mapper.retrieve(instance)
 
     return instance
 
@@ -70,7 +75,11 @@ def store_instances(path_format, format_spec=None, mapping=None):
                 self.yorm_path = path_format.format(**format_spec2)
                 self.yorm_mapper = Mapper(self.yorm_path)
 
-                self.yorm_mapper.create(self)
+                if not os.path.exists(self.yorm_path):
+                    self.yorm_mapper.create(self)
+                    self.yorm_mapper.store(self)
+                else:
+                    self.yorm_mapper.retrieve(self)
 
         return Mapped
 
