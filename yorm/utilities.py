@@ -38,6 +38,8 @@ def store(instance, path, mapping=None):
     else:
         instance.yorm_mapper.retrieve(instance)
 
+    instance.yorm_mapper.auto = True
+
     return instance
 
 
@@ -80,6 +82,8 @@ def store_instances(path_format, format_spec=None, mapping=None):
                     self.yorm_mapper.store(self)
                 else:
                     self.yorm_mapper.retrieve(self)
+
+                self.yorm_mapper.auto = True
 
         return Mapped
 

@@ -47,7 +47,7 @@ class Mapper:
 
     def __init__(self, path):
         self.path = path
-        self.auto = True
+        self.auto = False
         self.exists = True
         self.retrieving = False
         self.storing = False
@@ -140,7 +140,6 @@ class Mapper:
 
         # Set meta attributes
         self.storing = False
-        self.auto = True
 
     @staticmethod
     def dump(data):

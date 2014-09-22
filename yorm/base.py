@@ -28,6 +28,7 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
         object.__setattr__(self, name, value)
 
         if hasattr(self, 'yorm_attrs') and name in self.yorm_attrs:
+            # TODO: move auto check into Mapper
             if hasattr(self, 'yorm_mapper') and self.yorm_mapper.auto:
                 self.yorm_mapper.store(self)
             else:
