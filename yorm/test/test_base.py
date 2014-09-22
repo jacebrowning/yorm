@@ -42,12 +42,14 @@ class SampleMappable(Mappable):
         self.var2 = None
         self.var3 = None
         logging.debug("sample initialized")
+
         self.yorm_path = "mock/path/to/sample.yml"
         self.yorm_attrs = {'var1': String,
                            'var2': Integer,
                            'var3': Boolean}
         self.yorm_mapper = MockMapper(self.yorm_path)
         self.yorm_mapper.store(self)
+        self.yorm_mapper.auto = True
 
     def __repr__(self):
         return "<sample {}>".format(id(self))
