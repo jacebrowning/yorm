@@ -1,5 +1,6 @@
 """Functions and decorators."""
 
+import os
 import uuid
 
 from . import common
@@ -11,12 +12,13 @@ log = common.logger(__name__)
 UUID = 'UUID'
 
 
-def store(instance, path, mapping=None):
+def store(instance, path, mapping=None, auto=True):
     """Enable YAML mapping on an object.
 
     :param instance: object to patch with YAML mapping behavior
     :param path: file path for dump/load
     :param mapping: dictionary of attribute names mapped to converter classes
+    :param auto: automatically store attribute to file
 
     """
     mapping = mapping or {}
@@ -31,17 +33,25 @@ def store(instance, path, mapping=None):
     instance.yorm_path = path
     instance.yorm_mapper = Mapper(instance.yorm_path)
 
-    instance.yorm_mapper.create(instance)
+    if not os.path.exists(instance.yorm_path):
+        instance.yorm_mapper.create(instance)
+        if auto:
+            instance.yorm_mapper.store(instance)
+    else:
+        instance.yorm_mapper.retrieve(instance)
+
+    instance.yorm_mapper.auto = auto
 
     return instance
 
 
-def store_instances(path_format, format_spec=None, mapping=None):
+def store_instances(path_format, format_spec=None, mapping=None, auto=True):
     """Class decorator to enable YAML mapping after instantiation.
 
     :param path_format: formatting string to create file paths for dump/load
     :param format_spec: dictionary to use for string formatting
     :param mapping: dictionary of attribute names mapped to converter classes
+    :param auto: automatically store attribute to file
 
     """
     format_spec = format_spec or {}
@@ -70,7 +80,14 @@ def store_instances(path_format, format_spec=None, mapping=None):
                 self.yorm_path = path_format.format(**format_spec2)
                 self.yorm_mapper = Mapper(self.yorm_path)
 
-                self.yorm_mapper.create(self)
+                if not os.path.exists(self.yorm_path):
+                    self.yorm_mapper.create(self)
+                    if auto:
+                        self.yorm_mapper.store(self)
+                else:
+                    self.yorm_mapper.retrieve(self)
+
+                self.yorm_mapper.auto = auto
 
         return Mapped
 

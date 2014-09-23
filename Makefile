@@ -80,6 +80,11 @@ demo: env
 	cd examples/students; $(OPEN) .
 	$(BIN)/ipython notebook examples/demo.ipynb
 
+.PHONY: reset
+reset:
+	rm -rf examples/*/*.yml
+	git checkout examples/*.ipynb
+
 # Development Installation ###################################################
 
 .PHONY: env
