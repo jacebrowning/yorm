@@ -137,6 +137,14 @@ class TestMappable:
         assert 42 == self.sample.var2
         assert False is self.sample.var3
 
+    def test_get_new(self):
+        """Verify a new attribute can be read from file."""
+        text = """
+        new: 1
+        """.strip().replace("        ", "") + '\n'
+        self.sample.yorm_mapper.write(text)
+        assert 1 == self.sample.new
+
     def test_error_invalid_yaml(self):
         """Verify an exception is raised on invalid YAML."""
         text = """

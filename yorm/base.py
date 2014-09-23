@@ -15,10 +15,17 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
         if name in ('yorm_mapper', 'yorm_attrs'):
             return object.__getattribute__(self, name)
 
-        if name in self.yorm_attrs:
+        try:
+            value = object.__getattribute__(self, name)
+        except AttributeError:
             self.yorm_mapper.retrieve(self)
+            value = object.__getattribute__(self, name)
+        else:
+            if name in self.yorm_attrs:
+                self.yorm_mapper.retrieve(self)
+                value = object.__getattribute__(self, name)
 
-        return object.__getattribute__(self, name)
+        return value
 
     def __setattr__(self, name, value):
         if hasattr(self, 'yorm_attrs') and name in self.yorm_attrs:
