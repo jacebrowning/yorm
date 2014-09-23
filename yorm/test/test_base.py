@@ -180,8 +180,6 @@ class TestMappable:
         new: 42
         """.strip().replace("        ", "") + '\n'
         self.sample.yorm_mapper.write(text)
-        # TODO: currently, another attribute must be read first to call retrieve
-        assert None == self.sample.var1
         assert 42 == self.sample.new
 
     def test_new_unknown(self):
