@@ -28,7 +28,7 @@ Requirements
 Installation
 ------------
 
-YORM can be installed with 'pip':
+YORM can be installed with pip:
 
     $ pip install YORM
 
