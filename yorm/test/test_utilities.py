@@ -125,6 +125,14 @@ class TestStoreInstances:
         def __init__(self, name):
             self.name = name
 
+    @utilities.store_instances("path/to/{self.name}.yml")
+    class SampleDecoratedAttributesAutomatic:
+
+        """Sample decorated class using an attribute value for paths."""
+
+        def __init__(self, name):
+            self.name = name
+
     @utilities.store_instances("sample.yml", mapping={'var1': MockConverter})
     class SampleDecoratedWithAttributes:
 
@@ -160,6 +168,13 @@ class TestStoreInstances:
         """Verify attributes can be used to determine filename."""
         sample1 = self.SampleDecoratedAttributes('one')
         sample2 = self.SampleDecoratedAttributes('two')
+        assert "path/to/one.yml" == sample1.yorm_path
+        assert "path/to/two.yml" == sample2.yorm_path
+
+    def test_filename_attributes_automatic(self):
+        """Verify attributes can be used to determine filename (auto)."""
+        sample1 = self.SampleDecoratedAttributesAutomatic('one')
+        sample2 = self.SampleDecoratedAttributesAutomatic('two')
         assert "path/to/one.yml" == sample1.yorm_path
         assert "path/to/two.yml" == sample2.yorm_path
 

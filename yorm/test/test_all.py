@@ -108,7 +108,7 @@ class SampleNested:
 @map_attr(object=EmptyDictionary, array=IntegerList, string=String)
 @map_attr(number_int=Integer, number_real=Float)
 @map_attr(true=Boolean, false=Boolean)
-@store_instances("path/to/{d}/{n}.yml", {'n': 'name', 'd': 'category'})
+@store_instances("path/to/{self.category}/{self.name}.yml")
 class SampleStandardDecorated:
 
     """Sample class using standard attribute types."""
