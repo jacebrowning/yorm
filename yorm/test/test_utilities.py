@@ -102,6 +102,7 @@ class TestStore:
         mock_yorm_mapper.store.assert_never_called()
 
 
+@patch('yorm.common.create_dirname', Mock())
 @patch('yorm.common.write_text', Mock())
 class TestStoreInstances:
 
