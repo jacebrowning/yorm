@@ -7,7 +7,7 @@ ifndef TEST_RUNNER
 	# options are: nose, pytest
 	TEST_RUNNER := pytest
 endif
-UNIT_TEST_COVERAGE := 92
+UNIT_TEST_COVERAGE := 94
 INTEGRATION_TEST_COVERAGE := 100
 
 # Project settings (automatically detected from files/directories)
