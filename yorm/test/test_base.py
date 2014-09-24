@@ -8,6 +8,7 @@ import logging
 
 from yorm.base import Mappable, Converter, Dictionary, List
 from yorm.mapper import Mapper
+from yorm.utilities import map_attr
 from yorm.standard import String, Integer, Boolean
 
 
@@ -55,25 +56,23 @@ class SampleMappable(Mappable):
         return "<sample {}>".format(id(self))
 
 
+@map_attr(abc=Integer)
 class SampleDictionary(Dictionary):
 
     """Sample dictionary container."""
 
-    yorm_attrs = {'abc': Integer}
 
-
+@map_attr(all=String)
 class StringList(List):
 
     """Sample list container."""
 
-    item_type = String
+    yorm_attrs = {'all': String}
 
 
 class UnknownList(List):
 
     """Sample list container."""
-
-    item_type = None
 
 
 # tests #######################################################################

@@ -76,6 +76,7 @@ def store_instances(path_format, format_spec=None, mapping=None, auto=True):
                     format_spec2[key] = getattr(self, value)
                 if '{' + UUID + '}' in path_format:
                     format_spec2[UUID] = uuid.uuid4().hex
+                format_spec2['self'] = self
 
                 self.yorm_path = path_format.format(**format_spec2)
                 self.yorm_mapper = Mapper(self.yorm_path)
