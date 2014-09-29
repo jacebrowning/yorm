@@ -9,7 +9,7 @@ YORM
 
 YORM provides functions and decorators to enable automatic, bidirectional, and human-friendly mappings of Python object attributes to YAML files.
 
-Uses beyond pure object serialization and object mapping include:
+Uses beyond typical object serialization and object mapping include:
 
 * automatic bidirectional conversion of attributes types
 * attribute creation and type inference for new attributes
