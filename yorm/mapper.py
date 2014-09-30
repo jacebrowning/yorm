@@ -47,7 +47,7 @@ class Mapper:
 
     def __init__(self, path):
         self.path = path
-        self.auto = True
+        self.auto = False
         self.exists = True
         self.retrieving = False
         self.storing = False
@@ -60,7 +60,7 @@ class Mapper:
     def create(self, obj):
         """Create a new file for the object."""
         if not os.path.exists(self.path):
-            log.debug("creating '{}' for {}...".format(self, repr(obj)))
+            log.info("mapping {} to '{}'...".format(repr(obj), self))
             common.create_dirname(self.path)
             common.touch(self.path)
             self.exists = True
@@ -69,10 +69,9 @@ class Mapper:
     def retrieve(self, obj):
         """Load the object's properties from its file."""
         if self.storing:
-            log.trace("storing in process...")
             return
         self.retrieving = True
-        log.debug("retrieving {} from {}...".format(repr(obj), self))
+        log.debug("retrieving {} from '{}'...".format(repr(obj), self.path))
 
         # Parse data from file
         text = self.read()
@@ -89,7 +88,7 @@ class Mapper:
                 converter = standard.match(name, data)
                 obj.yorm_attrs[name] = converter
             value = converter.to_value(data)
-            log.trace("value retrieved: {} = {}".format(name, repr(value)))
+            log.trace("value retrieved: '{}' = {}".format(name, repr(value)))
             setattr(obj, name, value)
 
         # Set meta attributes
@@ -123,17 +122,16 @@ class Mapper:
     def store(self, obj):
         """Format and save the object's properties to its file."""
         if self.retrieving:
-            log.trace("retrieving in process...")
             return
         self.storing = True
-        log.debug("storing {} to {}...".format(repr(obj), self))
+        log.debug("storing {} to '{}'...".format(repr(obj), self.path))
 
         # Format the data items
         data = {}
         for name, converter in obj.yorm_attrs.items():
             value = getattr(obj, name, None)
             data2 = converter.to_data(value)
-            log.debug("data to store: {} = {}".format(name, repr(data2)))
+            log.trace("data to store: '{}' = {}".format(name, repr(data2)))
             data[name] = data2
 
         # Dump data to file
@@ -142,7 +140,6 @@ class Mapper:
 
         # Set meta attributes
         self.storing = False
-        self.auto = True
 
     @staticmethod
     def dump(data):
@@ -168,7 +165,7 @@ class Mapper:
     def delete(self):
         """Delete the object's file from the file system."""
         if self.exists:
-            log.info("deleting '{}'...".format(self))
+            log.info("deleting '{}'...".format(self.path))
             common.delete(self.path)
             self.retrieved = False
             self.exists = False

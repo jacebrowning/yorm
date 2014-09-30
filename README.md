@@ -9,6 +9,12 @@ YORM
 
 YORM provides functions and decorators to enable automatic, bidirectional, and human-friendly mappings of Python object attributes to YAML files.
 
+Uses beyond typical object serialization and object mapping include:
+
+* automatic bidirectional conversion of attributes types
+* attribute creation and type inference for new attributes
+* storage of content in text files optimized for version control
+* custom converters to map complex classes to JSON-compatible types
 
 
 Getting Started
@@ -19,11 +25,10 @@ Requirements
 
 * Python 3.3+
 
-
 Installation
 ------------
 
-YORM can be installed with 'pip':
+YORM can be installed with pip:
 
     $ pip install YORM
 
@@ -33,20 +38,69 @@ Or directly from the source code:
     $ cd yorm
     $ python setup.py install
 
-
-
 Basic Usage
 ===========
 
-After installation, YORM can be imported from the package:
+Simply take an existing class:
 
-    $ python
-    >>> import yorm
-    yorm.__version__
+```python
+class Student:
 
-YORM doesn't do anything yet.
+    def __init__(name, school, number, year=2009):
+        self.name = name
+        self.school = school
+        self.number = number
+        self.year = year
+        self.gpa = 0.0
+```
 
+and define an attribute mapping:
 
+```python
+from yorm import store_instances, map_attr
+from yorm.standard import 
+
+@map_attr(name=String, year=Integer, gpa=Float)
+@store_instances("students/{self.school}/{self.number}.yml")
+class Student: ...
+```
+
+Modifications to an object's mapped attributes:
+
+```python
+>>> s1 = Student("John Doe", "GVSU", 123)
+>>> s2 = Student("Jane Doe", "GVSU", 456, year=2014)
+>>> s1.gpa = 3
+```
+
+are automatically reflected on the filesytem:
+
+```bash
+$ cat students/GVSU/123.yml
+name: John Doe
+gpa: 3.0
+school: GVSU
+year: 2009
+```
+
+Modifications and new content in the mapped file:
+
+```bash
+$ echo "name: John Doe
+> gpa: 1.8
+> year: 2010
+> expelled: true
+" > students/GVSU/123.yml
+```
+
+are automatically reflected in the objects:
+
+```python
+>>> s1.gpa
+1.8
+>>> s1.expelled
+True
+```
 
 For Contributors
 ================
@@ -61,7 +115,6 @@ Requirements
 * virtualenv: https://pypi.python.org/pypi/virtualenv#installation
 * Pandoc: http://johnmacfarlane.net/pandoc/installing.html
 * Graphviz: http://www.graphviz.org/Download.php
-
 
 Installation
 ------------

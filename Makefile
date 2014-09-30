@@ -7,7 +7,7 @@ ifndef TEST_RUNNER
 	# options are: nose, pytest
 	TEST_RUNNER := pytest
 endif
-UNIT_TEST_COVERAGE := 92
+UNIT_TEST_COVERAGE := 94
 INTEGRATION_TEST_COVERAGE := 100
 
 # Project settings (automatically detected from files/directories)
@@ -74,6 +74,17 @@ $(ALL): $(SOURCES)
 .PHONY: ci
 ci: pep8 pep257 test tests
 
+.PHONY: demo
+demo: env
+	$(PIP) install --upgrade ipython[notebook]
+	cd examples/students; $(OPEN) .
+	$(BIN)/ipython notebook examples/demo.ipynb
+
+.PHONY: reset
+reset:
+	rm -rf examples/*/*.yml
+	git checkout examples/*.ipynb
+
 # Development Installation ###################################################
 
 .PHONY: env
@@ -99,7 +110,7 @@ $(DEPENDS_CI): Makefile
 .PHONY: .depends-dev
 .depends-dev: env Makefile $(DEPENDS_DEV)
 $(DEPENDS_DEV): Makefile
-	$(PIP) install --upgrade pep8radius docutils pdoc pylint wheel
+	$(PIP) install --upgrade pep8radius pygments docutils pdoc pylint wheel
 	touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
 
 # Documentation ##############################################################

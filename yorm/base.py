@@ -15,18 +15,19 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
         if name in ('yorm_mapper', 'yorm_attrs'):
             return object.__getattribute__(self, name)
 
-        log.trace("getting attribute '{}'...".format(name))
-
-        if name in self.yorm_attrs:
+        try:
+            value = object.__getattribute__(self, name)
+        except AttributeError:
             self.yorm_mapper.retrieve(self)
+            value = object.__getattribute__(self, name)
         else:
-            log.trace("unmapped: {}".format(name))
+            if name in self.yorm_attrs:
+                self.yorm_mapper.retrieve(self)
+                value = object.__getattribute__(self, name)
 
-        return object.__getattribute__(self, name)
+        return value
 
     def __setattr__(self, name, value):
-        log.trace("setting attribute '{}' to {}...".format(name, repr(value)))
-
         if hasattr(self, 'yorm_attrs') and name in self.yorm_attrs:
             converter = self.yorm_attrs[name]
             value = converter.to_value(value)
@@ -38,8 +39,6 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
                 self.yorm_mapper.store(self)
             else:
                 log.trace("automatic storage is off")
-        else:
-            log.trace("unmapped: {}".format(name))
 
     def __enter__(self):
         log.debug("turning off automatic storage...")
@@ -97,12 +96,12 @@ class Dictionary(metaclass=ContainerMeta):
                 converter = yorm_attrs.pop(name)
             except KeyError:
                 from . import standard
-                converter = standard.match(name, data)
+                converter = standard.match(name, data, nested=True)
                 cls.yorm_attrs[name] = converter
             value[name] = converter.to_value(data)
 
         for name, converter in yorm_attrs.items():
-            log.debug("adding deleted '{}'...".format(name))
+            log.trace("adding missing nested key '{}'...".format(name))
             value[name] = converter.to_value(None)
 
         return value

@@ -8,6 +8,7 @@ import logging
 
 from yorm.base import Mappable, Converter, Dictionary, List
 from yorm.mapper import Mapper
+from yorm.utilities import map_attr
 from yorm.standard import String, Integer, Boolean
 
 
@@ -42,36 +43,36 @@ class SampleMappable(Mappable):
         self.var2 = None
         self.var3 = None
         logging.debug("sample initialized")
+
         self.yorm_path = "mock/path/to/sample.yml"
         self.yorm_attrs = {'var1': String,
                            'var2': Integer,
                            'var3': Boolean}
         self.yorm_mapper = MockMapper(self.yorm_path)
         self.yorm_mapper.store(self)
+        self.yorm_mapper.auto = True
 
     def __repr__(self):
         return "<sample {}>".format(id(self))
 
 
+@map_attr(abc=Integer)
 class SampleDictionary(Dictionary):
 
     """Sample dictionary container."""
 
-    yorm_attrs = {'abc': Integer}
 
-
+@map_attr(all=String)
 class StringList(List):
 
     """Sample list container."""
 
-    item_type = String
+    yorm_attrs = {'all': String}
 
 
 class UnknownList(List):
 
     """Sample list container."""
-
-    item_type = None
 
 
 # tests #######################################################################
@@ -178,8 +179,6 @@ class TestMappable:
         new: 42
         """.strip().replace("        ", "") + '\n'
         self.sample.yorm_mapper.write(text)
-        # TODO: currently, another attribute must be read first to call retrieve
-        assert None == self.sample.var1
         assert 42 == self.sample.new
 
     def test_new_unknown(self):

@@ -42,14 +42,13 @@ class Level(Converter):
             return value
 
 
-@map_attr(key2=String)
-class Dictionary2(Dictionary):
+class EmptyDictionary(Dictionary):
 
     """Sample dictionary container."""
 
 
-@map_attr(key3=String)
-class Dictionary3(Dictionary):
+@map_attr(key=String)
+class SingleKeyDictionary(Dictionary):
 
     """Sample dictionary container."""
 
@@ -100,16 +99,16 @@ class SampleNested:
 
     def __init__(self):
         self.count = 0
-        self.results = {}
+        self.results = []
 
     def __repr__(self):
         return "<nested {}>".format(id(self))
 
 
-@map_attr(object=Dictionary2, array=IntegerList, string=String)
+@map_attr(object=EmptyDictionary, array=IntegerList, string=String)
 @map_attr(number_int=Integer, number_real=Float)
 @map_attr(true=Boolean, false=Boolean)
-@store_instances("path/to/{d}/{n}.yml", {'n': 'name', 'd': 'category'})
+@store_instances("path/to/{self.category}/{self.name}.yml")
 class SampleStandardDecorated:
 
     """Sample class using standard attribute types."""
@@ -129,6 +128,20 @@ class SampleStandardDecorated:
 
     def __repr__(self):
         return "<decorated {}>".format(id(self))
+
+
+@map_attr(string=String, number_real=Float)
+@store_instances("sample.yml", auto=False)
+class SampleDecoratedNoAuto:
+
+    """Sample class with automatic storate turned off."""
+
+    def __init__(self):
+        self.string = ""
+        self.number_real = 0.0
+
+    def __repr__(self):
+        return "<no auto {}>".format(id(self))
 
 
 @store_instances("sample.yml")
@@ -192,7 +205,7 @@ class TestStandard:
         assert "path/to/default/sample.yml" == sample.yorm_path
 
         # check defaults
-        assert {'key2': ''} == sample.object
+        assert {} == sample.object
         assert [] == sample.array
         assert "" == sample.string
         assert 0 == sample.number_int
@@ -254,7 +267,7 @@ class TestStandard:
         """Verify standard attribute types dump/load correctly (function)."""
         tmpdir.chdir()
         _sample = SampleStandard()
-        mapping = {'object': Dictionary3,
+        mapping = {'object': SingleKeyDictionary,
                    'array': IntegerList,
                    'string': String,
                    'number_int': Integer,
@@ -265,7 +278,7 @@ class TestStandard:
         assert "path/to/directory/sample.yml" == sample.yorm_path
 
         # check defaults
-        assert {} == sample.object
+        assert {'key': ''} == sample.object
         assert [] == sample.array
         assert "" == sample.string
         assert 0 == sample.number_int
@@ -275,7 +288,7 @@ class TestStandard:
         assert None is sample.null
 
         # change object values
-        sample.object = {'key3': 'value'}
+        sample.object = {'key2': 'value'}
         sample.array = [1, 2, 3]
         sample.string = "Hello, world!"
         sample.number_int = 42
@@ -295,7 +308,8 @@ class TestStandard:
         number_int: 42
         number_real: 4.2
         object:
-          key3: value
+          key: ''
+          key2: value
         string: Hello, world!
         'true': false
         """.strip().replace("        ", "") + '\n' == text
@@ -306,7 +320,7 @@ class TestStandard:
         _sample = SampleStandard()
         mapping = {'string': String,
                    'number_real': Float}
-        sample = store(_sample, "path/to/directory/sample.yml", mapping)
+        sample = store(_sample, "sample.yml", mapping, auto=False)
 
         # change object values
         with sample:
@@ -318,7 +332,33 @@ class TestStandard:
                 text = stream.read()
             assert "" == text
 
-            # check for cahnged file values
+            # check for changed file values
+        with open(sample.yorm_path, 'r') as stream:
+            text = stream.read()
+        assert """
+        number_real: 4.2
+        string: abc
+        """.strip().replace("        ", "") + '\n' == text
+
+    def test_no_auto(self, tmpdir):
+        """Verify standard attribute types dump/load correctly (auto)."""
+        tmpdir.chdir()
+        sample = SampleDecoratedNoAuto()
+
+        # change object values
+        sample.string = "abc"
+        sample.number_real = 4.2
+
+        # check for unchanged file values
+        with open(sample.yorm_path, 'r') as stream:
+            text = stream.read()
+        assert "" == text
+
+        # store value
+        sample.yorm_mapper.store(sample)
+        sample.yorm_mapper.auto = True
+
+        # check for changed file values
         with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
         assert """
@@ -342,7 +382,7 @@ class TestContainers:
 
         # check defaults
         assert 0 == sample.count
-        assert {} == sample.results
+        assert [] == sample.results
 
         # change object values
         sample.count = 5
@@ -503,6 +543,37 @@ class TestCustom:
 
         # check object values
         assert '1' == sample.level
+
+
+@integration
+class TestInit:
+
+    """Integration tests for initializing mapped classes."""
+
+    def test_retrieve_from_existing(self, tmpdir):
+        """Verify attributes are loaded from an existing file."""
+        tmpdir.chdir()
+        sample = SampleStandardDecorated('sample')
+        sample2 = SampleStandardDecorated('sample')
+        assert sample2.yorm_path == sample.yorm_path
+
+        # change object values
+        sample.object = {'key2': 'value'}
+        sample.array = [0, 1, 2]
+        sample.string = "Hello, world!"
+        sample.number_int = 42
+        sample.number_real = 4.2
+        sample.true = True
+        sample.false = False
+
+        # check object values
+        assert {'key2': 'value', 'status': False} == sample2.object
+        assert [0, 1, 2] == sample2.array
+        assert "Hello, world!" == sample2.string
+        assert 42 == sample2.number_int
+        assert 4.2 == sample2.number_real
+        assert True is sample2.true
+        assert False is sample2.false
 
 
 @integration
