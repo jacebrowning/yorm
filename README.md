@@ -44,54 +44,56 @@ Basic Usage
 Simply take an existing class:
 
 ```python
-
 class Student:
 
-    def __init__(name, number, grade=9):
+    def __init__(name, school, number, year=2009):
         self.name = name
+        self.school = school
         self.number = number
-        self.grade = grade
+        self.year = year
         self.gpa = 0.0
 ```
 
-Define an attribute mapping:
+and define an attribute mapping:
 
 ```python
-
 from yorm import store_instances, map_attr
 from yorm.standard import 
 
-@map_attr(name=String, grade=Integer, gpa=Float)
-@store_instances("students/{self.grade}/{self.number}.yml")
+@map_attr(name=String, year=Integer, gpa=Float)
+@store_instances("students/{self.school}/{self.number}.yml")
 class Student: ...
 ```
 
-And interact with objects normally:
+Modifications to an object's mapped attributes:
 
 ```python
->>> s1 = Student("John Doe", 123)
->>> s2 = Student("Jane Doe", 456, grade=12)
+>>> s1 = Student("John Doe", "GVSU", 123)
+>>> s2 = Student("Jane Doe", "GVSU", 456, year=2014)
 >>> s1.gpa = 3
 ```
 
-Mapped attributes are automatically reflected on the filesytem:
+are automatically reflected on the filesytem:
 
 ```bash
-$ cat students/9/123.yml
+$ cat students/GVSU/123.yml
 name: John Doe
 gpa: 3.0
-grade: 9
+school: GVSU
+year: 2009
 ```
 
-And in the objects:
+Modifications and new content in the mapped file:
 
 ```bash
 $ echo "name: John Doe
 > gpa: 1.8
-> grade: 9
+> year: 2010
 > expelled: true
-" > students/9/123.yml
+" > students/GVSU/123.yml
 ```
+
+are automatically reflected in the objects:
 
 ```python
 >>> s1.gpa
