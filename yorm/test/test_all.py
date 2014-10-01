@@ -6,7 +6,7 @@
 import pytest
 
 from yorm import store, store_instances, map_attr, Converter
-from yorm.base import Dictionary, List
+from yorm.container import Dictionary, List
 from yorm.standard import Object, String, Integer, Float, Boolean
 from yorm.extended import Markdown
 
@@ -183,14 +183,20 @@ class SampleCustomDecorated:
 def test_imports():
     """Verify the package namespace is mapped correctly."""
     # pylint: disable=W0404,W0612,W0621
+    import yorm
+
     from yorm import UUID, store, store_instances, map_attr
     from yorm import Mappable, Converter
-    import yorm
+
+    from yorm.standard import String
+    from yorm.extended import Markdown
+    from yorm.container import List
 
     assert store
     assert Converter
     assert yorm.standard.Boolean
     assert yorm.extended.Markdown
+    assert yorm.container.Dictionary
 
 
 @integration
