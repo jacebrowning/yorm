@@ -3,6 +3,7 @@
 import abc
 
 from . import common
+from . import standard
 
 log = common.logger(__name__)
 
@@ -35,7 +36,6 @@ class Dictionary(metaclass=ContainerMeta):
             try:
                 converter = yorm_attrs.pop(name)
             except KeyError:
-                from . import standard
                 converter = standard.match(name, data, nested=True)
                 cls.yorm_attrs[name] = converter
             value[name] = converter.to_value(data)
