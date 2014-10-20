@@ -58,7 +58,7 @@ and define an attribute mapping:
 
 ```python
 from yorm import store_instances, map_attr
-from yorm.standard import 
+from yorm.standard import String, Integer, Float
 
 @map_attr(name=String, year=Integer, gpa=Float)
 @store_instances("students/{self.school}/{self.number}.yml")
