@@ -46,7 +46,7 @@ Simply take an existing class:
 ```python
 class Student:
 
-    def __init__(name, school, number, year=2009):
+    def __init__(self, name, school, number, year=2009):
         self.name = name
         self.school = school
         self.number = number
