@@ -6,6 +6,7 @@ Changelog
 
 - Allowing `map_attr` and `store` to be used together.
 - Allowing `Dictionary` containers to be used as attributes.
+- Fixed method resolution order for modified classes.
 
 0.1.1 (2014-10-20)
 ------------------

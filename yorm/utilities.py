@@ -23,7 +23,7 @@ def store(instance, path, mapping=None, auto=True):
     """
     mapping = mapping or {}
 
-    class Mapped(instance.__class__, Mappable):
+    class Mapped(Mappable, instance.__class__):
 
         """Original class with `Mappable` as the base."""
 
@@ -64,7 +64,7 @@ def store_instances(path_format, format_spec=None, mapping=None, auto=True):
         else:
             cls.yorm_attrs = mapping
 
-        class Mapped(cls, Mappable):
+        class Mapped(Mappable, cls):
 
             """Original class with `Mappable` as the base."""
 
