@@ -72,7 +72,7 @@ $(ALL): $(SOURCES)
 	touch $(ALL)  # flag to indicate all setup steps were successful
 
 .PHONY: ci
-ci: pep8 pep257 test tests
+ci: pep8 pep257 pylint test tests
 
 .PHONY: demo
 demo: env
@@ -111,6 +111,8 @@ $(DEPENDS_CI): Makefile
 .depends-dev: env Makefile $(DEPENDS_DEV)
 $(DEPENDS_DEV): Makefile
 	$(PIP) install --upgrade pep8radius pygments docutils pdoc pylint wheel
+	# TODO: temporary fix for: https://bitbucket.org/logilab/astroid/issue/57
+	$(PIP) install astroid==1.2.1
 	touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
 
 # Documentation ##############################################################

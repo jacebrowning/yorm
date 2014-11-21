@@ -6,6 +6,7 @@ import functools
 import yaml
 
 from . import common
+from . import settings
 
 log = common.logger(__name__)
 
@@ -59,7 +60,7 @@ class Mapper:
 
     def create(self, obj):
         """Create a new file for the object."""
-        if not os.path.exists(self.path):
+        if not settings.fake and not os.path.exists(self.path):
             log.info("mapping {} to '{}'...".format(repr(obj), self))
             common.create_dirname(self.path)
             common.touch(self.path)
@@ -74,7 +75,10 @@ class Mapper:
         log.debug("retrieving {} from '{}'...".format(repr(obj), self.path))
 
         # Parse data from file
-        text = self.read()
+        if settings.fake:
+            text = getattr(obj, 'yorm_fake', "")
+        else:
+            text = self.read()
         data = self.load(text, self.path)
         log.trace("loaded: {}".format(data))
 
@@ -136,7 +140,10 @@ class Mapper:
 
         # Dump data to file
         text = self.dump(data)
-        self.write(text)
+        if settings.fake:
+            obj.yorm_fake = text
+        else:
+            self.write(text)
 
         # Set meta attributes
         self.storing = False
