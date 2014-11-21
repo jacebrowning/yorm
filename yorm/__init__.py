@@ -7,8 +7,6 @@ __version__ = '0.2-dev'
 
 VERSION = __project__ + '-' + __version__
 
-fake = False
-
 try:
     from . import standard, extended, container
     from .utilities import UUID, store, store_instances, map_attr

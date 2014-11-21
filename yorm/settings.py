@@ -1,0 +1,3 @@
+"""Package settings."""
+
+fake = False
