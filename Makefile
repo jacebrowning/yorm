@@ -111,8 +111,6 @@ $(DEPENDS_CI): Makefile
 .depends-dev: env Makefile $(DEPENDS_DEV)
 $(DEPENDS_DEV): Makefile
 	$(PIP) install --upgrade pep8radius pygments docutils pdoc pylint wheel
-	# TODO: temporary fix for: https://bitbucket.org/logilab/astroid/issue/57
-	$(PIP) install astroid==1.2.1
 	touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
 
 # Documentation ##############################################################
