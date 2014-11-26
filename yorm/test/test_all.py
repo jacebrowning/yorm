@@ -144,6 +144,19 @@ class SampleDecoratedNoAuto:
         return "<no auto {}>".format(id(self))
 
 
+@map_attr(string=String, number_real=Float)
+class SampleDecoratedNoPath:
+
+    """Sample class with a manually mapped path."""
+
+    def __init__(self):
+        self.string = ""
+        self.number_real = 0.0
+
+    def __repr__(self):
+        return "<no path {}>".format(id(self))
+
+
 @store_instances("sample.yml")
 class SampleEmptyDecorated:
 
@@ -363,6 +376,23 @@ class TestStandard:
         # store value
         sample.yorm_mapper.store(sample)
         sample.yorm_mapper.auto = True
+
+        # check for changed file values
+        with open(sample.yorm_path, 'r') as stream:
+            text = stream.read()
+        assert """
+        number_real: 4.2
+        string: abc
+        """.strip().replace("        ", "") + '\n' == text
+
+    def test_no_path(self, tmpdir):
+        """Verify standard attribute types dump/load correctly (path)."""
+        tmpdir.chdir()
+        sample = store(SampleDecoratedNoAuto(), "sample.yml")
+
+        # change object values
+        sample.string = "abc"
+        sample.number_real = 4.2
 
         # check for changed file values
         with open(sample.yorm_path, 'r') as stream:

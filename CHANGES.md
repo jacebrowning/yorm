@@ -4,7 +4,8 @@ Changelog
 0.2 (dev)
 ---------
 
-- TBD
+- Allowing `map_attr` and `store` to be used together.
+- Allowing `Dictionary` containers to be used as attributes.
 
 0.1.1 (2014-10-20)
 ------------------

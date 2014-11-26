@@ -21,6 +21,8 @@ class Dictionary(metaclass=ContainerMeta):
 
     """Base class for a dictionary of attribute converters."""
 
+    TYPE = dict
+
     @classmethod
     def to_value(cls, obj):  # pylint: disable=E0213
         """Convert all loaded values back to its original attribute types."""
@@ -28,11 +30,18 @@ class Dictionary(metaclass=ContainerMeta):
             msg = "Dictionary class must be subclassed to use"
             raise NotImplementedError(msg)
 
-        value = {}
-
+        value = cls.TYPE()
         yorm_attrs = cls.yorm_attrs.copy()
 
-        for name, data in cls.to_dict(obj).items():
+        # Convert object attributes to a dictionary
+        if isinstance(obj, cls):
+            items = obj.__dict__.items()
+            dictionary = {k: v for k, v in items if k in yorm_attrs}
+        else:
+            dictionary = cls.to_dict(obj)
+
+        # Map object attributes to converters
+        for name, data in dictionary.items():
             try:
                 converter = yorm_attrs.pop(name)
             except KeyError:
@@ -40,6 +49,7 @@ class Dictionary(metaclass=ContainerMeta):
                 cls.yorm_attrs[name] = converter
             value[name] = converter.to_value(data)
 
+        # Create default values for unmapped converters
         for name, converter in yorm_attrs.items():
             log.trace("adding missing nested key '{}'...".format(name))
             value[name] = converter.to_value(None)

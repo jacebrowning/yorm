@@ -133,7 +133,11 @@ class Mapper:
         # Format the data items
         data = {}
         for name, converter in obj.yorm_attrs.items():
-            value = getattr(obj, name, None)
+            try:
+                value = getattr(obj, name)
+            except AttributeError as exc:
+                log.debug(exc)
+                value = None
             data2 = converter.to_data(value)
             log.trace("data to store: '{}' = {}".format(name, repr(data2)))
             data[name] = data2

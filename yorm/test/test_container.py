@@ -19,11 +19,23 @@ class SampleDictionary(Dictionary):
     """Sample dictionary container."""
 
 
+@map_attr(var1=Integer, var2=String)
+class SampleDictionaryWithInitialization(Dictionary):
+
+    """Sample dictionary container with initialization."""
+
+    def __init__(self, var1, var2, var3):
+        self.var1 = var1
+        self.var2 = var2
+        self.var3 = var3
+
+
 @map_attr(all=String)
 class StringList(List):
 
     """Sample list container."""
 
+    # TODO: this shouldn't be required for the tests to pass
     yorm_attrs = {'all': String}
 
 
@@ -73,6 +85,12 @@ class TestDictionary:
             Dictionary.to_value(None)
         with pytest.raises(NotImplementedError):
             Dictionary.to_data(None)
+
+    def test_dict_as_object(self):
+        """Verify a `Dictionary` can be used as an attribute."""
+        dictionary = SampleDictionaryWithInitialization(1, 2, 3)
+        value = {'var1': 1, 'var2': '2'}
+        assert value == dictionary.to_value(dictionary)
 
 
 class TestList:

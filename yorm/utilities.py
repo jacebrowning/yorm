@@ -29,7 +29,7 @@ def store(instance, path, mapping=None, auto=True):
 
     instance.__class__ = Mapped
 
-    instance.yorm_attrs = mapping
+    instance.yorm_attrs = mapping or getattr(instance, 'yorm_attrs', mapping)
     instance.yorm_path = path
     instance.yorm_mapper = Mapper(instance.yorm_path)
 
