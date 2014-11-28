@@ -6,6 +6,7 @@
 import pytest
 from unittest.mock import patch, Mock
 
+from yorm import common
 from yorm import utilities
 from yorm.standard import Converter
 
@@ -75,6 +76,12 @@ class TestStore:
         sample = utilities.store(self.Sample(), "sample.yml", mapping)
         assert "sample.yml" == sample.yorm_path
         assert {'var1': MockConverter} == sample.yorm_attrs
+
+    def test_multiple(self):
+        """Verify mapping cannot be enabled twice."""
+        sample = utilities.store(self.Sample(), "sample.yml")
+        with pytest.raises(common.UseageError):
+            utilities.store(sample, "sample.yml")
 
     @patch('os.path.exists', Mock(return_value=True))
     @patch('yorm.common.read_text', Mock(return_value="abc: 123"))

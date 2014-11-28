@@ -388,7 +388,7 @@ class TestStandard:
     def test_no_path(self, tmpdir):
         """Verify standard attribute types dump/load correctly (path)."""
         tmpdir.chdir()
-        sample = store(SampleDecoratedNoAuto(), "sample.yml")
+        sample = store(SampleDecoratedNoPath(), "sample.yml")
 
         # change object values
         sample.string = "abc"

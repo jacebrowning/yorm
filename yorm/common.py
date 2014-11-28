@@ -32,29 +32,25 @@ class YORMException(Exception):
 
     """Base class for all YORM exceptions."""
 
-    pass
-
 
 class FileError(YORMException, FileNotFoundError):
 
     """Raised when text cannot be read from a file."""
-
-    pass
 
 
 class ContentError(YORMException, yaml.error.YAMLError, ValueError):
 
     """Raised when YAML cannot be parsed from text."""
 
-    pass
-
 
 class ConversionError(YORMException, ValueError):
 
     """Raised when a value cannot be converted to the specified type."""
 
-    pass
 
+class UseageError(YORMException):
+
+    """Raised when an API is called incorrectly."""
 
 # decorators #################################################################
 
