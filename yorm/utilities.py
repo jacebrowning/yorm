@@ -23,6 +23,9 @@ def store(instance, path, mapping=None, auto=True):
     """
     mapping = mapping or {}
 
+    if isinstance(instance, Mappable):
+        raise common.UseageError("{} is already mapped".format(repr(instance)))
+
     class Mapped(Mappable, instance.__class__):
 
         """Original class with `Mappable` as the base."""
