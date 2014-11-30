@@ -1,22 +1,24 @@
 # Python settings
-PYTHON_MAJOR := 3
-PYTHON_MINOR := 4
+ifndef TRAVIS
+	PYTHON_MAJOR := 3
+	PYTHON_MINOR := 4
+endif
 
 # Test runner settings
 ifndef TEST_RUNNER
 	# options are: nose, pytest
 	TEST_RUNNER := pytest
 endif
-UNIT_TEST_COVERAGE := 94
+UNIT_TEST_COVERAGE := 95
 INTEGRATION_TEST_COVERAGE := 100
 
-# Project settings (automatically detected from files/directories)
-PROJECT := $(patsubst ./%.sublime-project,%, $(shell find . -type f -name '*.sublime-p*'))
-PACKAGE := $(patsubst ./%/__init__.py,%, $(shell find . -maxdepth 2 -name '__init__.py'))
+# Project settings
+PROJECT := YORM
+PACKAGE := yorm
 SOURCES := Makefile setup.py $(shell find $(PACKAGE) -name '*.py')
 EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 
-# System paths (automatically detected from the system Python)
+# System paths
 PLATFORM := $(shell python -c 'import sys; print(sys.platform)')
 ifneq ($(findstring win32, $(PLATFORM)), )
 	SYS_PYTHON_DIR := C:\\Python$(PYTHON_MAJOR)$(PYTHON_MINOR)
@@ -26,10 +28,13 @@ ifneq ($(findstring win32, $(PLATFORM)), )
 	export TCL_LIBRARY=$(SYS_PYTHON_DIR)\\tcl\\tcl8.5
 else
 	SYS_PYTHON := python$(PYTHON_MAJOR)
+	ifdef PYTHON_MINOR
+		SYS_PYTHON := $(SYS_PYTHON).$(PYTHON_MINOR)
+	endif
 	SYS_VIRTUALENV := virtualenv
 endif
 
-# virtualenv paths (automatically detected from the system Python)
+# virtualenv paths
 ENV := env
 ifneq ($(findstring win32, $(PLATFORM)), )
 	BIN := $(ENV)/Scripts
@@ -58,6 +63,10 @@ NOSE := $(BIN)/nosetests
 PYTEST := $(BIN)/py.test
 COVERAGE := $(BIN)/coverage
 
+# Remove if you don't want pip to cache downloads
+PIP_CACHE_DIR := .cache
+PIP_CACHE := --download-cache $(PIP_CACHE_DIR)
+
 # Flags for PHONY targets
 DEPENDS_CI := $(ENV)/.depends-ci
 DEPENDS_DEV := $(ENV)/.depends-dev
@@ -72,7 +81,7 @@ $(ALL): $(SOURCES)
 	touch $(ALL)  # flag to indicate all setup steps were successful
 
 .PHONY: ci
-ci: pep8 pep257 test tests
+ci: pep8 pep257 pylint test tests
 
 .PHONY: demo
 demo: env
@@ -90,7 +99,7 @@ reset:
 .PHONY: env
 env: .virtualenv $(EGG_INFO)
 $(EGG_INFO): Makefile setup.py requirements.txt
-	$(PYTHON) setup.py develop
+	VIRTUAL_ENV=$(ENV) $(PYTHON) setup.py develop
 	touch $(EGG_INFO)  # flag to indicate package is installed
 
 .PHONY: .virtualenv
@@ -104,13 +113,13 @@ depends: .depends-ci .depends-dev
 .PHONY: .depends-ci
 .depends-ci: env Makefile $(DEPENDS_CI)
 $(DEPENDS_CI): Makefile
-	$(PIP) install --upgrade pep8 pep257 nose pytest pytest-capturelog coverage
+	$(PIP) install $(PIP_CACHE) --upgrade pep8 pep257 $(TEST_RUNNER) pytest-capturelog coverage
 	touch $(DEPENDS_CI)  # flag to indicate dependencies are installed
 
 .PHONY: .depends-dev
 .depends-dev: env Makefile $(DEPENDS_DEV)
 $(DEPENDS_DEV): Makefile
-	$(PIP) install --upgrade pep8radius pygments docutils pdoc pylint wheel
+	$(PIP) install $(PIP_CACHE) --upgrade pep8radius pygments docutils pdoc pylint wheel
 	touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
 
 # Documentation ##############################################################
@@ -187,14 +196,18 @@ tests-nose: .depends-ci
 
 # pytest commands
 
-.PHONY: test-py.test
+.PHONY: test-pytest
 test-pytest: .depends-ci
+	$(COVERAGE) erase; rm -rf .coverage-html
 	$(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
+	$(COVERAGE) html --directory .coverage-html
 	$(COVERAGE) report --show-missing --fail-under=$(UNIT_TEST_COVERAGE)
 
-.PHONY: tests-py.test
+.PHONY: tests-pytest
 tests-pytest: .depends-ci
+	$(COVERAGE) erase; rm -rf .coverage-html
 	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
+	$(COVERAGE) html --directory .coverage-html
 	$(COVERAGE) report --show-missing --fail-under=$(INTEGRATION_TEST_COVERAGE)
 
 # Cleanup ####################################################################
@@ -203,18 +216,18 @@ tests-pytest: .depends-ci
 clean: .clean-dist .clean-test .clean-doc .clean-build
 	rm -rf $(ALL)
 
-.PHONY: clean-all
-clean-all: clean .clean-env
-
-.PHONY: .clean-env
-.clean-env:
+.PHONY: clean-env
+clean-env: clean
 	rm -rf $(ENV)
+
+.PHONY: clean-all
+clean-all: clean clean-env .clean-workspace .clean-cache
 
 .PHONY: .clean-build
 .clean-build:
-	find . -name '*.pyc' -delete
-	find . -name '__pycache__' -delete
-	rm -rf *.egg-info
+	find $(PACKAGE) -name '*.pyc' -delete
+	find $(PACKAGE) -name '__pycache__' -delete
+	rm -rf $(EGG_INFO)
 
 .PHONY: .clean-doc
 .clean-doc:
@@ -228,18 +241,19 @@ clean-all: clean .clean-env
 .clean-dist:
 	rm -rf dist build
 
+.PHONY: .clean-cache
+.clean-cache:
+	rm -rf $(PIP_CACHE_DIR)
+
+.PHONY: .clean-workspace
+.clean-workspace:
+	rm -rf *.sublime-workspace
+
 # Release ####################################################################
 
-.PHONY: .git-no-changes
-.git-no-changes:
-	@if git diff --name-only --exit-code;         \
-	then                                          \
-		echo Git working copy is clean...;        \
-	else                                          \
-		echo ERROR: Git working copy is dirty!;   \
-		echo Commit your changes and try again.;  \
-		exit -1;                                  \
-	fi;
+.PHONY: register
+register: doc
+	$(PYTHON) setup.py register
 
 .PHONY: dist
 dist: check doc test tests
@@ -251,6 +265,17 @@ dist: check doc test tests
 upload: .git-no-changes doc
 	$(PYTHON) setup.py register sdist upload
 	$(PYTHON) setup.py bdist_wheel upload
+
+.PHONY: .git-no-changes
+.git-no-changes:
+	@if git diff --name-only --exit-code;         \
+	then                                          \
+		echo Git working copy is clean...;        \
+	else                                          \
+		echo ERROR: Git working copy is dirty!;   \
+		echo Commit your changes and try again.;  \
+		exit -1;                                  \
+	fi;
 
 # System Installation ########################################################
 

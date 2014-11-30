@@ -23,13 +23,16 @@ def store(instance, path, mapping=None, auto=True):
     """
     mapping = mapping or {}
 
-    class Mapped(instance.__class__, Mappable):
+    if isinstance(instance, Mappable):
+        raise common.UseageError("{} is already mapped".format(repr(instance)))
+
+    class Mapped(Mappable, instance.__class__):
 
         """Original class with `Mappable` as the base."""
 
     instance.__class__ = Mapped
 
-    instance.yorm_attrs = mapping
+    instance.yorm_attrs = mapping or getattr(instance, 'yorm_attrs', mapping)
     instance.yorm_path = path
     instance.yorm_mapper = Mapper(instance.yorm_path)
 
@@ -64,7 +67,7 @@ def store_instances(path_format, format_spec=None, mapping=None, auto=True):
         else:
             cls.yorm_attrs = mapping
 
-        class Mapped(cls, Mappable):
+        class Mapped(Mappable, cls):
 
             """Original class with `Mappable` as the base."""
 

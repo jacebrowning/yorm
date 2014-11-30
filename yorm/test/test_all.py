@@ -6,7 +6,7 @@
 import pytest
 
 from yorm import store, store_instances, map_attr, Converter
-from yorm.base import Dictionary, List
+from yorm.container import Dictionary, List
 from yorm.standard import Object, String, Integer, Float, Boolean
 from yorm.extended import Markdown
 
@@ -144,6 +144,19 @@ class SampleDecoratedNoAuto:
         return "<no auto {}>".format(id(self))
 
 
+@map_attr(string=String, number_real=Float)
+class SampleDecoratedNoPath:
+
+    """Sample class with a manually mapped path."""
+
+    def __init__(self):
+        self.string = ""
+        self.number_real = 0.0
+
+    def __repr__(self):
+        return "<no path {}>".format(id(self))
+
+
 @store_instances("sample.yml")
 class SampleEmptyDecorated:
 
@@ -183,14 +196,20 @@ class SampleCustomDecorated:
 def test_imports():
     """Verify the package namespace is mapped correctly."""
     # pylint: disable=W0404,W0612,W0621
+    import yorm
+
     from yorm import UUID, store, store_instances, map_attr
     from yorm import Mappable, Converter
-    import yorm
+
+    from yorm.standard import String
+    from yorm.extended import Markdown
+    from yorm.container import List
 
     assert store
     assert Converter
     assert yorm.standard.Boolean
     assert yorm.extended.Markdown
+    assert yorm.container.Dictionary
 
 
 @integration
@@ -357,6 +376,23 @@ class TestStandard:
         # store value
         sample.yorm_mapper.store(sample)
         sample.yorm_mapper.auto = True
+
+        # check for changed file values
+        with open(sample.yorm_path, 'r') as stream:
+            text = stream.read()
+        assert """
+        number_real: 4.2
+        string: abc
+        """.strip().replace("        ", "") + '\n' == text
+
+    def test_no_path(self, tmpdir):
+        """Verify standard attribute types dump/load correctly (path)."""
+        tmpdir.chdir()
+        sample = store(SampleDecoratedNoPath(), "sample.yml")
+
+        # change object values
+        sample.string = "abc"
+        sample.number_real = 4.2
 
         # check for changed file values
         with open(sample.yorm_path, 'r') as stream:
