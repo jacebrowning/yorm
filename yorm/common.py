@@ -136,18 +136,21 @@ def write_text(text, path, encoding='utf-8'):
 def touch(path):
     """Ensure a file exists."""
     if not os.path.exists(path):
+        dirpath = os.path.dirname(path)
+        if dirpath and not os.path.isdir(dirpath):
+            log.trace("creating directory '{}'...".format(dirpath))
+            os.makedirs(dirpath)
         log.trace("creating empty '{}'...".format(path))
         write_text('', path)
 
 
 def delete(path):
     """Delete a file or directory with error handling."""
-    # TODO: determine if directory deletion should be part of this library
-    if os.path.isdir(path):  # pragma: no cover (unused)
+    if os.path.isdir(path):
         try:
             log.trace("deleting '{}'...".format(path))
             shutil.rmtree(path)
-        except IOError:
+        except IOError:  # pragma: no cover (manual test)
             # bug: http://code.activestate.com/lists/python-list/159050
             msg = "unable to delete: {}".format(path)
             log.warning(msg)
