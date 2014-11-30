@@ -3,7 +3,7 @@
 """Package for YORM."""
 
 __project__ = 'YORM'
-__version__ = '0.2'
+__version__ = '0.3-dev'
 
 VERSION = __project__ + '-' + __version__
 
