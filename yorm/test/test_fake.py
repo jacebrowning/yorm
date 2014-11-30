@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # pylint:disable=R0201
 
-"""Integration tests for the `yorm.fake` option."""
+"""Integration tests for the `yorm.settings.fake` option."""
 
 import os
 import pytest
