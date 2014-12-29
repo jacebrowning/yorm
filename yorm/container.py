@@ -17,11 +17,20 @@ class ContainerMeta(abc.ABCMeta):
         cls.yorm_attrs = {}
 
 
-class Dictionary(metaclass=ContainerMeta):
+class _dict(dict):
+
+    """A `dict` with keys available as attributes."""
+
+    def __init__(self, *args, **kwargs):
+        super(dict2, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
+
+class Dictionary(dict, metaclass=ContainerMeta):
 
     """Base class for a dictionary of attribute converters."""
 
-    TYPE = dict
+    TYPE = _dict
 
     @classmethod
     def to_value(cls, obj):  # pylint: disable=E0213
