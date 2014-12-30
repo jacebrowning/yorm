@@ -17,20 +17,18 @@ class ContainerMeta(abc.ABCMeta):
         cls.yorm_attrs = {}
 
 
-class _dict(dict):
+class AttributeDict(dict):
 
     """A `dict` with keys available as attributes."""
 
     def __init__(self, *args, **kwargs):
-        super(dict2, self).__init__(*args, **kwargs)
+        super(AttributeDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
 
 
-class Dictionary(dict, metaclass=ContainerMeta):
+class Dictionary(AttributeDict, metaclass=ContainerMeta):
 
     """Base class for a dictionary of attribute converters."""
-
-    TYPE = _dict
 
     @classmethod
     def to_value(cls, obj):  # pylint: disable=E0213
@@ -39,10 +37,12 @@ class Dictionary(dict, metaclass=ContainerMeta):
             msg = "Dictionary class must be subclassed to use"
             raise NotImplementedError(msg)
 
-        value = cls.TYPE()
-        yorm_attrs = cls.yorm_attrs.copy()
+        # Create an uninitialized object with keys as attributes
+        value = cls.__new__(cls)
+        value.__dict__ = value
 
         # Convert object attributes to a dictionary
+        yorm_attrs = cls.yorm_attrs.copy()
         if isinstance(obj, cls):
             items = obj.__dict__.items()
             dictionary = {k: v for k, v in items if k in yorm_attrs}
@@ -107,7 +107,7 @@ class Dictionary(dict, metaclass=ContainerMeta):
             return {}
 
 
-class List(metaclass=ContainerMeta):
+class List(list, metaclass=ContainerMeta):
 
     """Base class for a homogeneous list of attribute converters."""
 
@@ -126,7 +126,7 @@ class List(metaclass=ContainerMeta):
         if not cls.item_type:
             raise NotImplementedError("List subclass must specify item type")
 
-        value = []
+        value = cls.__new__(cls)
 
         for item in cls.to_list(obj):
             value.append(cls.item_type.to_value(item))
