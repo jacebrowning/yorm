@@ -25,6 +25,7 @@ class SampleDictionaryWithInitialization(Dictionary):
     """Sample dictionary container with initialization."""
 
     def __init__(self, var1, var2, var3):
+        super().__init__()
         self.var1 = var1
         self.var2 = var2
         self.var3 = var3
@@ -88,9 +89,13 @@ class TestDictionary:
 
     def test_dict_as_object(self):
         """Verify a `Dictionary` can be used as an attribute."""
-        dictionary = SampleDictionaryWithInitialization(1, 2, 3)
+        dictionary = SampleDictionaryWithInitialization(1, 2, 3.0)
         value = {'var1': 1, 'var2': '2'}
-        assert value == dictionary.to_value(dictionary)
+        value2 = dictionary.to_value(dictionary)
+        assert value == value2
+        assert 1 == value2.var1
+        assert '2' == value2.var2
+        assert not hasattr(value2, 'var3')  # lost in conversion
 
 
 class TestList:
