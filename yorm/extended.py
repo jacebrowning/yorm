@@ -4,7 +4,35 @@ import re
 
 import yaml
 
-from .standard import String
+from .standard import String, Integer, Float, Boolean
+
+
+class NoneString(String):
+
+    """Converter for the `str` type with `None` as default."""
+
+    DEFAULT = None
+
+
+class NoneInteger(Integer):
+
+    """Converter for the `int` type with `None` as default."""
+
+    DEFAULT = None
+
+
+class NoneFloat(Float):
+
+    """Converter for the `float` type with `None` as default."""
+
+    DEFAULT = None
+
+
+class NoneBoolean(Boolean):
+
+    """Converter for the `bool` type with `None` as default."""
+
+    DEFAULT = None
 
 
 class _Literal(str):
