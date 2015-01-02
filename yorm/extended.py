@@ -188,7 +188,11 @@ class SortedList(List):
     @classmethod
     def to_data(cls, obj):
         """Convert all attribute values for optimal dumping to YAML."""
-        data = super().to_data(obj)
-        data.sort()
+        value = cls.to_value(obj)
+
+        data = []
+
+        for item in sorted(value):
+            data.append(cls.item_type.to_data(item))
 
         return data
