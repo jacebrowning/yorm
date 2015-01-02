@@ -17,29 +17,23 @@ class ContainerMeta(abc.ABCMeta):
         cls.yorm_attrs = {}
 
 
-class AttributeDict(dict):
-
-    """A `dict` with keys available as attributes."""
-
-    def __init__(self, *args, **kwargs):
-        super(AttributeDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
-
-
-class Dictionary(AttributeDict, metaclass=ContainerMeta):
+class Dictionary(dict, metaclass=ContainerMeta):
 
     """Base class for a dictionary of attribute converters."""
 
     @classmethod
-    def to_value(cls, obj):  # pylint: disable=E0213
-        """Convert all loaded values back to its original attribute types."""
+    def default(cls):
+        """Create an uninitialized object with keys as attributes."""
         if cls is Dictionary:
             msg = "Dictionary class must be subclassed to use"
             raise NotImplementedError(msg)
 
-        # Create an uninitialized object with keys as attributes
-        value = cls.__new__(cls)
-        value.__dict__ = value
+        return dict()
+
+    @classmethod
+    def to_value(cls, obj):  # pylint: disable=E0213
+        """Convert all loaded values back to its original attribute types."""
+        value = cls.default()
 
         # Convert object attributes to a dictionary
         yorm_attrs = cls.yorm_attrs.copy()

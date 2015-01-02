@@ -61,7 +61,7 @@ class Mapper:
     def create(self, obj):
         """Create a new file for the object."""
         if not settings.fake and not os.path.exists(self.path):
-            log.info("mapping {} to '{}'...".format(repr(obj), self))
+            log.info("mapping %r to '%s'...", obj, self)
             common.create_dirname(self.path)
             common.touch(self.path)
             self.exists = True
@@ -72,7 +72,7 @@ class Mapper:
         if self.storing:
             return
         self.retrieving = True
-        log.debug("retrieving {} from '{}'...".format(repr(obj), self.path))
+        log.debug("retrieving %r from '%s'...", obj, self.path)
 
         # Parse data from file
         if settings.fake:
@@ -128,7 +128,7 @@ class Mapper:
         if self.retrieving:
             return
         self.storing = True
-        log.debug("storing {} to '{}'...".format(repr(obj), self.path))
+        log.debug("storing %r to '%s'...", obj, self.path)
 
         # Format the data items
         data = {}
@@ -139,7 +139,7 @@ class Mapper:
                 log.debug(exc)
                 value = None
             data2 = converter.to_data(value)
-            log.trace("data to store: '{}' = {}".format(name, repr(data2)))
+            log.trace("data to store: '%s' = %r", name, data2)
             data[name] = data2
 
         # Dump data to file
@@ -176,9 +176,9 @@ class Mapper:
     def delete(self):
         """Delete the object's file from the file system."""
         if self.exists:
-            log.info("deleting '{}'...".format(self.path))
+            log.info("deleting '%s'...", self.path)
             common.delete(self.path)
             self.retrieved = False
             self.exists = False
         else:
-            log.warning("already deleted: {}".format(self))
+            log.warning("already deleted: %s", self)

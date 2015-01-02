@@ -5,8 +5,8 @@
 
 import pytest
 
-from yorm.container import Dictionary, List
 from yorm.utilities import map_attr
+from yorm.container import Dictionary, List
 from yorm.standard import String, Integer
 
 
@@ -93,9 +93,10 @@ class TestDictionary:
         value = {'var1': 1, 'var2': '2'}
         value2 = dictionary.to_value(dictionary)
         assert value == value2
-        assert 1 == value2.var1
-        assert '2' == value2.var2
-        assert not hasattr(value2, 'var3')  # lost in conversion
+        # keys are not accesible as attributes
+        assert not hasattr(value2, 'var1')
+        assert not hasattr(value2, 'var2')
+        assert not hasattr(value2, 'var3')
 
 
 class TestList:

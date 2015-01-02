@@ -5,6 +5,10 @@ import re
 import yaml
 
 from .standard import String, Integer, Float, Boolean
+from .container import Dictionary
+
+
+# standard types with None as a default #######################################
 
 
 class NoneString(String):
@@ -33,6 +37,9 @@ class NoneBoolean(Boolean):
     """Converter for the `bool` type with `None` as default."""
 
     DEFAULT = None
+
+
+# standard types with additional behavior #####################################
 
 
 class _Literal(str):
@@ -138,3 +145,25 @@ class Markdown(String):
             return Markdown.REGEX_SENTENCE_BOUNDARIES.sub('\n', stripped) + end
         else:
             return ''
+
+# container types with additional behavior ####################################
+
+
+class AttributeDictionary(Dictionary):
+
+    """Dictionary converter with keys available as attributes."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__dict__ = self
+
+    @classmethod
+    def default(cls):
+        """Create an uninitialized object with keys as attributes."""
+        if cls is AttributeDictionary:
+            msg = "AttributeDictionary class must be subclassed to use"
+            raise NotImplementedError(msg)
+
+        obj = cls.__new__(cls)
+        obj.__dict__ = obj
+        return obj
