@@ -5,7 +5,7 @@ import re
 import yaml
 
 from .standard import String, Integer, Float, Boolean
-from .container import Dictionary
+from .container import Dictionary, List
 
 
 # standard types with None as a default #######################################
@@ -167,3 +167,28 @@ class AttributeDictionary(Dictionary):
         obj = cls.__new__(cls)
         obj.__dict__ = obj
         return obj
+
+
+class SortedList(List):
+
+    """List converter that is sorted on disk."""
+
+    @classmethod
+    def default(cls):
+        """Create an uninitialized object."""
+        if cls is SortedList:
+            msg = "SortedList class must be subclassed to use"
+            raise NotImplementedError(msg)
+        if not cls.item_type:
+            msg = "SortedList subclass must specify item type"
+            raise NotImplementedError(msg)
+
+        return cls.__new__(cls)
+
+    @classmethod
+    def to_data(cls, obj):
+        """Convert all attribute values for optimal dumping to YAML."""
+        data = super().to_data(obj)
+        data.sort()
+
+        return data

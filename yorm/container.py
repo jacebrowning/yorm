@@ -23,7 +23,7 @@ class Dictionary(dict, metaclass=ContainerMeta):
 
     @classmethod
     def default(cls):
-        """Create an uninitialized object with keys as attributes."""
+        """Create an uninitialized object."""
         if cls is Dictionary:
             msg = "Dictionary class must be subclassed to use"
             raise NotImplementedError(msg)
@@ -107,6 +107,16 @@ class List(list, metaclass=ContainerMeta):
 
     ALL = 'all'
 
+    @classmethod
+    def default(cls):
+        """Create an uninitialized object."""
+        if cls is List:
+            raise NotImplementedError("List class must be subclassed to use")
+        if not cls.item_type:
+            raise NotImplementedError("List subclass must specify item type")
+
+        return cls.__new__(cls)
+
     @common.classproperty
     def item_type(cls):  # pylint: disable=E0213
         """Get the converter class for all items."""
@@ -115,12 +125,7 @@ class List(list, metaclass=ContainerMeta):
     @classmethod
     def to_value(cls, obj):  # pylint: disable=E0213
         """Convert all loaded values back to the original attribute type."""
-        if cls is List:
-            raise NotImplementedError("List class must be subclassed to use")
-        if not cls.item_type:
-            raise NotImplementedError("List subclass must specify item type")
-
-        value = cls.__new__(cls)
+        value = cls.default()
 
         for item in cls.to_list(obj):
             value.append(cls.item_type.to_value(item))
