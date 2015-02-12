@@ -60,11 +60,13 @@ class Mapper:
 
     def create(self, obj):
         """Create a new file for the object."""
-        if not settings.fake and not os.path.exists(self.path):
-            log.info("mapping {} to '{}'...".format(repr(obj), self))
-            common.create_dirname(self.path)
-            common.touch(self.path)
-            self.exists = True
+        log.critical((self.path, obj))
+        if self._fake or not os.path.isfile(self.path):
+            log.info("mapping %r to %s'%s'...", obj, self._fake, self)
+            if not self._fake:
+                common.create_dirname(self.path)
+                common.touch(self.path)
+        self.exists = True
 
     @readwrite
     def retrieve(self, obj):
@@ -72,10 +74,10 @@ class Mapper:
         if self.storing:
             return
         self.retrieving = True
-        log.debug("retrieving {} from '{}'...".format(repr(obj), self.path))
+        log.debug("retrieving %r from %s'%s'...", obj, self._fake, self.path)
 
         # Parse data from file
-        if settings.fake:
+        if self._fake:
             text = getattr(obj, 'yorm_fake', "")
         else:
             text = self.read()
@@ -128,7 +130,7 @@ class Mapper:
         if self.retrieving:
             return
         self.storing = True
-        log.debug("storing {} to '{}'...".format(repr(obj), self.path))
+        log.debug("storing %r to %s'%s'...", obj, self._fake, self.path)
 
         # Format the data items
         data = {}
@@ -139,12 +141,12 @@ class Mapper:
                 log.debug(exc)
                 value = None
             data2 = converter.to_data(value)
-            log.trace("data to store: '{}' = {}".format(name, repr(data2)))
+            log.trace("data to store: '%s' = %r", name, data2)
             data[name] = data2
 
         # Dump data to file
         text = self.dump(data)
-        if settings.fake:
+        if self._fake:
             obj.yorm_fake = text
         else:
             self.write(text)
@@ -176,9 +178,15 @@ class Mapper:
     def delete(self):
         """Delete the object's file from the file system."""
         if self.exists:
-            log.info("deleting '{}'...".format(self.path))
-            common.delete(self.path)
+            log.info("deleting %s'%s'...", self._fake, self.path)
+            if not self._fake:
+                common.delete(self.path)
             self.retrieved = False
             self.exists = False
         else:
-            log.warning("already deleted: {}".format(self))
+            log.warning("already deleted: %s", self)
+
+    @property
+    def _fake(self):  # pylint: disable=R0201
+        """Return a string indicating the fake setting to use in logging."""
+        return "(fake) " if settings.fake else ''

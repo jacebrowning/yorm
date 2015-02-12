@@ -98,21 +98,21 @@ class Boolean(Object):
 def match(name, data, nested=False):
     """Determine the appropriate converter for new data."""
     nested = " nested" if nested else ""
-    msg = "determining converter for new{}: '{}' = {}"
-    log.debug(msg.format(nested, name, repr(data)))
+    msg = "determining converter for new%s: '%s' = %r"
+    log.debug(msg, nested, name, repr(data))
 
     converters = Object.__subclasses__()
     log.trace("converter options: {}".format(converters))
 
     for converter in converters:
         if converter.TYPE and type(data) == converter.TYPE:
-            log.debug("matched converter: {}".format(converter))
-            log.info("new{} attribute: {}".format(nested, name))
+            log.debug("matched converter: %s", converter)
+            log.info("new%s attribute: %s", nested, name)
             return converter
 
     if data is None or isinstance(data, (dict, list)):
-        log.info("default converter: {}".format(Object))
-        log.warn("new{} attribute with unknown type: {}".format(nested, name))
+        log.info("default converter: %s", Object)
+        log.warn("new%s attribute with unknown type: %s", nested, name)
         return Object
 
     raise common.ConversionError("no converter available for: {}".format(data))

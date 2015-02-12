@@ -21,11 +21,11 @@ class MockMapper(Mapper):
 
     def read(self):
         text = self._mock_file
-        logging.debug("mock read:\n{}".format(text.strip()))
+        logging.debug("mock read:\n%s", text.strip())
         return text
 
     def write(self, text):
-        logging.debug("mock write:\n{}".format(text.strip()))
+        logging.debug("mock write:\n%s", text.strip())
         self._mock_file = text
 
 

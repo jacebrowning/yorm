@@ -5,8 +5,8 @@
 
 import pytest
 
-from yorm.container import Dictionary, List
 from yorm.utilities import map_attr
+from yorm.container import Dictionary, List
 from yorm.standard import String, Integer
 
 
@@ -25,6 +25,7 @@ class SampleDictionaryWithInitialization(Dictionary):
     """Sample dictionary container with initialization."""
 
     def __init__(self, var1, var2, var3):
+        super().__init__()
         self.var1 = var1
         self.var2 = var2
         self.var3 = var3
@@ -88,9 +89,14 @@ class TestDictionary:
 
     def test_dict_as_object(self):
         """Verify a `Dictionary` can be used as an attribute."""
-        dictionary = SampleDictionaryWithInitialization(1, 2, 3)
+        dictionary = SampleDictionaryWithInitialization(1, 2, 3.0)
         value = {'var1': 1, 'var2': '2'}
-        assert value == dictionary.to_value(dictionary)
+        value2 = dictionary.to_value(dictionary)
+        assert value == value2
+        # keys are not accesible as attributes
+        assert not hasattr(value2, 'var1')
+        assert not hasattr(value2, 'var2')
+        assert not hasattr(value2, 'var3')
 
 
 class TestList:
@@ -129,7 +135,7 @@ class TestList:
 
     def test_item_type_none(self):
         """Verify list item type defaults to None."""
-        assert None == UnknownList.item_type
+        assert None is UnknownList.item_type
 
     def test_not_implemented(self):
         """Verify `List` cannot be used directly."""

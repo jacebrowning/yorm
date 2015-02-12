@@ -12,7 +12,7 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
     """Base class for objects with attributes that map to YAML."""
 
     def __getattribute__(self, name):
-        if name in ('yorm_mapper', 'yorm_attrs'):
+        if name.startswith('yorm_'):
             return object.__getattribute__(self, name)
 
         try:

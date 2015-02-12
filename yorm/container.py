@@ -17,23 +17,26 @@ class ContainerMeta(abc.ABCMeta):
         cls.yorm_attrs = {}
 
 
-class Dictionary(metaclass=ContainerMeta):
+class Dictionary(dict, metaclass=ContainerMeta):
 
     """Base class for a dictionary of attribute converters."""
 
-    TYPE = dict
-
     @classmethod
-    def to_value(cls, obj):  # pylint: disable=E0213
-        """Convert all loaded values back to its original attribute types."""
+    def default(cls):
+        """Create an uninitialized object."""
         if cls is Dictionary:
             msg = "Dictionary class must be subclassed to use"
             raise NotImplementedError(msg)
 
-        value = cls.TYPE()
-        yorm_attrs = cls.yorm_attrs.copy()
+        return dict()
+
+    @classmethod
+    def to_value(cls, obj):  # pylint: disable=E0213
+        """Convert all loaded values back to its original attribute types."""
+        value = cls.default()
 
         # Convert object attributes to a dictionary
+        yorm_attrs = cls.yorm_attrs.copy()
         if isinstance(obj, cls):
             items = obj.__dict__.items()
             dictionary = {k: v for k, v in items if k in yorm_attrs}
@@ -98,11 +101,21 @@ class Dictionary(metaclass=ContainerMeta):
             return {}
 
 
-class List(metaclass=ContainerMeta):
+class List(list, metaclass=ContainerMeta):
 
     """Base class for a homogeneous list of attribute converters."""
 
     ALL = 'all'
+
+    @classmethod
+    def default(cls):
+        """Create an uninitialized object."""
+        if cls is List:
+            raise NotImplementedError("List class must be subclassed to use")
+        if not cls.item_type:
+            raise NotImplementedError("List subclass must specify item type")
+
+        return cls.__new__(cls)
 
     @common.classproperty
     def item_type(cls):  # pylint: disable=E0213
@@ -112,12 +125,7 @@ class List(metaclass=ContainerMeta):
     @classmethod
     def to_value(cls, obj):  # pylint: disable=E0213
         """Convert all loaded values back to the original attribute type."""
-        if cls is List:
-            raise NotImplementedError("List class must be subclassed to use")
-        if not cls.item_type:
-            raise NotImplementedError("List subclass must specify item type")
-
-        value = []
+        value = cls.default()
 
         for item in cls.to_list(obj):
             value.append(cls.item_type.to_value(item))
