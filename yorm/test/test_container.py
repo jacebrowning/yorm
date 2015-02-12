@@ -135,7 +135,7 @@ class TestList:
 
     def test_item_type_none(self):
         """Verify list item type defaults to None."""
-        assert None == UnknownList.item_type
+        assert None is UnknownList.item_type
 
     def test_not_implemented(self):
         """Verify `List` cannot be used directly."""
