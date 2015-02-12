@@ -9,7 +9,7 @@ ifndef TEST_RUNNER
 	# options are: nose, pytest
 	TEST_RUNNER := pytest
 endif
-UNIT_TEST_COVERAGE := 95
+UNIT_TEST_COVERAGE := 97
 INTEGRATION_TEST_COVERAGE := 100
 
 # Project settings
@@ -77,7 +77,7 @@ $(ALL): $(SOURCES)
 	touch $(ALL)  # flag to indicate all setup steps were successful
 
 .PHONY: ci
-ci: pep8 pep257 pylint test tests
+ci: check test tests
 
 .PHONY: demo
 demo: env
@@ -104,18 +104,18 @@ $(PIP):
 	$(SYS_VIRTUALENV) --python $(SYS_PYTHON) $(ENV)
 
 .PHONY: depends
-depends: .depends-ci .depends-dev
+depends: depends-ci depends-dev
 
-.PHONY: .depends-ci
-.depends-ci: env Makefile $(DEPENDS_CI)
+.PHONY: depends-ci
+depends-ci: env Makefile $(DEPENDS_CI)
 $(DEPENDS_CI): Makefile
-	$(PIP) install --upgrade pep8 pep257 $(TEST_RUNNER) pytest-capturelog coverage
+	$(PIP) install --upgrade pep8 pep257 pylint $(TEST_RUNNER) pytest-capturelog coverage
 	touch $(DEPENDS_CI)  # flag to indicate dependencies are installed
 
-.PHONY: .depends-dev
-.depends-dev: env Makefile $(DEPENDS_DEV)
+.PHONY: depends-dev
+depends-dev: env Makefile $(DEPENDS_DEV)
 $(DEPENDS_DEV): Makefile
-	$(PIP) install --upgrade pep8radius pygments docutils pdoc pylint wheel
+	$(PIP) install --upgrade pep8radius pygments docutils pdoc wheel
 	touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
 
 # Documentation ##############################################################
@@ -124,22 +124,21 @@ $(DEPENDS_DEV): Makefile
 doc: readme apidocs uml
 
 .PHONY: readme
-readme: .depends-dev docs/README-github.html docs/README-pypi.html
-docs/README-github.html: README.md
-	pandoc -f markdown_github -t html -o docs/README-github.html README.md
-	cp -f docs/README-github.html docs/README.html  # default format is GitHub
-docs/README-pypi.html: README.rst
-	$(RST2HTML) README.rst docs/README-pypi.html
+readme: depends-dev README-github.html README-pypi.html
+README-github.html: README.md
+	pandoc -f markdown_github -t html -o README-github.html README.md
+README-pypi.html: README.rst
+	$(RST2HTML) README.rst README-pypi.html
 README.rst: README.md
 	pandoc -f markdown_github -t rst -o README.rst README.md
 
 .PHONY: apidocs
-apidocs: .depends-dev apidocs/$(PACKAGE)/index.html
+apidocs: depends-dev apidocs/$(PACKAGE)/index.html
 apidocs/$(PACKAGE)/index.html: $(SOURCES)
 	$(PDOC) --html --overwrite $(PACKAGE) --html-dir apidocs
 
 .PHONY: uml
-uml: .depends-dev docs/*.png
+uml: depends-dev docs/*.png
 docs/*.png: $(SOURCES)
 	$(PYREVERSE) $(PACKAGE) -p $(PACKAGE) -f ALL -o png --ignore test
 	- mv -f classes_$(PACKAGE).png docs/classes.png
@@ -148,8 +147,8 @@ docs/*.png: $(SOURCES)
 .PHONY: read
 read: doc
 	$(OPEN) apidocs/$(PACKAGE)/index.html
-	$(OPEN) docs/README-pypi.html
-	$(OPEN) docs/README-github.html
+	$(OPEN) README-pypi.html
+	$(OPEN) README-github.html
 
 # Static Analysis ############################################################
 
@@ -157,19 +156,22 @@ read: doc
 check: pep8 pep257 pylint
 
 .PHONY: pep8
-pep8: .depends-ci
+pep8: depends-ci
+	# E501: line too long (checked by PyLint)
 	$(PEP8) $(PACKAGE) --ignore=E501
 
 .PHONY: pep257
-pep257: .depends-ci
-	$(PEP257) $(PACKAGE) --ignore=D102
+pep257: depends-ci
+	# D102: docstring missing (checked by PyLint)
+	# D202: No blank lines allowed *after* function docstring
+	$(PEP257) $(PACKAGE) --ignore=D102,D202
 
 .PHONY: pylint
-pylint: .depends-dev
+pylint: depends-ci
 	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc
 
 .PHONY: fix
-fix: .depends-dev
+fix: depends-dev
 	$(PEP8RADIUS) --docformatter --in-place
 
 # Testing ####################################################################
@@ -180,28 +182,32 @@ test: test-$(TEST_RUNNER)
 .PHONY: tests
 tests: tests-$(TEST_RUNNER)
 
+.PHONY: read-coverage
+read-coverage:
+	$(OPEN) .coverage-html/index.html
+
 # nosetest commands
 
 .PHONY: test-nose
-test-nose: .depends-ci
+test-nose: depends-ci .clean-test
 	$(NOSE) --config=.noserc
+	$(COVERAGE) html --directory .coverage-html
 
 .PHONY: tests-nose
-tests-nose: .depends-ci
+tests-nose: depends-ci .clean-test
 	TEST_INTEGRATION=1 $(NOSE) --config=.noserc --cover-package=$(PACKAGE) -xv
+	$(COVERAGE) html --directory .coverage-html
 
 # pytest commands
 
 .PHONY: test-pytest
-test-pytest: .depends-ci
-	$(COVERAGE) erase; rm -rf .coverage-html
+test-pytest: depends-ci .clean-test
 	$(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
 	$(COVERAGE) html --directory .coverage-html
 	$(COVERAGE) report --show-missing --fail-under=$(UNIT_TEST_COVERAGE)
 
 .PHONY: tests-pytest
-tests-pytest: .depends-ci
-	$(COVERAGE) erase; rm -rf .coverage-html
+tests-pytest: depends-ci .clean-test
 	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
 	$(COVERAGE) html --directory .coverage-html
 	$(COVERAGE) report --show-missing --fail-under=$(INTEGRATION_TEST_COVERAGE)
@@ -217,7 +223,7 @@ clean-env: clean
 	rm -rf $(ENV)
 
 .PHONY: clean-all
-clean-all: clean clean-env .clean-workspace .clean-cache
+clean-all: clean clean-env .clean-workspace
 
 .PHONY: .clean-build
 .clean-build:
@@ -227,19 +233,15 @@ clean-all: clean clean-env .clean-workspace .clean-cache
 
 .PHONY: .clean-doc
 .clean-doc:
-	rm -rf README.rst apidocs docs/*.html docs/*.png
+	rm -rf README.rst apidocs *.html docs/*.png
 
 .PHONY: .clean-test
 .clean-test:
-	rm -rf .coverage
+	rm -rf .coverage .coverage-html
 
 .PHONY: .clean-dist
 .clean-dist:
 	rm -rf dist build
-
-.PHONY: .clean-cache
-.clean-cache:
-	rm -rf $(PIP_CACHE_DIR)
 
 .PHONY: .clean-workspace
 .clean-workspace:
