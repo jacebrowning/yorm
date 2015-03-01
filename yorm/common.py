@@ -144,6 +144,11 @@ def touch(path):
         write_text('', path)
 
 
+def stamp(path):
+    """Get the modification timestamp from a file."""
+    return os.path.getmtime(path)
+
+
 def delete(path):
     """Delete a file or directory with error handling."""
     if os.path.isdir(path):

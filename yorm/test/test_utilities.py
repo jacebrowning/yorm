@@ -56,6 +56,7 @@ class MockConverter4(MockConverter):
 
 
 @patch('yorm.common.write_text', Mock())
+@patch('yorm.common.stamp', Mock())
 class TestStore:
 
     """Unit tests for the `store` function."""
@@ -111,6 +112,7 @@ class TestStore:
 
 @patch('yorm.common.create_dirname', Mock())
 @patch('yorm.common.write_text', Mock())
+@patch('yorm.common.stamp', Mock())
 class TestStoreInstances:
 
     """Unit tests for the `store_instances` decorator."""
@@ -222,6 +224,7 @@ class TestStoreInstances:
 
 
 @patch('yorm.common.write_text', Mock())
+@patch('yorm.common.stamp', Mock())
 class TestMapAttr:
 
     """Unit tests for the `map_attr` decorator."""

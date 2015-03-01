@@ -50,19 +50,17 @@ class Mapper:
         self.path = path
         self.auto = False
         self.exists = True
-        self.retrieving = False
-        self.storing = False
-        # TODO: replace this variable with a timeout or modification check
-        self.retrieved = False
+        self._retrieving = False
+        self._storing = False
+        self._timestamp = 0
 
     def __str__(self):
         return str(self.path)
 
     def create(self, obj):
         """Create a new file for the object."""
-        log.critical((self.path, obj))
         if self._fake or not os.path.isfile(self.path):
-            log.info("mapping %r to %s'%s'...", obj, self._fake, self)
+            log.info("creating %s'%s' for %r...", self._fake, self, obj)
             if not self._fake:
                 common.create_dirname(self.path)
                 common.touch(self.path)
@@ -71,9 +69,11 @@ class Mapper:
     @readwrite
     def retrieve(self, obj):
         """Load the object's properties from its file."""
-        if self.storing:
+        if self._storing:
             return
-        self.retrieving = True
+        if not self.modified:
+            return
+        self._retrieving = True
         log.debug("retrieving %r from %s'%s'...", obj, self._fake, self.path)
 
         # Parse data from file
@@ -98,8 +98,8 @@ class Mapper:
             setattr(obj, name, value)
 
         # Set meta attributes
-        self.retrieving = False
-        self.retrieved = True
+        self.modified = False
+        self._retrieving = False
 
     @readwrite
     def read(self):
@@ -127,9 +127,9 @@ class Mapper:
     @readwrite
     def store(self, obj):
         """Format and save the object's properties to its file."""
-        if self.retrieving:
+        if self._retrieving:
             return
-        self.storing = True
+        self._storing = True
         log.debug("storing %r to %s'%s'...", obj, self._fake, self.path)
 
         # Format the data items
@@ -152,7 +152,8 @@ class Mapper:
             self.write(text)
 
         # Set meta attributes
-        self.storing = False
+        self.modified = False
+        self._storing = False
 
     @staticmethod
     def dump(data):
@@ -181,12 +182,41 @@ class Mapper:
             log.info("deleting %s'%s'...", self._fake, self.path)
             if not self._fake:
                 common.delete(self.path)
-            self.retrieved = False
             self.exists = False
         else:
             log.warning("already deleted: %s", self)
 
     @property
+    def modified(self):
+        """Determine if the file has been modified."""
+        if self._fake:
+            log.trace("file is modified (it is fake)")
+            return True
+        elif not self.exists:
+            log.trace("file is modified (it is deleted)")
+            return True
+        else:
+            was = self._timestamp
+            now = common.stamp(self.path)
+            log.trace("file is %smodified (%s -> %s)",
+                      "not " if was == now else "",
+                      was, now)
+            return was != now
+
+    @modified.setter
+    def modified(self, changes):
+        """Mark the file as modified if there are changes."""
+        if changes:
+            log.trace("marked %sfile as modified", self._fake)
+            self._timestamp = 0
+        else:
+            if self._fake:
+                self._timestamp = None
+            else:
+                self._timestamp = common.stamp(self.path)
+            log.trace("marked %sfile as not modified", self._fake)
+
+    @property
     def _fake(self):  # pylint: disable=R0201
-        """Return a string indicating the fake setting to use in logging."""
+        """Get a string indicating the fake setting to use in logging."""
         return "(fake) " if settings.fake else ''

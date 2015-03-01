@@ -9,8 +9,8 @@ ifndef TEST_RUNNER
 	# options are: nose, pytest
 	TEST_RUNNER := pytest
 endif
-UNIT_TEST_COVERAGE := 97
-INTEGRATION_TEST_COVERAGE := 100
+UNIT_TEST_COVERAGE := 96
+INTEGRATION_TEST_COVERAGE := 99
 
 # Project settings
 PROJECT := YORM

@@ -18,6 +18,7 @@ class MockMapper(Mapper):
     def __init__(self, path):
         super().__init__(path)
         self._mock_file = None
+        self._mock_modified = True
 
     def read(self):
         text = self._mock_file
@@ -27,6 +28,15 @@ class MockMapper(Mapper):
     def write(self, text):
         logging.debug("mock write:\n%s", text.strip())
         self._mock_file = text
+        self.modified = True
+
+    @property
+    def modified(self):
+        return self._mock_modified
+
+    @modified.setter
+    def modified(self, changes):  # pylint: disable=W0221
+        self._mock_modified = changes
 
 
 # sample classes ##############################################################
