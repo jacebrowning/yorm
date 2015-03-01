@@ -30,6 +30,17 @@ class TestFake:
 
         assert not os.path.exists(mapped.path)
 
+    def test_modified(self):
+        """Verify a fake file is always modified."""
+        mapped = mapper.Mapper("fake/path/to/file")
+        mapped.create(None)
+
+        assert mapped.modified
+
+        mapped.modified = False
+
+        assert mapped.modified
+
 
 class TestReal:
 
@@ -43,14 +54,14 @@ class TestReal:
 
         assert os.path.isfile(mapped.path)
 
-    def test_create_exists(self, tmpdir):
-        """Verify files are only created if they don't exist."""
+    def test_create_twice(self, tmpdir):
+        """Verify the second creation is ignored."""
         tmpdir.chdir()
         mapped = mapper.Mapper("real/path/to/file")
-        with patch('os.path.isfile', Mock(return_value=True)):
-            mapped.create(None)
+        mapped.create(None)
+        mapped.create(None)
 
-        assert not os.path.isfile(mapped.path)
+        assert os.path.isfile(mapped.path)
 
     def test_delete(self, tmpdir):
         """Verify files can be deleted."""
@@ -60,6 +71,32 @@ class TestReal:
         mapped.delete()
 
         assert not os.path.exists(mapped.path)
+
+    def test_delete_twice(self, tmpdir):
+        """Verify the second deletion is ignored."""
+        tmpdir.chdir()
+        mapped = mapper.Mapper("real/path/to/file")
+        mapped.delete()
+
+        assert not os.path.exists(mapped.path)
+
+    def test_modified(self, tmpdir):
+        """Verify files track modifications."""
+        tmpdir.chdir()
+        mapped = mapper.Mapper("real/path/to/file")
+        mapped.create(None)
+
+        assert not mapped.modified
+
+        mapped.modified = True
+
+        assert mapped.modified
+
+    def test_modified_deleted(self):
+        """Verify a deleted file is always modified."""
+        mapped = mapper.Mapper("fake/path/to/file")
+
+        assert mapped.modified
 
 
 if __name__ == '__main__':

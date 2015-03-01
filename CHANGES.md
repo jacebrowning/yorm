@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.3 (dev)
+---------
+
+- Updated mapped objects to only read from the filesystem if there are changes.
+
 0.2.1 (2015-2-12)
 -----------------
 

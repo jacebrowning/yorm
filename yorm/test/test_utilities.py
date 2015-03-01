@@ -56,6 +56,7 @@ class MockConverter4(MockConverter):
 
 
 @patch('yorm.common.write_text', Mock())
+@patch('yorm.common.stamp', Mock())
 class TestStore:
 
     """Unit tests for the `store` function."""
@@ -83,7 +84,7 @@ class TestStore:
         with pytest.raises(common.UseageError):
             utilities.store(sample, "sample.yml")
 
-    @patch('os.path.exists', Mock(return_value=True))
+    @patch('os.path.isfile', Mock(return_value=True))
     @patch('yorm.common.read_text', Mock(return_value="abc: 123"))
     def test_init_existing(self):
         """Verify an existing file is read."""
@@ -97,7 +98,7 @@ class TestStore:
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             setattr(sample, 'var1', None)
         mock_yorm_mapper.retrieve.assert_never_called()
-        mock_yorm_mapper.store.assert_called_once_with(sample)
+        mock_yorm_mapper.store.assert_called_once_with(sample, mapping)
 
     def test_retrieve(self):
         """Verify retrieve is called when getting an attribute."""
@@ -105,12 +106,13 @@ class TestStore:
         sample = utilities.store(self.Sample(), "sample.yml", mapping)
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             getattr(sample, 'var1', None)
-        mock_yorm_mapper.retrieve.assert_called_once_with(sample)
+        mock_yorm_mapper.retrieve.assert_called_once_with(sample, mapping)
         mock_yorm_mapper.store.assert_never_called()
 
 
 @patch('yorm.common.create_dirname', Mock())
 @patch('yorm.common.write_text', Mock())
+@patch('yorm.common.stamp', Mock())
 class TestStoreInstances:
 
     """Unit tests for the `store_instances` decorator."""
@@ -120,10 +122,16 @@ class TestStoreInstances:
 
         """Sample decorated class using a single path."""
 
+        def __repr__(self):
+            return "<decorated {}>".format(id(self))
+
     @utilities.store_instances("{UUID}.yml")
     class SampleDecoratedIdentifiers:
 
         """Sample decorated class using UUIDs for paths."""
+
+        def __repr__(self):
+            return "<decorated w/ UUID {}>".format(id(self))
 
     @utilities.store_instances("path/to/{n}.yml", {'n': 'name'})
     class SampleDecoratedAttributes:
@@ -133,6 +141,9 @@ class TestStoreInstances:
         def __init__(self, name):
             self.name = name
 
+        def __repr__(self):
+            return "<decorated w/ specified attributes {}>".format(id(self))
+
     @utilities.store_instances("path/to/{self.name}.yml")
     class SampleDecoratedAttributesAutomatic:
 
@@ -140,6 +151,9 @@ class TestStoreInstances:
 
         def __init__(self, name):
             self.name = name
+
+        def __repr__(self):
+            return "<decorated w/ automatic attributes {}>".format(id(self))
 
     @utilities.store_instances("{self.a}/{self.b}/{c}.yml",
                                {'self.b': 'b', 'c': 'c'})
@@ -151,6 +165,9 @@ class TestStoreInstances:
             self.a = a
             self.b = b
             self.c = c
+
+        def __repr__(self):
+            return "<decorated w/ attributes {}>".format(id(self))
 
     @utilities.store_instances("sample.yml", mapping={'var1': MockConverter})
     class SampleDecoratedWithAttributes:
@@ -169,7 +186,7 @@ class TestStoreInstances:
         assert "sample.yml" == sample.yorm_path
         assert ['var1'] == list(sample.yorm_attrs.keys())
 
-    @patch('os.path.exists', Mock(return_value=True))
+    @patch('os.path.isfile', Mock(return_value=True))
     @patch('yorm.common.read_text', Mock(return_value="abc: 123"))
     def test_init_existing(self):
         """Verify an existing file is read."""
@@ -210,18 +227,21 @@ class TestStoreInstances:
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             setattr(sample, 'var1', None)
         mock_yorm_mapper.retrieve.assert_never_called()
-        mock_yorm_mapper.store.assert_called_once_with(sample)
+        mock_yorm_mapper.store.assert_called_once_with(sample,
+                                                       sample.yorm_attrs)
 
     def test_retrieve(self):
         """Verify retrieve is called when getting an attribute."""
         sample = self.SampleDecoratedWithAttributes()
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             getattr(sample, 'var1', None)
-        mock_yorm_mapper.retrieve.assert_called_once_with(sample)
+        mock_yorm_mapper.retrieve.assert_called_once_with(sample,
+                                                          sample.yorm_attrs)
         mock_yorm_mapper.store.assert_never_called()
 
 
 @patch('yorm.common.write_text', Mock())
+@patch('yorm.common.stamp', Mock())
 class TestMapAttr:
 
     """Unit tests for the `map_attr` decorator."""

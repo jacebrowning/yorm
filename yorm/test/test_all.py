@@ -3,6 +3,9 @@
 
 """Integration tests for the `yorm` package."""
 
+import time
+import logging
+
 import pytest
 
 from yorm import store, store_instances, map_attr, Converter
@@ -134,7 +137,7 @@ class SampleStandardDecorated:
 @store_instances("sample.yml", auto=False)
 class SampleDecoratedNoAuto:
 
-    """Sample class with automatic storate turned off."""
+    """Sample class with automatic storage turned off."""
 
     def __init__(self):
         self.string = ""
@@ -191,6 +194,13 @@ class SampleCustomDecorated:
 
 
 # tests #######################################################################
+
+
+def refresh_file_modification_times(seconds=1.1):
+    """Sleep to allow file modification times to refresh."""
+    logging.info("delaying for %s second%s...", seconds,
+                 "" if seconds == 1 else "s")
+    time.sleep(seconds)
 
 
 def test_imports():
@@ -260,6 +270,7 @@ class TestStandard:
         """.strip().replace("        ", "") + '\n' == text
 
         # change file values
+        refresh_file_modification_times()
         text = """
         array: [4, 5, 6]
         'false': null
@@ -297,7 +308,7 @@ class TestStandard:
         assert "path/to/directory/sample.yml" == sample.yorm_path
 
         # check defaults
-        assert {'key': ''} == sample.object
+        assert {} == sample.object
         assert [] == sample.array
         assert "" == sample.string
         assert 0 == sample.number_int
@@ -374,7 +385,7 @@ class TestStandard:
         assert "" == text
 
         # store value
-        sample.yorm_mapper.store(sample)
+        sample.yorm_mapper.store(sample, sample.yorm_attrs)
         sample.yorm_mapper.auto = True
 
         # check for changed file values
@@ -447,6 +458,7 @@ class TestContainers:
         """.strip().replace("        ", "") + '\n' == text
 
         # change file values
+        refresh_file_modification_times()
         text = """
         count: 3
         other: 4.2
@@ -472,6 +484,7 @@ class TestContainers:
         sample = SampleEmptyDecorated()
 
         # change file values
+        refresh_file_modification_times()
         text = """
         object: {'key': 'value'}
         array: [1, '2', '3.0']
@@ -479,8 +492,8 @@ class TestContainers:
         with open(sample.yorm_path, 'w') as stream:
             stream.write(text)
 
-            # (a mapped attribute must be read first to trigger retrieving)
-        sample.yorm_mapper.retrieve(sample)
+        # (a mapped attribute must be read first to trigger retrieving)
+        sample.yorm_mapper.retrieve(sample, sample.yorm_attrs)
 
         # check object values
         assert {'key': 'value'} == sample.object
@@ -519,6 +532,7 @@ class TestExtended:
         assert "" == sample.text
 
         # change object values
+        refresh_file_modification_times()
         sample.text = """
         This is the first sentence. This is the second sentence.
         This is the third sentence.
@@ -535,6 +549,7 @@ class TestExtended:
         """.strip().replace("        ", "") + '\n' == text
 
         # change file values
+        refresh_file_modification_times()
         text = """
         text: |
           This is a
@@ -571,6 +586,7 @@ class TestCustom:
         """.strip().replace("        ", "") + '\n' == text
 
         # change file values
+        refresh_file_modification_times()
         text = """
         level: 1
         """.strip().replace("        ", "") + '\n'
@@ -593,7 +609,9 @@ class TestInit:
         sample2 = SampleStandardDecorated('sample')
         assert sample2.yorm_path == sample.yorm_path
 
-        # change object values
+        refresh_file_modification_times()
+
+        logging.info("changing values in object 1...")
         sample.object = {'key2': 'value'}
         sample.array = [0, 1, 2]
         sample.string = "Hello, world!"
@@ -602,8 +620,8 @@ class TestInit:
         sample.true = True
         sample.false = False
 
-        # check object values
-        assert {'key2': 'value', 'status': False} == sample2.object
+        logging.info("reading changed values in object 2...")
+        assert 'value' == sample2.object.get('key2')
         assert [0, 1, 2] == sample2.array
         assert "Hello, world!" == sample2.string
         assert 42 == sample2.number_int
