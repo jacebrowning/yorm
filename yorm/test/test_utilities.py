@@ -84,7 +84,7 @@ class TestStore:
         with pytest.raises(common.UseageError):
             utilities.store(sample, "sample.yml")
 
-    @patch('os.path.exists', Mock(return_value=True))
+    @patch('os.path.isfile', Mock(return_value=True))
     @patch('yorm.common.read_text', Mock(return_value="abc: 123"))
     def test_init_existing(self):
         """Verify an existing file is read."""
@@ -122,10 +122,16 @@ class TestStoreInstances:
 
         """Sample decorated class using a single path."""
 
+        def __repr__(self):
+            return "<decorated {}>".format(id(self))
+
     @utilities.store_instances("{UUID}.yml")
     class SampleDecoratedIdentifiers:
 
         """Sample decorated class using UUIDs for paths."""
+
+        def __repr__(self):
+            return "<decorated w/ UUID {}>".format(id(self))
 
     @utilities.store_instances("path/to/{n}.yml", {'n': 'name'})
     class SampleDecoratedAttributes:
@@ -135,6 +141,9 @@ class TestStoreInstances:
         def __init__(self, name):
             self.name = name
 
+        def __repr__(self):
+            return "<decorated w/ specified attributes {}>".format(id(self))
+
     @utilities.store_instances("path/to/{self.name}.yml")
     class SampleDecoratedAttributesAutomatic:
 
@@ -142,6 +151,9 @@ class TestStoreInstances:
 
         def __init__(self, name):
             self.name = name
+
+        def __repr__(self):
+            return "<decorated w/ automatic attributes {}>".format(id(self))
 
     @utilities.store_instances("{self.a}/{self.b}/{c}.yml",
                                {'self.b': 'b', 'c': 'c'})
@@ -153,6 +165,9 @@ class TestStoreInstances:
             self.a = a
             self.b = b
             self.c = c
+
+        def __repr__(self):
+            return "<decorated w/ attributes {}>".format(id(self))
 
     @utilities.store_instances("sample.yml", mapping={'var1': MockConverter})
     class SampleDecoratedWithAttributes:
@@ -171,7 +186,7 @@ class TestStoreInstances:
         assert "sample.yml" == sample.yorm_path
         assert ['var1'] == list(sample.yorm_attrs.keys())
 
-    @patch('os.path.exists', Mock(return_value=True))
+    @patch('os.path.isfile', Mock(return_value=True))
     @patch('yorm.common.read_text', Mock(return_value="abc: 123"))
     def test_init_existing(self):
         """Verify an existing file is read."""

@@ -49,7 +49,7 @@ class Mapper:
     def __init__(self, path):
         self.path = path
         self.auto = False
-        self.exists = True
+        self.exists = os.path.isfile(self.path)
         self._retrieving = False
         self._storing = False
         self._timestamp = 0
@@ -57,13 +57,21 @@ class Mapper:
     def __str__(self):
         return str(self.path)
 
+    @property
+    def _fake(self):  # pylint: disable=R0201
+        """Get a string indicating the fake setting to use in logging."""
+        return "(fake) " if settings.fake else ''
+
     def create(self, obj):
         """Create a new file for the object."""
-        if self._fake or not os.path.isfile(self.path):
-            log.info("creating %s'%s' for %r...", self._fake, self, obj)
-            if not self._fake:
-                common.create_dirname(self.path)
-                common.touch(self.path)
+        log.info("creating %s'%s' for %r...", self._fake, self, obj)
+        if self.exists:
+            log.warning("already created: %s", self)
+            return
+        if not self._fake:
+            common.create_dirname(self.path)
+            common.touch(self.path)
+        self.modified = False
         self.exists = True
 
     @readwrite
@@ -80,13 +88,14 @@ class Mapper:
         if self._fake:
             text = getattr(obj, 'yorm_fake', "")
         else:
-            text = self.read()
-        data = self.load(text, self.path)
+            text = self._read()
+        data = self._load(text, self.path)
         log.trace("loaded: {}".format(data))
 
         # Update attributes
         for name, data in data.items():
             try:
+                # TODO: should yorm_attrs be passed as well?
                 converter = obj.yorm_attrs[name]
             except KeyError:
                 # TODO: determine if this runtime import is the best way to do this
@@ -102,7 +111,7 @@ class Mapper:
         self._retrieving = False
 
     @readwrite
-    def read(self):
+    def _read(self):
         """Read text from the object's file.
 
         :param path: path to a text file
@@ -113,7 +122,7 @@ class Mapper:
         return common.read_text(self.path)
 
     @staticmethod
-    def load(text, path):
+    def _load(text, path):
         """Load YAML data from text.
 
         :param text: text read from a file
@@ -145,18 +154,18 @@ class Mapper:
             data[name] = data2
 
         # Dump data to file
-        text = self.dump(data)
+        text = self._dump(data)
         if self._fake:
             obj.yorm_fake = text
         else:
-            self.write(text)
+            self._write(text)
 
         # Set meta attributes
         self.modified = False
         self._storing = False
 
     @staticmethod
-    def dump(data):
+    def _dump(data):
         """Dump YAML data to text.
 
         :param data: dictionary of YAML data
@@ -167,7 +176,7 @@ class Mapper:
         return yaml.dump(data, default_flow_style=False, allow_unicode=True)
 
     @readwrite
-    def write(self, text):
+    def _write(self, text):
         """Write text to the object's file.
 
         :param text: text to write to a file
@@ -175,16 +184,6 @@ class Mapper:
 
         """
         common.write_text(text, self.path)
-
-    def delete(self):
-        """Delete the object's file from the file system."""
-        if self.exists:
-            log.info("deleting %s'%s'...", self._fake, self.path)
-            if not self._fake:
-                common.delete(self.path)
-            self.exists = False
-        else:
-            log.warning("already deleted: %s", self)
 
     @property
     def modified(self):
@@ -216,7 +215,12 @@ class Mapper:
                 self._timestamp = common.stamp(self.path)
             log.trace("marked %sfile as not modified", self._fake)
 
-    @property
-    def _fake(self):  # pylint: disable=R0201
-        """Get a string indicating the fake setting to use in logging."""
-        return "(fake) " if settings.fake else ''
+    def delete(self):
+        """Delete the object's file from the file system."""
+        if self.exists:
+            log.info("deleting %s'%s'...", self._fake, self.path)
+            if not self._fake:
+                common.delete(self.path)
+            self.exists = False
+        else:
+            log.warning("already deleted: %s", self)
