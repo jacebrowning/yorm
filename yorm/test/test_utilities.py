@@ -98,7 +98,7 @@ class TestStore:
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             setattr(sample, 'var1', None)
         mock_yorm_mapper.retrieve.assert_never_called()
-        mock_yorm_mapper.store.assert_called_once_with(sample)
+        mock_yorm_mapper.store.assert_called_once_with(sample, mapping)
 
     def test_retrieve(self):
         """Verify retrieve is called when getting an attribute."""
@@ -106,7 +106,7 @@ class TestStore:
         sample = utilities.store(self.Sample(), "sample.yml", mapping)
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             getattr(sample, 'var1', None)
-        mock_yorm_mapper.retrieve.assert_called_once_with(sample)
+        mock_yorm_mapper.retrieve.assert_called_once_with(sample, mapping)
         mock_yorm_mapper.store.assert_never_called()
 
 
@@ -227,14 +227,16 @@ class TestStoreInstances:
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             setattr(sample, 'var1', None)
         mock_yorm_mapper.retrieve.assert_never_called()
-        mock_yorm_mapper.store.assert_called_once_with(sample)
+        mock_yorm_mapper.store.assert_called_once_with(sample,
+                                                       sample.yorm_attrs)
 
     def test_retrieve(self):
         """Verify retrieve is called when getting an attribute."""
         sample = self.SampleDecoratedWithAttributes()
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             getattr(sample, 'var1', None)
-        mock_yorm_mapper.retrieve.assert_called_once_with(sample)
+        mock_yorm_mapper.retrieve.assert_called_once_with(sample,
+                                                          sample.yorm_attrs)
         mock_yorm_mapper.store.assert_never_called()
 
 

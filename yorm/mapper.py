@@ -75,8 +75,8 @@ class Mapper:
         self.exists = True
 
     @readwrite
-    def retrieve(self, obj):
-        """Load the object's properties from its file."""
+    def retrieve(self, obj, attrs):
+        """Load the object's mapped attributes from its file."""
         if self._storing:
             return
         if not self.modified:
@@ -95,13 +95,12 @@ class Mapper:
         # Update attributes
         for name, data in data.items():
             try:
-                # TODO: should yorm_attrs be passed as well?
-                converter = obj.yorm_attrs[name]
+                converter = attrs[name]
             except KeyError:
                 # TODO: determine if this runtime import is the best way to do this
                 from . import standard
                 converter = standard.match(name, data)
-                obj.yorm_attrs[name] = converter
+                attrs[name] = converter
             value = converter.to_value(data)
             log.trace("value retrieved: '{}' = {}".format(name, repr(value)))
             setattr(obj, name, value)
@@ -134,8 +133,8 @@ class Mapper:
         return common.load_yaml(text, path)
 
     @readwrite
-    def store(self, obj):
-        """Format and save the object's properties to its file."""
+    def store(self, obj, attrs):
+        """Format and save the object's mapped attributes to its file."""
         if self._retrieving:
             return
         self._storing = True
@@ -143,7 +142,7 @@ class Mapper:
 
         # Format the data items
         data = {}
-        for name, converter in obj.yorm_attrs.items():
+        for name, converter in attrs.items():
             try:
                 value = getattr(obj, name)
             except AttributeError as exc:

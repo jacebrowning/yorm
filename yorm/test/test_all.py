@@ -385,7 +385,7 @@ class TestStandard:
         assert "" == text
 
         # store value
-        sample.yorm_mapper.store(sample)
+        sample.yorm_mapper.store(sample, sample.yorm_attrs)
         sample.yorm_mapper.auto = True
 
         # check for changed file values
@@ -492,8 +492,8 @@ class TestContainers:
         with open(sample.yorm_path, 'w') as stream:
             stream.write(text)
 
-            # (a mapped attribute must be read first to trigger retrieving)
-        sample.yorm_mapper.retrieve(sample)
+        # (a mapped attribute must be read first to trigger retrieving)
+        sample.yorm_mapper.retrieve(sample, sample.yorm_attrs)
 
         # check object values
         assert {'key': 'value'} == sample.object

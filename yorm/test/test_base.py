@@ -59,7 +59,7 @@ class SampleMappable(Mappable):
                            'var2': Integer,
                            'var3': Boolean}
         self.yorm_mapper = MockMapper(self.yorm_path)
-        self.yorm_mapper.store(self)
+        self.yorm_mapper.store(self, self.yorm_attrs)
         self.yorm_mapper.auto = True
 
     def __repr__(self):

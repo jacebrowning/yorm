@@ -18,11 +18,11 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
         try:
             value = object.__getattribute__(self, name)
         except AttributeError:
-            self.yorm_mapper.retrieve(self)
+            self.yorm_mapper.retrieve(self, self.yorm_attrs)
             value = object.__getattribute__(self, name)
         else:
             if name in self.yorm_attrs:
-                self.yorm_mapper.retrieve(self)
+                self.yorm_mapper.retrieve(self, self.yorm_attrs)
                 value = object.__getattribute__(self, name)
 
         return value
@@ -36,7 +36,7 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
 
         if hasattr(self, 'yorm_attrs') and name in self.yorm_attrs:
             if hasattr(self, 'yorm_mapper') and self.yorm_mapper.auto:
-                self.yorm_mapper.store(self)
+                self.yorm_mapper.store(self, self.yorm_attrs)
             else:
                 log.trace("automatic storage is off")
 
@@ -46,7 +46,7 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
 
     def __exit__(self, *_):
         log.debug("turning on automatic storage...")
-        self.yorm_mapper.store(self)
+        self.yorm_mapper.store(self, self.yorm_attrs)
 
 
 class Converter(metaclass=abc.ABCMeta):  # pylint:disable=R0921
