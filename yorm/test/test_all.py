@@ -180,7 +180,7 @@ class SampleExtended:
         return "<extended {}>".format(id(self))
 
 
-@store_instances("path/to/directory/{UUID}.yml", mapping={'level': Level})
+@store_instances("path/to/directory/{UUID}.yml", attrs={'level': Level})
 class SampleCustomDecorated:
 
     """Sample class using custom attribute types."""
@@ -204,22 +204,32 @@ def refresh_file_modification_times(seconds=1.1):
 
 
 def test_imports():
-    """Verify the package namespace is mapped correctly."""
+    """Verify the package namespace is correct."""
     # pylint: disable=W0404,W0612,W0621
+
     import yorm
 
-    from yorm import UUID, store, store_instances, map_attr
-    from yorm import Mappable, Converter
+    # Constants
+    from yorm import UUID  # filename placeholder
 
-    from yorm.standard import String
-    from yorm.extended import Markdown
-    from yorm.container import List
+    # Classes
+    from yorm import Mappable  # base class for mapped objects
+    from yorm import Converter  # base class for converters
+    from yorm.standard import String  # and others
+    from yorm.extended import Markdown  # and others
+    from yorm.container import List  # and others
 
-    assert store
-    assert Converter
-    assert yorm.standard.Boolean
-    assert yorm.extended.Markdown
-    assert yorm.container.Dictionary
+    # Decorators
+    from yorm import sync  # enables mapping on a class's instance objects
+    from yorm import sync_instances  # alias for the class decorator
+    from yorm import attr  # alternate API to identify mapped attributes
+
+    # Functions
+    from yorm import sync  # enables mapping on an instance object
+    from yorm import sync_object  # alias for the mapping function
+    from yorm import update  # fetch (if necessary) and store a mapped object
+    from yorm import update_object  # fetch (optional force) a mapped object
+    from yorm import update_file  # store a mapped object
 
 
 @integration

@@ -169,7 +169,7 @@ class TestStoreInstances:
         def __repr__(self):
             return "<decorated w/ attributes {}>".format(id(self))
 
-    @utilities.store_instances("sample.yml", mapping={'var1': MockConverter})
+    @utilities.store_instances("sample.yml", attrs={'var1': MockConverter})
     class SampleDecoratedWithAttributes:
 
         """Sample decorated class using a single path."""
@@ -263,12 +263,12 @@ class TestMapAttr:
     @utilities.map_attr()
     @utilities.map_attr(var1=MockConverter1)
     @utilities.map_attr(var2=MockConverter2, var3=MockConverter3)
-    @utilities.store_instances("sample.yml", mapping={'var0': MockConverter0})
+    @utilities.store_instances("sample.yml", attrs={'var0': MockConverter0})
     class SampleDecoratedCombo:
 
         """Sample decorated class using `map_attr` and providing a mapping."""
 
-    @utilities.store_instances("sample.yml", mapping={'var0': MockConverter0})
+    @utilities.store_instances("sample.yml", attrs={'var0': MockConverter0})
     @utilities.map_attr(var1=MockConverter1)
     class SampleDecoratedBackwards:
 
