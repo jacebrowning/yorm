@@ -5,7 +5,7 @@
 
 import pytest
 
-from yorm.utilities import map_attr
+from yorm.utilities import attr
 from yorm.container import Dictionary, List
 from yorm.standard import String, Integer
 
@@ -13,13 +13,13 @@ from yorm.standard import String, Integer
 # sample classes ##############################################################
 
 
-@map_attr(abc=Integer)
+@attr(abc=Integer)
 class SampleDictionary(Dictionary):
 
     """Sample dictionary container."""
 
 
-@map_attr(var1=Integer, var2=String)
+@attr(var1=Integer, var2=String)
 class SampleDictionaryWithInitialization(Dictionary):
 
     """Sample dictionary container with initialization."""
@@ -31,7 +31,7 @@ class SampleDictionaryWithInitialization(Dictionary):
         self.var3 = var3
 
 
-@map_attr(all=String)
+@attr(all=String)
 class StringList(List):
 
     """Sample list container."""

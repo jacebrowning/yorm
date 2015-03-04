@@ -18,11 +18,11 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
         try:
             value = object.__getattribute__(self, name)
         except AttributeError:
-            self.yorm_mapper.retrieve(self, self.yorm_attrs)
+            self.yorm_mapper.fetch(self, self.yorm_attrs)
             value = object.__getattribute__(self, name)
         else:
             if name in self.yorm_attrs:
-                self.yorm_mapper.retrieve(self, self.yorm_attrs)
+                self.yorm_mapper.fetch(self, self.yorm_attrs)
                 value = object.__getattribute__(self, name)
 
         return value

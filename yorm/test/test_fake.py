@@ -15,8 +15,8 @@ class TestFake:
 
     """Integration tests with `yorm.fake` enabled."""
 
-    @yorm.map_attr(value=yorm.standard.Integer)
-    @yorm.store_instances("path/to/{self.name}.yml")
+    @yorm.attr(value=yorm.standard.Integer)
+    @yorm.sync("path/to/{self.name}.yml")
     class Sample:
 
         """Sample class for fake mapping."""
