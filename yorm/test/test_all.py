@@ -8,7 +8,7 @@ import logging
 
 import pytest
 
-from yorm import store, store_instances, map_attr, Converter
+from yorm import sync, attr, Converter
 from yorm.container import Dictionary, List
 from yorm.standard import Object, String, Integer, Float, Boolean
 from yorm.extended import Markdown
@@ -50,25 +50,25 @@ class EmptyDictionary(Dictionary):
     """Sample dictionary container."""
 
 
-@map_attr(key=String)
+@attr(key=String)
 class SingleKeyDictionary(Dictionary):
 
     """Sample dictionary container."""
 
 
-@map_attr(all=Integer)
+@attr(all=Integer)
 class IntegerList(List):
 
     """Sample list container."""
 
 
-@map_attr(status=Boolean, label=String)
+@attr(status=Boolean, label=String)
 class StatusDictionary(Dictionary):
 
     """Sample dictionary container."""
 
 
-@map_attr(all=StatusDictionary)
+@attr(all=StatusDictionary)
 class StatusDictionaryList(List):
 
     """Sample list container."""
@@ -108,10 +108,10 @@ class SampleNested:
         return "<nested {}>".format(id(self))
 
 
-@map_attr(object=EmptyDictionary, array=IntegerList, string=String)
-@map_attr(number_int=Integer, number_real=Float)
-@map_attr(true=Boolean, false=Boolean)
-@store_instances("path/to/{self.category}/{self.name}.yml")
+@attr(object=EmptyDictionary, array=IntegerList, string=String)
+@attr(number_int=Integer, number_real=Float)
+@attr(true=Boolean, false=Boolean)
+@sync("path/to/{self.category}/{self.name}.yml")
 class SampleStandardDecorated:
 
     """Sample class using standard attribute types."""
@@ -133,8 +133,8 @@ class SampleStandardDecorated:
         return "<decorated {}>".format(id(self))
 
 
-@map_attr(string=String, number_real=Float)
-@store_instances("sample.yml", auto=False)
+@attr(string=String, number_real=Float)
+@sync("sample.yml", auto=False)
 class SampleDecoratedNoAuto:
 
     """Sample class with automatic storage turned off."""
@@ -147,7 +147,7 @@ class SampleDecoratedNoAuto:
         return "<no auto {}>".format(id(self))
 
 
-@map_attr(string=String, number_real=Float)
+@attr(string=String, number_real=Float)
 class SampleDecoratedNoPath:
 
     """Sample class with a manually mapped path."""
@@ -160,7 +160,7 @@ class SampleDecoratedNoPath:
         return "<no path {}>".format(id(self))
 
 
-@store_instances("sample.yml")
+@sync("sample.yml")
 class SampleEmptyDecorated:
 
     """Sample class using standard attribute types."""
@@ -180,7 +180,7 @@ class SampleExtended:
         return "<extended {}>".format(id(self))
 
 
-@store_instances("path/to/directory/{UUID}.yml", attrs={'level': Level})
+@sync("path/to/directory/{UUID}.yml", attrs={'level': Level})
 class SampleCustomDecorated:
 
     """Sample class using custom attribute types."""
@@ -307,14 +307,14 @@ class TestStandard:
         """Verify standard attribute types dump/load correctly (function)."""
         tmpdir.chdir()
         _sample = SampleStandard()
-        mapping = {'object': SingleKeyDictionary,
-                   'array': IntegerList,
-                   'string': String,
-                   'number_int': Integer,
-                   'number_real': Float,
-                   'true': Boolean,
-                   'false': Boolean}
-        sample = store(_sample, "path/to/directory/sample.yml", mapping)
+        attrs = {'object': SingleKeyDictionary,
+                 'array': IntegerList,
+                 'string': String,
+                 'number_int': Integer,
+                 'number_real': Float,
+                 'true': Boolean,
+                 'false': Boolean}
+        sample = sync(_sample, "path/to/directory/sample.yml", attrs)
         assert "path/to/directory/sample.yml" == sample.yorm_path
 
         # check defaults
@@ -358,9 +358,9 @@ class TestStandard:
         """Verify standard attribute types dump/load correctly (with)."""
         tmpdir.chdir()
         _sample = SampleStandard()
-        mapping = {'string': String,
-                   'number_real': Float}
-        sample = store(_sample, "sample.yml", mapping, auto=False)
+        attrs = {'string': String,
+                 'number_real': Float}
+        sample = sync(_sample, "sample.yml", attrs, auto=False)
 
         # change object values
         with sample:
@@ -409,7 +409,7 @@ class TestStandard:
     def test_no_path(self, tmpdir):
         """Verify standard attribute types dump/load correctly (path)."""
         tmpdir.chdir()
-        sample = store(SampleDecoratedNoPath(), "sample.yml")
+        sample = sync(SampleDecoratedNoPath(), "sample.yml")
 
         # change object values
         sample.string = "abc"
@@ -433,9 +433,9 @@ class TestContainers:
         """Verify standard attribute types can be nested."""
         tmpdir.chdir()
         _sample = SampleNested()
-        mapping = {'count': Integer,
-                   'results': StatusDictionaryList}
-        sample = store(_sample, "sample.yml", mapping)
+        attrs = {'count': Integer,
+                 'results': StatusDictionaryList}
+        sample = sync(_sample, "sample.yml", attrs)
 
         # check defaults
         assert 0 == sample.count
@@ -503,7 +503,7 @@ class TestContainers:
             stream.write(text)
 
         # (a mapped attribute must be read first to trigger retrieving)
-        sample.yorm_mapper.retrieve(sample, sample.yorm_attrs)
+        sample.yorm_mapper.fetch(sample, sample.yorm_attrs)
 
         # check object values
         assert {'key': 'value'} == sample.object
@@ -535,8 +535,8 @@ class TestExtended:
         """Verify extended attribute types dump/load correctly."""
         tmpdir.chdir()
         _sample = SampleExtended()
-        mapping = {'text': Markdown}
-        sample = store(_sample, "path/to/directory/sample.yml", mapping)
+        attrs = {'text': Markdown}
+        sample = sync(_sample, "path/to/directory/sample.yml", attrs)
 
         # check defaults
         assert "" == sample.text
