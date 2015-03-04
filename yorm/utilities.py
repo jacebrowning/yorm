@@ -14,7 +14,7 @@ UUID = 'UUID'
 def sync(*args, **kwargs):
     """Convenience function to forward calls based on arguments.
 
-    This function will call one of:
+    This function will call either:
 
     * `sync_object` - when given an unmapped object
     * `sync_instances` - when used as the class decorator
@@ -38,9 +38,7 @@ def sync_object(instance, path, attrs=None, auto=True):
 
     """
     attrs = attrs or {}
-
-    if isinstance(instance, Mappable):
-        raise common.UseageError("{} is already mapped".format(repr(instance)))
+    _check_base(instance, mappable=False)
 
     class Mapped(Mappable, instance.__class__):
 
@@ -131,16 +129,49 @@ def attr(**kwargs):
     return decorator
 
 
-def update(instance):
-    """Synchronize changes between a mapped object and its file."""
-    log.critical(instance)
+def update(instance, fetch=True, force=True, store=True):
+    """Synchronize changes between a mapped object and its file.
+
+    :param instance: object with patched YAML mapping behavior
+    :param fetch: update the object with changes from its file
+    :param force: even if the file appears unchanged
+    :param store: update the file with changes from the object
+
+    """
+    _check_base(instance, mappable=True)
+
+    if fetch:
+        update_object(instance, force=force)
+    if store:
+        update_file(instance)
 
 
-def update_object(instance):
-    """Synchronize changes into a mapped object from its file."""
-    log.critical(instance)
+def update_object(instance, force=True):
+    """Synchronize changes into a mapped object from its file.
+
+    :param instance: object with patched YAML mapping behavior
+    :param force: update the object even if the file appears unchanged
+
+    """
+    _check_base(instance, mappable=True)
+
+    instance.yorm_mapper.fetch(instance, instance.yorm_attrs, force=force)
 
 
 def update_file(instance):
-    """Synchronize changes into a mapped object's file."""
-    log.critical(instance)
+    """Synchronize changes into a mapped object's file.
+
+    :param instance: object with patched YAML mapping behavior
+
+    """
+    _check_base(instance, mappable=True)
+
+    instance.yorm_mapper.store(instance, instance.yorm_attrs)
+
+
+def _check_base(obj, mappable=True):
+    """Confirm an object's base class is `Mappable` as required."""
+    if mappable and not isinstance(obj, Mappable):
+        raise common.UseageError("{} is not mapped".format(repr(obj)))
+    if not mappable and isinstance(obj, Mappable):
+        raise common.UseageError("{} is already mapped".format(repr(obj)))

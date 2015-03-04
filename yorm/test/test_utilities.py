@@ -8,6 +8,7 @@ from unittest.mock import patch, Mock
 
 from yorm import common
 from yorm import utilities
+from yorm.base import Mappable
 from yorm.standard import Converter
 
 
@@ -50,6 +51,14 @@ class MockConverter3(MockConverter):
 class MockConverter4(MockConverter):
 
     """Sample converter class."""
+
+
+class MockMappable(Mappable):
+
+    """Sample mappable class."""
+
+    yorm_attrs = []
+    yorm_mapper = Mock()
 
 
 # tests #######################################################################
@@ -97,7 +106,7 @@ class TestSyncObject:
         sample = utilities.sync(self.Sample(), "sample.yml", attrs)
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             setattr(sample, 'var1', None)
-        mock_yorm_mapper.fetch.assert_never_called()
+        assert not mock_yorm_mapper.fetch.called
         mock_yorm_mapper.store.assert_called_once_with(sample, attrs)
 
     def test_fetch(self):
@@ -107,7 +116,7 @@ class TestSyncObject:
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             getattr(sample, 'var1', None)
         mock_yorm_mapper.fetch.assert_called_once_with(sample, attrs)
-        mock_yorm_mapper.store.assert_never_called()
+        assert not mock_yorm_mapper.store.called
 
 
 @patch('yorm.common.create_dirname', Mock())
@@ -225,7 +234,7 @@ class TestSyncInstances:
         sample = self.SampleDecoratedWithAttributes()
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             setattr(sample, 'var1', None)
-        mock_yorm_mapper.fetch.assert_never_called()
+        assert not mock_yorm_mapper.fetch.called
         mock_yorm_mapper.store.assert_called_once_with(sample,
                                                        sample.yorm_attrs)
 
@@ -236,7 +245,7 @@ class TestSyncInstances:
             getattr(sample, 'var1', None)
         mock_yorm_mapper.fetch.assert_called_once_with(sample,
                                                        sample.yorm_attrs)
-        mock_yorm_mapper.store.assert_never_called()
+        assert not mock_yorm_mapper.store.called
 
 
 @patch('yorm.common.write_text', Mock())
@@ -303,6 +312,92 @@ class TestAttr:
         expected = {'var0': MockConverter0,
                     'var1': MockConverter1}
         assert expected == sample.yorm_attrs
+
+
+class TestUpdate:
+
+    """Unit tests for the `update` function."""
+
+    def test_update(self):
+        """Verify the object and file are updated."""
+        instance = MockMappable()
+        instance.yorm_mapper.reset_mock()
+
+        utilities.update(instance)
+
+        assert instance.yorm_mapper.fetch.called
+        assert instance.yorm_mapper.store.called
+
+    def test_update_object_only(self):
+        """Verify only the object is updated."""
+        instance = MockMappable()
+        instance.yorm_mapper.reset_mock()
+
+        utilities.update(instance, store=False)
+
+        assert instance.yorm_mapper.fetch.called
+        assert not instance.yorm_mapper.store.called
+
+    def test_update_file_only(self):
+        """Verify only the file is updated."""
+        instance = MockMappable()
+        instance.yorm_mapper.reset_mock()
+
+        utilities.update(instance, fetch=False)
+
+        assert not instance.yorm_mapper.fetch.called
+        assert instance.yorm_mapper.store.called
+
+    def test_update_wrong_base(self):
+        """Verify an exception is raised with the wrong base."""
+        instance = Mock()
+
+        with pytest.raises(common.UseageError):
+            utilities.update(instance)
+
+
+class TestUpdateObject:
+
+    """Unit tests for the `update_object` function."""
+
+    def test_update(self):
+        """Verify only the object is updated."""
+        instance = MockMappable()
+        instance.yorm_mapper.reset_mock()
+
+        utilities.update_object(instance)
+
+        assert instance.yorm_mapper.fetch.called
+        assert not instance.yorm_mapper.store.called
+
+    def test_update_wrong_base(self):
+        """Verify an exception is raised with the wrong base."""
+        instance = Mock()
+
+        with pytest.raises(common.UseageError):
+            utilities.update_object(instance)
+
+
+class TestUpdateFile:
+
+    """Unit tests for the `update_file` function."""
+
+    def test_update(self):
+        """Verify only the file is updated."""
+        instance = MockMappable()
+        instance.yorm_mapper.reset_mock()
+
+        utilities.update_file(instance)
+
+        assert not instance.yorm_mapper.fetch.called
+        assert instance.yorm_mapper.store.called
+
+    def test_update_wrong_base(self):
+        """Verify an exception is raised with the wrong base."""
+        instance = Mock()
+
+        with pytest.raises(common.UseageError):
+            utilities.update_file(instance)
 
 
 if __name__ == '__main__':

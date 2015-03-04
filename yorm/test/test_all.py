@@ -612,8 +612,8 @@ class TestInit:
 
     """Integration tests for initializing mapped classes."""
 
-    def test_retrieve_from_existing(self, tmpdir):
-        """Verify attributes are loaded from an existing file."""
+    def test_fetch_from_existing(self, tmpdir):
+        """Verify attributes are updated from an existing file."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
         sample2 = SampleStandardDecorated('sample')
