@@ -49,7 +49,6 @@ Simply take an existing class:
 
 ```python
 class Student:
-
     def __init__(self, name, school, number, year=2009):
         self.name = name
         self.school = school
@@ -66,7 +65,8 @@ from yorm.standard import String, Integer, Float
 
 @yorm.attr(name=String, year=Integer, gpa=Float)
 @yorm.sync("students/{self.school}/{self.number}.yml")
-class Student: ...
+class Student:
+    ...
 ```
 
 Modifications to each object's mapped attributes:
