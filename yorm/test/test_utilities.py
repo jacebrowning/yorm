@@ -97,8 +97,8 @@ class TestSyncObject:
         sample = utilities.sync(self.Sample(), "sample.yml", attrs)
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             setattr(sample, 'var1', None)
-        mock_yorm_mapper.retrieve.assert_never_called()
-        mock_yorm_mapper.sync.assert_called_once_with(sample, attrs)
+        mock_yorm_mapper.fetch.assert_never_called()
+        mock_yorm_mapper.store.assert_called_once_with(sample, attrs)
 
     def test_fetch(self):
         """Verify fetch is called when getting an attribute."""
@@ -107,7 +107,7 @@ class TestSyncObject:
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             getattr(sample, 'var1', None)
         mock_yorm_mapper.fetch.assert_called_once_with(sample, attrs)
-        mock_yorm_mapper.sync.assert_never_called()
+        mock_yorm_mapper.store.assert_never_called()
 
 
 @patch('yorm.common.create_dirname', Mock())
@@ -225,9 +225,9 @@ class TestSyncInstances:
         sample = self.SampleDecoratedWithAttributes()
         with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
             setattr(sample, 'var1', None)
-        mock_yorm_mapper.retrieve.assert_never_called()
-        mock_yorm_mapper.sync.assert_called_once_with(sample,
-                                                      sample.yorm_attrs)
+        mock_yorm_mapper.fetch.assert_never_called()
+        mock_yorm_mapper.store.assert_called_once_with(sample,
+                                                       sample.yorm_attrs)
 
     def test_fetch(self):
         """Verify fetch is called when getting an attribute."""
@@ -236,7 +236,7 @@ class TestSyncInstances:
             getattr(sample, 'var1', None)
         mock_yorm_mapper.fetch.assert_called_once_with(sample,
                                                        sample.yorm_attrs)
-        mock_yorm_mapper.sync.assert_never_called()
+        mock_yorm_mapper.store.assert_never_called()
 
 
 @patch('yorm.common.write_text', Mock())

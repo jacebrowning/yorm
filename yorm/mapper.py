@@ -34,9 +34,9 @@ class Mapper:
 
     When getting an attribute:
 
-        FILE -> read -> [text] -> load -> [dict] -> retrieve -> ATTRIBUTES
+        FILE -> read -> [text] -> load -> [dict] -> fetch -> ATTRIBUTES
 
-    When settings an attribute:
+    When setting an attribute:
 
         ATTRIBUTES -> store -> [dict] -> dump -> [text] -> write -> FILE
 
@@ -75,8 +75,8 @@ class Mapper:
         self.exists = True
 
     @readwrite
-    def retrieve(self, obj, attrs):
-        """Load the object's mapped attributes from its file."""
+    def fetch(self, obj, attrs):
+        """Update the object's mapped attributes from its file."""
         if self._storing:
             return
         if not self.modified:
