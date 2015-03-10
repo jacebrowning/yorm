@@ -13,6 +13,8 @@ from yorm.container import Dictionary, List
 from yorm.standard import Object, String, Integer, Float, Boolean
 from yorm.extended import Markdown
 
+from . import strip
+
 integration = pytest.mark.integration
 
 
@@ -265,7 +267,7 @@ class TestStandard:
         # check file values
         with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert """
+        assert strip("""
         array:
         - 0
         - 1
@@ -277,11 +279,11 @@ class TestStandard:
           key2: value
         string: Hello, world!
         'true': false
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
         # change file values
         refresh_file_modification_times()
-        text = """
+        text = strip("""
         array: [4, 5, 6]
         'false': null
         number_int: 42
@@ -289,7 +291,7 @@ class TestStandard:
         object: {'status': false}
         string: "abc"
         'true': null
-        """.strip().replace("        ", "") + '\n'
+        """)
         with open(sample.yorm_path, 'w') as stream:
             stream.write(text)
 
@@ -339,7 +341,7 @@ class TestStandard:
         # check file values
         with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert """
+        assert strip("""
         array:
         - 1
         - 2
@@ -352,7 +354,7 @@ class TestStandard:
           key2: value
         string: Hello, world!
         'true': false
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
     def test_with(self, tmpdir):
         """Verify standard attribute types dump/load correctly (with)."""
@@ -375,10 +377,10 @@ class TestStandard:
             # check for changed file values
         with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert """
+        assert strip("""
         number_real: 4.2
         string: abc
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
     def test_no_auto(self, tmpdir):
         """Verify standard attribute types dump/load correctly (auto)."""
@@ -401,10 +403,10 @@ class TestStandard:
         # check for changed file values
         with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert """
+        assert strip("""
         number_real: 4.2
         string: abc
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
     def test_no_path(self, tmpdir):
         """Verify standard attribute types dump/load correctly (path)."""
@@ -418,10 +420,10 @@ class TestStandard:
         # check for changed file values
         with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert """
+        assert strip("""
         number_real: 4.2
         string: abc
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
 
 @integration
@@ -452,7 +454,7 @@ class TestContainers:
         # check file values
         with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert """
+        assert strip("""
         count: 5
         results:
         - label: abc
@@ -465,11 +467,11 @@ class TestContainers:
           status: true
         - label: ''
           status: false
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
         # change file values
         refresh_file_modification_times()
-        text = """
+        text = strip("""
         count: 3
         other: 4.2
         results:
@@ -477,7 +479,7 @@ class TestContainers:
         - label: null
           status: false
         - status: true
-        """.strip().replace("        ", "") + '\n'
+        """)
         with open(sample.yorm_path, 'w') as stream:
             stream.write(text)
 
@@ -495,10 +497,10 @@ class TestContainers:
 
         # change file values
         refresh_file_modification_times()
-        text = """
+        text = strip("""
         object: {'key': 'value'}
         array: [1, '2', '3.0']
-        """.strip().replace("        ", "") + '\n'
+        """)
         with open(sample.yorm_path, 'w') as stream:
             stream.write(text)
 
@@ -520,10 +522,10 @@ class TestContainers:
         # check file values
         with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert """
+        assert strip("""
         array: abc
         object: null
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
 
 @integration
@@ -543,28 +545,28 @@ class TestExtended:
 
         # change object values
         refresh_file_modification_times()
-        sample.text = """
+        sample.text = strip("""
         This is the first sentence. This is the second sentence.
         This is the third sentence.
-        """.strip().replace("        ", "")
+        """)
 
         # check file values
         with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert """
+        assert strip("""
         text: |
           This is the first sentence.
           This is the second sentence.
           This is the third sentence.
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
         # change file values
         refresh_file_modification_times()
-        text = """
+        text = strip("""
         text: |
           This is a
           sentence.
-        """.strip().replace("        ", "") + '\n'
+        """)
         with open(sample.yorm_path, 'w') as stream:
             stream.write(text)
 
@@ -591,15 +593,15 @@ class TestCustom:
         # check file values
         with open(sample.yorm_path, 'r') as stream:
             text = stream.read()
-        assert """
+        assert strip("""
         level: 1.2.3
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
         # change file values
         refresh_file_modification_times()
-        text = """
+        text = strip("""
         level: 1
-        """.strip().replace("        ", "") + '\n'
+        """)
         with open(sample.yorm_path, 'w') as stream:
             stream.write(text)
 

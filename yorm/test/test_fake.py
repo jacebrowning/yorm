@@ -9,6 +9,8 @@ from unittest.mock import patch
 
 import yorm
 
+from . import strip
+
 
 @patch('yorm.settings.fake', True)
 class TestFake:
@@ -38,17 +40,17 @@ class TestFake:
         sample.value = 42
 
         # check fake file
-        assert """
+        assert strip("""
         value: 42
-        """.strip().replace("        ", "") + '\n' == sample.yorm_fake
+        """) == sample.yorm_fake
 
         # ensure no file is created
         assert not os.path.exists(sample.yorm_path)
 
         # change fake file
-        text = """
+        text = strip("""
         value2: abc
-        """.strip().replace("        ", "") + '\n'
+        """)
         setattr(sample, 'yorm_fake', text)
 
         # check object values

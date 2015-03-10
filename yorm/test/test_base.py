@@ -10,6 +10,8 @@ from yorm.base import Mappable, Converter
 from yorm.mapper import Mapper
 from yorm.standard import String, Integer, Boolean
 
+from . import strip
+
 
 class MockMapper(Mapper):
 
@@ -80,11 +82,11 @@ class TestMappable:
     def test_init(self):
         """Verify files are created after initialized."""
         text = self.sample.yorm_mapper._read()
-        assert """
+        assert strip("""
         var1: ''
         var2: 0
         var3: false
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
     def test_set(self):
         """Verify the file is written to after setting an attribute."""
@@ -92,11 +94,11 @@ class TestMappable:
         self.sample.var2 = 1
         self.sample.var3 = True
         text = self.sample.yorm_mapper._read()
-        assert """
+        assert strip("""
         var1: abc123
         var2: 1
         var3: true
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
     def test_set_converted(self):
         """Verify conversion occurs when setting attributes."""
@@ -104,11 +106,11 @@ class TestMappable:
         self.sample.var2 = "1"
         self.sample.var3 = 'off'
         text = self.sample.yorm_mapper._read()
-        assert """
+        assert strip("""
         var1: '42'
         var2: 1
         var3: false
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
     def test_set_error(self):
         """Verify an exception is raised when a value cannot be converted."""
@@ -117,11 +119,11 @@ class TestMappable:
 
     def test_get(self):
         """Verify the file is read from before getting an attribute."""
-        text = """
+        text = strip("""
         var1: def456
         var2: 42
         var3: off
-        """.strip().replace("        ", "") + '\n'
+        """)
         self.sample.yorm_mapper._write(text)
         assert"def456" == self.sample.var1
         assert 42 == self.sample.var2
@@ -129,18 +131,18 @@ class TestMappable:
 
     def test_error_invalid_yaml(self):
         """Verify an exception is raised on invalid YAML."""
-        text = """
+        text = strip("""
         invalid: -
-        """.strip().replace("        ", "") + '\n'
+        """)
         self.sample.yorm_mapper._write(text)
         with pytest.raises(ValueError):
             print(self.sample.var1)
 
     def test_error_unexpected_yaml(self):
         """Verify an exception is raised on unexpected YAML."""
-        text = """
+        text = strip("""
         not a dictionary
-        """.strip().replace("        ", "") + '\n'
+        """)
         self.sample.yorm_mapper._write(text)
         with pytest.raises(ValueError):
             print(self.sample.var1)
@@ -151,32 +153,32 @@ class TestMappable:
             self.sample.var1 = "abc123"
 
             text = self.sample.yorm_mapper._read()
-            assert """
+            assert strip("""
             var1: ''
             var2: 0
             var3: false
-            """.strip().replace("            ", "") + '\n' == text
+            """) == text
 
         text = self.sample.yorm_mapper._read()
-        assert """
+        assert strip("""
         var1: abc123
         var2: 0
         var3: false
-        """.strip().replace("        ", "") + '\n' == text
+        """) == text
 
     def test_new(self):
         """Verify new attributes are added to the object."""
-        text = """
+        text = strip("""
         new: 42
-        """.strip().replace("        ", "") + '\n'
+        """)
         self.sample.yorm_mapper._write(text)
         assert 42 == self.sample.new
 
     def test_new_unknown(self):
         """Verify an exception is raised on new attributes w/ unknown types"""
-        text = """
+        text = strip("""
         new: !!timestamp 2001-12-15T02:59:43.1Z
-        """.strip().replace("        ", "") + '\n'
+        """)
         self.sample.yorm_mapper._write(text)
         with pytest.raises(ValueError):
             print(self.sample.var1)
