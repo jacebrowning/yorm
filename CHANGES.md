@@ -1,8 +1,8 @@
 Changelog
 =========
 
-0.3 (dev)
----------
+0.3 (2015-3-10)
+---------------
 
 - Updated mapped objects to only read from the filesystem if there are changes.
 - Renamed `store` to `sync_object`.
