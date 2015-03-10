@@ -9,12 +9,12 @@ YORM
 
 YORM provides functions and decorators to enable automatic, bidirectional, and human-friendly mappings of Python object attributes to YAML files.
 
-Uses beyond typical object serialization and object mapping include:
+Uses beyond typical object serialization and mapping include:
 
-* automatic bidirectional conversion of attributes types
+* bidirectional conversion between basic YAML and Python types
 * attribute creation and type inference for new attributes
 * storage of content in text files optimized for version control
-* custom converters to map complex classes to JSON-compatible types
+* extensible converters to customize formatting on complex classes
 
 
 Getting Started
@@ -30,13 +30,17 @@ Installation
 
 YORM can be installed with pip:
 
-    $ pip install YORM
+```
+$ pip install YORM
+```
 
-Or directly from the source code:
+or directly from the source code:
 
-    $ git clone https://github.com/jacebrowning/yorm.git
-    $ cd yorm
-    $ python setup.py install
+```
+$ git clone https://github.com/jacebrowning/yorm.git
+$ cd yorm
+$ python setup.py install
+```
 
 Basic Usage
 ===========
@@ -45,7 +49,6 @@ Simply take an existing class:
 
 ```python
 class Student:
-
     def __init__(self, name, school, number, year=2009):
         self.name = name
         self.school = school
@@ -57,15 +60,16 @@ class Student:
 and define an attribute mapping:
 
 ```python
-from yorm import store_instances, map_attr
+import yorm
 from yorm.standard import String, Integer, Float
 
-@map_attr(name=String, year=Integer, gpa=Float)
-@store_instances("students/{self.school}/{self.number}.yml")
-class Student: ...
+@yorm.attr(name=String, year=Integer, gpa=Float)
+@yorm.sync("students/{self.school}/{self.number}.yml")
+class Student:
+    ...
 ```
 
-Modifications to an object's mapped attributes:
+Modifications to each object's mapped attributes:
 
 ```python
 >>> s1 = Student("John Doe", "GVSU", 123)
@@ -83,7 +87,7 @@ school: GVSU
 year: 2009
 ```
 
-Modifications and new content in the mapped file:
+Modifications and new content in each mapped file:
 
 ```bash
 $ echo "name: John Doe
@@ -93,7 +97,7 @@ $ echo "name: John Doe
 " > students/GVSU/123.yml
 ```
 
-are automatically reflected in the objects:
+are automatically reflected in their corresponding object:
 
 ```python
 >>> s1.gpa
@@ -108,7 +112,7 @@ For Contributors
 Requirements
 ------------
 
-* GNU Make:
+* Make:
     * Windows: http://cygwin.com/install.html
     * Mac: https://developer.apple.com/xcode
     * Linux: http://www.gnu.org/software/make (likely already installed)
@@ -121,25 +125,35 @@ Installation
 
 Create a virtualenv:
 
-    $ make env
+```
+$ make env
+```
 
 Run the tests:
 
-    $ make test
-    $ make tests  # includes integration tests
+```
+$ make test
+$ make tests  # includes integration tests
+```
 
 Build the documentation:
 
-    $ make doc
+```
+$ make doc
+```
 
 Run static analysis:
 
-    $ make pep8
-    $ make pep257
-    $ make pylint
-    $ make check  # includes all checks
+```
+$ make pep8
+$ make pep257
+$ make pylint
+$ make check  # includes all checks
+```
 
 Prepare a release:
 
-    $ make dist  # dry run
-    $ make upload
+```
+$ make dist  # dry run
+$ make upload
+```

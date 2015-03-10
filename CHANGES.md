@@ -1,6 +1,17 @@
 Changelog
 =========
 
+0.3 (2015-3-10)
+---------------
+
+- Updated mapped objects to only read from the filesystem if there are changes.
+- Renamed `store` to `sync_object`.
+- Renamed `store_instances` to `sync_instances`.
+- Renamed `map_attr` to `attr`.
+- Added `sync` to call `sync_object` or `sync_instances` as needed.
+- Added `update_object` and `update_file` to force syncrhonization.
+- Added `update` to call `update_object` and/or `update_file` as needed.
+
 0.2.1 (2015-2-12)
 -----------------
 

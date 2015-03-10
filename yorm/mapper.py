@@ -34,9 +34,9 @@ class Mapper:
 
     When getting an attribute:
 
-        FILE -> read -> [text] -> load -> [dict] -> retrieve -> ATTRIBUTES
+        FILE -> read -> [text] -> load -> [dict] -> fetch -> ATTRIBUTES
 
-    When settings an attribute:
+    When setting an attribute:
 
         ATTRIBUTES -> store -> [dict] -> dump -> [text] -> write -> FILE
 
@@ -49,60 +49,69 @@ class Mapper:
     def __init__(self, path):
         self.path = path
         self.auto = False
-        self.exists = True
-        self.retrieving = False
-        self.storing = False
-        # TODO: replace this variable with a timeout or modification check
-        self.retrieved = False
+        self.exists = os.path.isfile(self.path)
+        self._retrieving = False
+        self._storing = False
+        self._timestamp = 0
 
     def __str__(self):
         return str(self.path)
 
+    @property
+    def _fake(self):  # pylint: disable=R0201
+        """Get a string indicating the fake setting to use in logging."""
+        return "(fake) " if settings.fake else ''
+
     def create(self, obj):
         """Create a new file for the object."""
-        log.critical((self.path, obj))
-        if self._fake or not os.path.isfile(self.path):
-            log.info("mapping %r to %s'%s'...", obj, self._fake, self)
-            if not self._fake:
-                common.create_dirname(self.path)
-                common.touch(self.path)
+        log.info("creating %s'%s' for %r...", self._fake, self, obj)
+        if self.exists:
+            log.warning("already created: %s", self)
+            return
+        if not self._fake:
+            common.create_dirname(self.path)
+            common.touch(self.path)
+        self.modified = False
         self.exists = True
 
     @readwrite
-    def retrieve(self, obj):
-        """Load the object's properties from its file."""
-        if self.storing:
+    def fetch(self, obj, attrs, force=False):
+        """Update the object's mapped attributes from its file."""
+        if self._storing:
             return
-        self.retrieving = True
-        log.debug("retrieving %r from %s'%s'...", obj, self._fake, self.path)
+        if not self.modified and not force:
+            return
+        self._retrieving = True
+        log.debug("%sfetching %r from %s'%s'...", "force-" if force else "",
+                  obj, self._fake, self.path)
 
         # Parse data from file
         if self._fake:
             text = getattr(obj, 'yorm_fake', "")
         else:
-            text = self.read()
-        data = self.load(text, self.path)
+            text = self._read()
+        data = self._load(text, self.path)
         log.trace("loaded: {}".format(data))
 
         # Update attributes
         for name, data in data.items():
             try:
-                converter = obj.yorm_attrs[name]
+                converter = attrs[name]
             except KeyError:
                 # TODO: determine if this runtime import is the best way to do this
                 from . import standard
                 converter = standard.match(name, data)
-                obj.yorm_attrs[name] = converter
+                attrs[name] = converter
             value = converter.to_value(data)
-            log.trace("value retrieved: '{}' = {}".format(name, repr(value)))
+            log.trace("value fetched: '{}' = {}".format(name, repr(value)))
             setattr(obj, name, value)
 
         # Set meta attributes
-        self.retrieving = False
-        self.retrieved = True
+        self.modified = False
+        self._retrieving = False
 
     @readwrite
-    def read(self):
+    def _read(self):
         """Read text from the object's file.
 
         :param path: path to a text file
@@ -113,7 +122,7 @@ class Mapper:
         return common.read_text(self.path)
 
     @staticmethod
-    def load(text, path):
+    def _load(text, path):
         """Load YAML data from text.
 
         :param text: text read from a file
@@ -125,16 +134,16 @@ class Mapper:
         return common.load_yaml(text, path)
 
     @readwrite
-    def store(self, obj):
-        """Format and save the object's properties to its file."""
-        if self.retrieving:
+    def store(self, obj, attrs):
+        """Format and save the object's mapped attributes to its file."""
+        if self._retrieving:
             return
-        self.storing = True
+        self._storing = True
         log.debug("storing %r to %s'%s'...", obj, self._fake, self.path)
 
         # Format the data items
         data = {}
-        for name, converter in obj.yorm_attrs.items():
+        for name, converter in attrs.items():
             try:
                 value = getattr(obj, name)
             except AttributeError as exc:
@@ -145,17 +154,18 @@ class Mapper:
             data[name] = data2
 
         # Dump data to file
-        text = self.dump(data)
+        text = self._dump(data)
         if self._fake:
             obj.yorm_fake = text
         else:
-            self.write(text)
+            self._write(text)
 
         # Set meta attributes
-        self.storing = False
+        self.modified = False
+        self._storing = False
 
     @staticmethod
-    def dump(data):
+    def _dump(data):
         """Dump YAML data to text.
 
         :param data: dictionary of YAML data
@@ -166,7 +176,7 @@ class Mapper:
         return yaml.dump(data, default_flow_style=False, allow_unicode=True)
 
     @readwrite
-    def write(self, text):
+    def _write(self, text):
         """Write text to the object's file.
 
         :param text: text to write to a file
@@ -175,18 +185,42 @@ class Mapper:
         """
         common.write_text(text, self.path)
 
+    @property
+    def modified(self):
+        """Determine if the file has been modified."""
+        if self._fake:
+            log.trace("file is modified (it is fake)")
+            return True
+        elif not self.exists:
+            log.trace("file is modified (it is deleted)")
+            return True
+        else:
+            was = self._timestamp
+            now = common.stamp(self.path)
+            log.trace("file is %smodified (%s -> %s)",
+                      "not " if was == now else "",
+                      was, now)
+            return was != now
+
+    @modified.setter
+    def modified(self, changes):
+        """Mark the file as modified if there are changes."""
+        if changes:
+            log.trace("marked %sfile as modified", self._fake)
+            self._timestamp = 0
+        else:
+            if self._fake:
+                self._timestamp = None
+            else:
+                self._timestamp = common.stamp(self.path)
+            log.trace("marked %sfile as not modified", self._fake)
+
     def delete(self):
         """Delete the object's file from the file system."""
         if self.exists:
             log.info("deleting %s'%s'...", self._fake, self.path)
             if not self._fake:
                 common.delete(self.path)
-            self.retrieved = False
             self.exists = False
         else:
             log.warning("already deleted: %s", self)
-
-    @property
-    def _fake(self):  # pylint: disable=R0201
-        """Return a string indicating the fake setting to use in logging."""
-        return "(fake) " if settings.fake else ''

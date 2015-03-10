@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-"""
-Setup script for YORM.
-"""
+"""Setup script for YORM."""
 
 import setuptools
 
@@ -32,7 +30,7 @@ setuptools.setup(
     long_description=(README + '\n' + CHANGES),
     license='MIT',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',

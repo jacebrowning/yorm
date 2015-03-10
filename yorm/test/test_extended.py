@@ -5,7 +5,7 @@
 
 import pytest
 
-from yorm.utilities import map_attr
+from yorm.utilities import attr
 from yorm.extended import Markdown, AttributeDictionary, SortedList
 from yorm.standard import Integer, String, Float
 
@@ -13,7 +13,7 @@ from yorm.standard import Integer, String, Float
 # sample classes ##############################################################
 
 
-@map_attr(var1=Integer, var2=String)
+@attr(var1=Integer, var2=String)
 class SampleAttributeDictionary(AttributeDictionary):
 
     """Sample dictionary container with initialization."""
@@ -25,7 +25,7 @@ class SampleAttributeDictionary(AttributeDictionary):
         self.var3 = var3
 
 
-@map_attr(all=Float)
+@attr(all=Float)
 class SampleSortedList(SortedList):
 
     """Sample sorted list container."""
