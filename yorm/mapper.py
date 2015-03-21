@@ -27,7 +27,6 @@ class Mapper:
 
     """Utility class to manipulate YAML files.
 
-
     To start mapping attributes to a file:
 
         create -> [empty] -> FILE

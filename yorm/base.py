@@ -7,7 +7,7 @@ from . import common
 log = common.logger(__name__)
 
 
-class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
+class Mappable(metaclass=abc.ABCMeta):
 
     """Base class for objects with attributes that map to YAML."""
 
@@ -49,7 +49,7 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint:disable=R0921
         self.yorm_mapper.store(self, self.yorm_attrs)
 
 
-class Converter(metaclass=abc.ABCMeta):  # pylint:disable=R0921
+class Converter(metaclass=abc.ABCMeta):
 
     """Base class for attribute converters."""
 

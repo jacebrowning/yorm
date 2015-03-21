@@ -105,7 +105,7 @@ def match(name, data, nested=False):
     log.trace("converter options: {}".format(converters))
 
     for converter in converters:
-        if converter.TYPE and type(data) == converter.TYPE:
+        if converter.TYPE and type(data) == converter.TYPE:  # pylint: disable=W1504
             log.debug("matched converter: %s", converter)
             log.info("new%s attribute: %s", nested, name)
             return converter
