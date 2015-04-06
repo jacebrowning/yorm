@@ -1,11 +1,13 @@
 Changelog
 =========
 
-0.4 (dev)
----------
+0.3.1 (2015-04-06)
+------------------
 
-0.3 (2015-3-10)
----------------
+- Fix infinite recursion with properties that rely on other mapped attributes.
+
+0.3 (2015-03-10)
+----------------
 
 - Updated mapped objects to only read from the filesystem if there are changes.
 - Renamed `store` to `sync_object`.
@@ -15,8 +17,8 @@ Changelog
 - Added `update_object` and `update_file` to force syncrhonization.
 - Added `update` to call `update_object` and/or `update_file` as needed.
 
-0.2.1 (2015-2-12)
------------------
+0.2.1 (2015-02-12)
+------------------
 
 - Container types now extend their builtin type.
 - Added `None<Type>` extended types with `None` as a default.

@@ -141,9 +141,11 @@ def update(instance, fetch=True, force=True, store=True):
     _check_base(instance, mappable=True)
 
     if fetch:
-        update_object(instance, force=force)
+        update_object(instance)
     if store:
         update_file(instance)
+    if fetch:
+        update_object(instance, force=force)
 
 
 def update_object(instance, force=True):

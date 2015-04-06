@@ -49,8 +49,7 @@ class Mapper:
         self.path = path
         self.auto = False
         self.exists = os.path.isfile(self.path)
-        self._retrieving = False
-        self._storing = False
+        self._activity = False
         self._timestamp = 0
 
     def __str__(self):
@@ -76,11 +75,11 @@ class Mapper:
     @readwrite
     def fetch(self, obj, attrs, force=False):
         """Update the object's mapped attributes from its file."""
-        if self._storing:
+        if self._activity:
             return
         if not self.modified and not force:
             return
-        self._retrieving = True
+        self._activity = True
         log.debug("%sfetching %r from %s'%s'...", "force-" if force else "",
                   obj, self._fake, self.path)
 
@@ -107,7 +106,7 @@ class Mapper:
 
         # Set meta attributes
         self.modified = False
-        self._retrieving = False
+        self._activity = False
 
     @readwrite
     def _read(self):
@@ -135,9 +134,9 @@ class Mapper:
     @readwrite
     def store(self, obj, attrs):
         """Format and save the object's mapped attributes to its file."""
-        if self._retrieving:
+        if self._activity:
             return
-        self._storing = True
+        self._activity = True
         log.debug("storing %r to %s'%s'...", obj, self._fake, self.path)
 
         # Format the data items
@@ -161,7 +160,7 @@ class Mapper:
 
         # Set meta attributes
         self.modified = False
-        self._storing = False
+        self._activity = False
 
     @staticmethod
     def _dump(data):
