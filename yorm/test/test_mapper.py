@@ -31,15 +31,17 @@ class TestFake:
         assert not os.path.exists(mapped.path)
 
     def test_modified(self):
-        """Verify a fake file is always modified."""
+        """Verify fake files can be modified."""
         mapped = mapper.Mapper("fake/path/to/file")
         mapped.create(None)
 
+        assert not mapped.modified
+
+        mapped.modified = True
         assert mapped.modified
 
         mapped.modified = False
-
-        assert mapped.modified
+        assert not mapped.modified
 
 
 class TestReal:

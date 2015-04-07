@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.3.2 (2015-04-07)
+------------------
+
+- Fix object overwrite when calling `utilities.update`.
+
 0.3.1 (2015-04-06)
 ------------------
 

@@ -11,16 +11,34 @@ from . import settings
 log = common.logger(__name__)
 
 
-def readwrite(func):
+def file_required(method):
     """Decorator for methods that require the file to exist."""
-    @functools.wraps(func)
-    def wrapped(self, *args, **kwargs):
-        """Wrapped method."""
+    @functools.wraps(method)
+    def decorated_method(self, *args, **kwargs):
+        """Decorated method."""
         if not self.exists:
             msg = "cannot access deleted: {}".format(self.path)
             raise common.FileError(msg)
-        return func(self, *args, **kwargs)
-    return wrapped
+        return method(self, *args, **kwargs)
+    return decorated_method
+
+
+def fake_required(method):
+    """Decorator for methods that require 'settings.fake' to be set."""
+    @functools.wraps(method)
+    def decorated_method(self, *args, **kwargs):
+        """Decorated method."""
+        if not settings.fake:
+            raise AttributeError("'fake' only available with 'settings.fake'")
+        return method(self, *args, **kwargs)
+    return decorated_method
+
+
+def prefix(obj):
+    """Prefix a string with a fake designator if enabled."""
+    fake = "(fake) " if settings.fake else ""
+    name = obj if isinstance(obj, str) else "'{}'".format(obj)
+    return fake + name
 
 
 class Mapper:
@@ -51,28 +69,37 @@ class Mapper:
         self.exists = os.path.isfile(self.path)
         self._activity = False
         self._timestamp = 0
+        self._fake = ""
 
     def __str__(self):
         return str(self.path)
 
     @property
-    def _fake(self):  # pylint: disable=R0201
-        """Get a string indicating the fake setting to use in logging."""
-        return "(fake) " if settings.fake else ''
+    @fake_required
+    def fake(self):
+        """Get fake file contents (if enabled)."""
+        return self._fake
+
+    @fake.setter
+    @fake_required
+    def fake(self, text):
+        """Set fake file contents (if enabled)."""
+        self._fake = text
+        self.modified = True
 
     def create(self, obj):
         """Create a new file for the object."""
-        log.info("creating %s'%s' for %r...", self._fake, self, obj)
+        log.info("creating %s for %r...", prefix(self), obj)
         if self.exists:
             log.warning("already created: %s", self)
             return
-        if not self._fake:
+        if not settings.fake:
             common.create_dirname(self.path)
             common.touch(self.path)
         self.modified = False
         self.exists = True
 
-    @readwrite
+    @file_required
     def fetch(self, obj, attrs, force=False):
         """Update the object's mapped attributes from its file."""
         if self._activity:
@@ -80,14 +107,11 @@ class Mapper:
         if not self.modified and not force:
             return
         self._activity = True
-        log.debug("%sfetching %r from %s'%s'...", "force-" if force else "",
-                  obj, self._fake, self.path)
+        _force = "force-" if force else ""
+        log.debug("%sfetching %r from %s...", _force, obj, prefix(self))
 
         # Parse data from file
-        if self._fake:
-            text = getattr(obj, 'yorm_fake', "")
-        else:
-            text = self._read()
+        text = self._read()
         data = self._load(text, self.path)
         log.trace("loaded: {}".format(data))
 
@@ -108,7 +132,7 @@ class Mapper:
         self.modified = False
         self._activity = False
 
-    @readwrite
+    @file_required
     def _read(self):
         """Read text from the object's file.
 
@@ -117,7 +141,10 @@ class Mapper:
         :return: contexts of text file
 
         """
-        return common.read_text(self.path)
+        if settings.fake:
+            return self.fake
+        else:
+            return common.read_text(self.path)
 
     @staticmethod
     def _load(text, path):
@@ -131,13 +158,13 @@ class Mapper:
         """
         return common.load_yaml(text, path)
 
-    @readwrite
+    @file_required
     def store(self, obj, attrs):
         """Format and save the object's mapped attributes to its file."""
         if self._activity:
             return
         self._activity = True
-        log.debug("storing %r to %s'%s'...", obj, self._fake, self.path)
+        log.debug("storing %r to %s...", obj, prefix(self))
 
         # Format the data items
         data = {}
@@ -153,10 +180,7 @@ class Mapper:
 
         # Dump data to file
         text = self._dump(data)
-        if self._fake:
-            obj.yorm_fake = text
-        else:
-            self._write(text)
+        self._write(text)
 
         # Set meta attributes
         self.modified = False
@@ -173,7 +197,7 @@ class Mapper:
         """
         return yaml.dump(data, default_flow_style=False, allow_unicode=True)
 
-    @readwrite
+    @file_required
     def _write(self, text):
         """Write text to the object's file.
 
@@ -181,14 +205,19 @@ class Mapper:
         :param path: path to the file
 
         """
-        common.write_text(text, self.path)
+        if settings.fake:
+            self.fake = text
+        else:
+            common.write_text(text, self.path)
 
     @property
     def modified(self):
         """Determine if the file has been modified."""
-        if self._fake:
-            log.trace("file is modified (it is fake)")
-            return True
+        if settings.fake:
+            changes = self._timestamp is not None
+            log.trace("file is %smodified (it is fake)",
+                      "" if changes else "not ")
+            return changes
         elif not self.exists:
             log.trace("file is modified (it is deleted)")
             return True
@@ -204,20 +233,20 @@ class Mapper:
     def modified(self, changes):
         """Mark the file as modified if there are changes."""
         if changes:
-            log.trace("marked %sfile as modified", self._fake)
+            log.trace("marked %s as modified", prefix("file"))
             self._timestamp = 0
         else:
-            if self._fake:
+            if settings.fake:
                 self._timestamp = None
             else:
                 self._timestamp = common.stamp(self.path)
-            log.trace("marked %sfile as not modified", self._fake)
+            log.trace("marked %s as not modified", prefix("file"))
 
     def delete(self):
         """Delete the object's file from the file system."""
         if self.exists:
-            log.info("deleting %s'%s'...", self._fake, self.path)
-            if not self._fake:
+            log.info("deleting %s...", prefix(self))
+            if not settings.fake:
                 common.delete(self.path)
             self.exists = False
         else:
