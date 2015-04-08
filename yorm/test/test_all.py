@@ -18,7 +18,7 @@ from . import strip
 integration = pytest.mark.integration
 
 
-# custom converters ###########################################################
+# custom converters ############################################################
 
 
 class Level(Converter):
@@ -76,7 +76,7 @@ class StatusDictionaryList(List):
     """Sample list container."""
 
 
-# sample classes ##############################################################
+# sample classes ###############################################################
 
 
 class SampleStandard:
@@ -195,7 +195,7 @@ class SampleCustomDecorated:
         return "<custom {}>".format(id(self))
 
 
-# tests #######################################################################
+# tests ########################################################################
 
 
 def refresh_file_modification_times(seconds=1.1):

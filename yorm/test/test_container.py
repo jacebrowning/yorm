@@ -10,7 +10,7 @@ from yorm.container import Dictionary, List
 from yorm.standard import String, Integer
 
 
-# sample classes ##############################################################
+# sample classes ###############################################################
 
 
 @attr(abc=Integer)
@@ -45,7 +45,7 @@ class UnknownList(List):
     """Sample list container."""
 
 
-# tests #######################################################################
+# tests ########################################################################
 
 
 class TestDictionary:

@@ -12,7 +12,7 @@ from yorm.base import Mappable
 from yorm.standard import Converter
 
 
-# sample classes ##############################################################
+# sample classes ###############################################################
 
 
 class MockConverter(Converter):
@@ -61,7 +61,7 @@ class MockMappable(Mappable):
     yorm_mapper = Mock()
 
 
-# tests #######################################################################
+# tests ########################################################################
 
 
 @patch('yorm.common.write_text', Mock())

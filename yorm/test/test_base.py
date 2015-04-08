@@ -42,7 +42,7 @@ class MockMapper(Mapper):
         self._mock_modified = changes
 
 
-# sample classes ##############################################################
+# sample classes ###############################################################
 
 
 class SampleMappable(Mappable):
@@ -68,7 +68,7 @@ class SampleMappable(Mappable):
         return "<sample {}>".format(id(self))
 
 
-# tests #######################################################################
+# tests ########################################################################
 
 
 class TestMappable:

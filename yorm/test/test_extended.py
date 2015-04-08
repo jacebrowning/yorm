@@ -10,7 +10,7 @@ from yorm.extended import Markdown, AttributeDictionary, SortedList
 from yorm.standard import Integer, String, Float
 
 
-# sample classes ##############################################################
+# sample classes ###############################################################
 
 
 @attr(var1=Integer, var2=String)
@@ -36,7 +36,7 @@ class UnknownSortedList(SortedList):
     """Sample list container."""
 
 
-# tests #######################################################################
+# tests ########################################################################
 
 
 class TestMarkdown:

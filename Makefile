@@ -1,22 +1,18 @@
+# Project settings
+PROJECT := YORM
+PACKAGE := yorm
+SOURCES := Makefile setup.py $(shell find $(PACKAGE) -name '*.py')
+EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
+
 # Python settings
 ifndef TRAVIS
 	PYTHON_MAJOR := 3
 	PYTHON_MINOR := 4
 endif
 
-# Test runner settings
-ifndef TEST_RUNNER
-	# options are: nose, pytest
-	TEST_RUNNER := pytest
-endif
+# Test settings
 UNIT_TEST_COVERAGE := 98
 INTEGRATION_TEST_COVERAGE := 100
-
-# Project settings
-PROJECT := YORM
-PACKAGE := yorm
-SOURCES := Makefile setup.py $(shell find $(PACKAGE) -name '*.py')
-EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 
 # System paths
 PLATFORM := $(shell python -c 'import sys; print(sys.platform)')
@@ -68,7 +64,7 @@ DEPENDS_CI := $(ENV)/.depends-ci
 DEPENDS_DEV := $(ENV)/.depends-dev
 ALL := $(ENV)/.all
 
-# Main Targets ###############################################################
+# Main Targets #################################################################
 
 .PHONY: all
 all: depends doc $(ALL)
@@ -79,18 +75,7 @@ $(ALL): $(SOURCES)
 .PHONY: ci
 ci: check test tests
 
-.PHONY: demo
-demo: env
-	$(PIP) install --upgrade ipython[notebook]
-	cd examples/students; $(OPEN) .
-	$(BIN)/ipython notebook examples/demo.ipynb
-
-.PHONY: reset
-reset:
-	rm -rf examples/*/*.yml
-	git checkout examples/*.ipynb
-
-# Development Installation ###################################################
+# Development Installation #####################################################
 
 .PHONY: env
 env: .virtualenv $(EGG_INFO)
@@ -102,6 +87,7 @@ $(EGG_INFO): Makefile setup.py requirements.txt
 .virtualenv: $(PIP)
 $(PIP):
 	$(SYS_VIRTUALENV) --python $(SYS_PYTHON) $(ENV)
+	$(PIP) install --upgrade pip
 
 .PHONY: depends
 depends: depends-ci depends-dev
@@ -109,16 +95,16 @@ depends: depends-ci depends-dev
 .PHONY: depends-ci
 depends-ci: env Makefile $(DEPENDS_CI)
 $(DEPENDS_CI): Makefile
-	$(PIP) install --upgrade pep8 pep257 pylint $(TEST_RUNNER) pytest-capturelog coverage
+	$(PIP) install --upgrade pip pep8 pep257 pylint pytest pytest-capturelog coverage
 	touch $(DEPENDS_CI)  # flag to indicate dependencies are installed
 
 .PHONY: depends-dev
 depends-dev: env Makefile $(DEPENDS_DEV)
 $(DEPENDS_DEV): Makefile
-	$(PIP) install --upgrade pep8radius pygments docutils pdoc wheel
+	$(PIP) install --upgrade pip pep8radius pygments docutils pdoc wheel
 	touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
 
-# Documentation ##############################################################
+# Documentation ################################################################
 
 .PHONY: doc
 doc: readme apidocs uml
@@ -150,20 +136,20 @@ read: doc
 	$(OPEN) README-pypi.html
 	$(OPEN) README-github.html
 
-# Static Analysis ############################################################
+# Static Analysis ##############################################################
 
 .PHONY: check
 check: pep8 pep257 pylint
 
 .PHONY: pep8
 pep8: depends-ci
-	# E501: line too long (checked by PyLint)
+# E501: line too long (checked by PyLint)
 	$(PEP8) $(PACKAGE) --ignore=E501
 
 .PHONY: pep257
 pep257: depends-ci
-	# D102: docstring missing (checked by PyLint)
-	# D202: No blank lines allowed *after* function docstring
+# D102: docstring missing (checked by PyLint)
+# D202: No blank lines allowed *after* function docstring
 	$(PEP257) $(PACKAGE) --ignore=D102,D202
 
 .PHONY: pylint
@@ -174,45 +160,29 @@ pylint: depends-ci
 fix: depends-dev
 	$(PEP8RADIUS) --docformatter --in-place
 
-# Testing ####################################################################
+# Testing ######################################################################
 
 .PHONY: test
-test: test-$(TEST_RUNNER)
+test: depends-ci .clean-test
+	$(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
+ifndef TRAVIS
+	$(COVERAGE) html --directory .coverage-html
+	$(COVERAGE) report --show-missing --fail-under=$(UNIT_TEST_COVERAGE)
+endif
 
 .PHONY: tests
-tests: tests-$(TEST_RUNNER)
+tests: depends-ci .clean-test
+	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
+ifndef TRAVIS
+	$(COVERAGE) html --directory .coverage-html
+	$(COVERAGE) report --show-missing --fail-under=$(INTEGRATION_TEST_COVERAGE)
+endif
 
 .PHONY: read-coverage
 read-coverage:
 	$(OPEN) .coverage-html/index.html
 
-# nosetest commands
-
-.PHONY: test-nose
-test-nose: depends-ci .clean-test
-	$(NOSE) --config=.noserc
-	$(COVERAGE) html --directory .coverage-html
-
-.PHONY: tests-nose
-tests-nose: depends-ci .clean-test
-	TEST_INTEGRATION=1 $(NOSE) --config=.noserc --cover-package=$(PACKAGE) -xv
-	$(COVERAGE) html --directory .coverage-html
-
-# pytest commands
-
-.PHONY: test-pytest
-test-pytest: depends-ci .clean-test
-	$(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
-	$(COVERAGE) html --directory .coverage-html
-	$(COVERAGE) report --show-missing --fail-under=$(UNIT_TEST_COVERAGE)
-
-.PHONY: tests-pytest
-tests-pytest: depends-ci .clean-test
-	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
-	$(COVERAGE) html --directory .coverage-html
-	$(COVERAGE) report --show-missing --fail-under=$(INTEGRATION_TEST_COVERAGE)
-
-# Cleanup ####################################################################
+# Cleanup ######################################################################
 
 .PHONY: clean
 clean: .clean-dist .clean-test .clean-doc .clean-build
@@ -247,7 +217,7 @@ clean-all: clean clean-env .clean-workspace
 .clean-workspace:
 	rm -rf *.sublime-workspace
 
-# Release ####################################################################
+# Release ######################################################################
 
 .PHONY: register
 register: doc
@@ -275,7 +245,7 @@ upload: .git-no-changes doc
 		exit -1;                                  \
 	fi;
 
-# System Installation ########################################################
+# System Installation ##########################################################
 
 .PHONY: develop
 develop:
