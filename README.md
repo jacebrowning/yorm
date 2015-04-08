@@ -1,21 +1,20 @@
 YORM
 ====
 
+Enables automatic, bidirectional, human-friendly mappings of object attributes to YAML files.
+
 [![Build Status](http://img.shields.io/travis/jacebrowning/yorm/master.svg)](https://travis-ci.org/jacebrowning/yorm)
 [![Coverage Status](http://img.shields.io/coveralls/jacebrowning/yorm/master.svg)](https://coveralls.io/r/jacebrowning/yorm)
 [![Scrutinizer Code Quality](http://img.shields.io/scrutinizer/g/jacebrowning/yorm.svg)](https://scrutinizer-ci.com/g/jacebrowning/yorm/?branch=master)
 [![PyPI Version](http://img.shields.io/pypi/v/yorm.svg)](https://pypi.python.org/pypi/yorm)
 [![PyPI Downloads](http://img.shields.io/pypi/dm/yorm.svg)](https://pypi.python.org/pypi/yorm)
 
-YORM provides functions and decorators to enable automatic, bidirectional, and human-friendly mappings of Python object attributes to YAML files.
-
-Uses beyond typical object serialization and mapping include:
+Uses beyond typical object serialization and relational mapping include:
 
 * bidirectional conversion between basic YAML and Python types
 * attribute creation and type inference for new attributes
 * storage of content in text files optimized for version control
 * extensible converters to customize formatting on complex classes
-
 
 Getting Started
 ===============
