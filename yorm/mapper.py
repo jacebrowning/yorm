@@ -23,17 +23,6 @@ def file_required(method):
     return decorated_method
 
 
-def fake_required(method):
-    """Decorator for methods that require 'settings.fake' to be set."""
-    @functools.wraps(method)
-    def decorated_method(self, *args, **kwargs):
-        """Decorated method."""
-        if not settings.fake:
-            raise AttributeError("'fake' only available with 'settings.fake'")
-        return method(self, *args, **kwargs)
-    return decorated_method
-
-
 def prefix(obj):
     """Prefix a string with a fake designator if enabled."""
     fake = "(fake) " if settings.fake else ""
@@ -69,22 +58,26 @@ class Mapper:
         self.exists = os.path.isfile(self.path)
         self._activity = False
         self._timestamp = 0
-        self._fake = ""
+        self._fake = None
 
     def __str__(self):
         return str(self.path)
 
     @property
-    @fake_required
-    def fake(self):
+    def text(self):
         """Get fake file contents (if enabled)."""
-        return self._fake
+        if settings.fake:
+            return self._fake
+        else:
+            return self._read()
 
-    @fake.setter
-    @fake_required
-    def fake(self, text):
+    @text.setter
+    def text(self, text):
         """Set fake file contents (if enabled)."""
-        self._fake = text
+        if settings.fake:
+            self._fake = text
+        else:
+            self._write(text)
         self.modified = True
 
     def create(self, obj):
@@ -142,7 +135,7 @@ class Mapper:
 
         """
         if settings.fake:
-            return self.fake
+            return self._fake
         else:
             return common.read_text(self.path)
 
@@ -206,7 +199,7 @@ class Mapper:
 
         """
         if settings.fake:
-            self.fake = text
+            self._fake = text
         else:
             common.write_text(text, self.path)
 
