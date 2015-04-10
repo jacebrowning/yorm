@@ -8,60 +8,8 @@ from unittest.mock import patch, Mock
 
 from yorm import common
 from yorm import utilities
-from yorm.base import Mappable
-from yorm.standard import Converter
 
-
-# sample classes ###############################################################
-
-
-class MockConverter(Converter):
-
-    """Sample converter class."""
-
-    @classmethod
-    def to_value(cls, obj):
-        return None
-
-    @classmethod
-    def to_data(cls, obj):
-        return None
-
-
-class MockConverter0(MockConverter):
-
-    """Sample converter class."""
-
-
-class MockConverter1(MockConverter):
-
-    """Sample converter class."""
-
-
-class MockConverter2(MockConverter):
-
-    """Sample converter class."""
-
-
-class MockConverter3(MockConverter):
-
-    """Sample converter class."""
-
-
-class MockConverter4(MockConverter):
-
-    """Sample converter class."""
-
-
-class MockMappable(Mappable):
-
-    """Sample mappable class."""
-
-    yorm_attrs = []
-    yorm_mapper = Mock()
-
-
-# tests ########################################################################
+from .samples import *  # pylint: disable=W0401,W0614
 
 
 @patch('yorm.common.write_text', Mock())

@@ -5,38 +5,9 @@
 
 import pytest
 
-from yorm.utilities import attr
 from yorm.extended import Markdown, AttributeDictionary, SortedList
-from yorm.standard import Integer, String, Float
 
-
-# sample classes ###############################################################
-
-
-@attr(var1=Integer, var2=String)
-class SampleAttributeDictionary(AttributeDictionary):
-
-    """Sample dictionary container with initialization."""
-
-    def __init__(self, var1, var2, var3):
-        super().__init__()
-        self.var1 = var1
-        self.var2 = var2
-        self.var3 = var3
-
-
-@attr(all=Float)
-class SampleSortedList(SortedList):
-
-    """Sample sorted list container."""
-
-
-class UnknownSortedList(SortedList):
-
-    """Sample list container."""
-
-
-# tests ########################################################################
+from .samples import *  # pylint: disable=W0401,W0614
 
 
 class TestMarkdown:
