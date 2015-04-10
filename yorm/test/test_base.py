@@ -6,9 +6,10 @@
 import pytest
 import logging
 
-from yorm.base import Mappable, Converter
+from yorm.base.mappable import Mappable
+from yorm.base.convertible import Convertible
 from yorm.mapper import Mapper
-from yorm.standard import String, Integer, Boolean
+from yorm.converters import String, Integer, Boolean
 
 from . import strip
 
@@ -186,14 +187,14 @@ class TestMappable:
 
 class TestConverter:
 
-    """Unit tests for the `Converter` class."""
+    """Unit tests for the `Convertible` class."""
 
     def test_not_implemented(self):
-        """Verify `Converter` cannot be used directly."""
+        """Verify `Convertible` cannot be used directly."""
         with pytest.raises(NotImplementedError):
-            Converter.to_value(None)  # pylint: disable=E1120
+            Convertible.to_value(None)  # pylint: disable=E1120
         with pytest.raises(NotImplementedError):
-            Converter.to_data(None)  # pylint: disable=E1120
+            Convertible.to_data(None)  # pylint: disable=E1120
 
 
 if __name__ == '__main__':

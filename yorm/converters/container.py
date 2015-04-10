@@ -1,6 +1,6 @@
 """Converter classes for abstract container types."""
 
-from . import common
+from .. import common
 from . import standard
 
 log = common.logger(__name__)

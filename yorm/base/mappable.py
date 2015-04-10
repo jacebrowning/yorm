@@ -1,8 +1,8 @@
-"""Base classes."""
+"""Base class for mapped objects."""
 
 import abc
 
-from . import common
+from .. import common
 
 log = common.logger(__name__)
 
@@ -12,7 +12,7 @@ MAPPER = 'yorm_mapper'
 
 class Mappable(metaclass=abc.ABCMeta):
 
-    """Base class for objects with attributes that map to YAML."""
+    """Base class for objects with attributes mapped to file."""
 
     def __getattribute__(self, name):
         if name == MAPPER:
@@ -22,10 +22,12 @@ class Mappable(metaclass=abc.ABCMeta):
 
         try:
             value = object.__getattribute__(self, name)
-        except AttributeError:
+        except AttributeError as exc:
             if mapper:
                 mapper.fetch()
-            value = object.__getattribute__(self, name)
+                value = object.__getattribute__(self, name)
+            else:
+                raise exc from None
         else:
             if mapper and name in mapper.attrs:
                 mapper.fetch()
@@ -60,21 +62,3 @@ class Mappable(metaclass=abc.ABCMeta):
         log.debug("turning on automatic storage...")
         mapper = getattr(self, MAPPER)
         mapper.store()
-
-
-class Converter(metaclass=abc.ABCMeta):
-
-    """Base class for attribute converters."""
-
-    TYPE = None  # type for inferred converters (set in subclasses)
-    DEFAULT = None  # default value for conversion (set in subclasses)
-
-    @abc.abstractclassmethod
-    def to_value(cls, obj):  # pylint: disable=E0213
-        """Convert the loaded value back to its original attribute type."""
-        raise NotImplementedError("method must be implemented in subclasses")
-
-    @abc.abstractclassmethod
-    def to_data(cls, obj):  # pylint: disable=E0213
-        """Convert the attribute's value for optimal dumping to YAML."""
-        raise NotImplementedError("method must be implemented in subclasses")

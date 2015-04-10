@@ -2,17 +2,18 @@
 
 from unittest.mock import Mock
 
-from yorm.base import Mappable, Converter
+from yorm.base.mappable import Mappable
+from yorm.base.convertible import Convertible
 from yorm.utilities import sync, attr
-from yorm.container import Dictionary, List
-from yorm.standard import String, Integer, Float, Boolean
-from yorm.extended import AttributeDictionary, SortedList
+from yorm.converters import Dictionary, List
+from yorm.converters import String, Integer, Float, Boolean
+from yorm.converters import AttributeDictionary, SortedList
 
 
 # sample converters ###########################################################
 
 
-class Level(Converter):
+class Level(Convertible):
 
     """Sample custom attribute."""
 
@@ -41,7 +42,7 @@ class Level(Converter):
 # mock containers #############################################################
 
 
-class MockConverter(Converter):
+class MockConverter(Convertible):
 
     """Sample converter class."""
 

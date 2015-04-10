@@ -6,8 +6,8 @@
 import pytest
 
 from yorm import common
-from yorm.container import Dictionary, List
-from yorm.standard import String, Integer
+from yorm.converters import Dictionary, List
+from yorm.converters import String, Integer
 
 from .samples import *  # pylint: disable=W0401,W0614
 

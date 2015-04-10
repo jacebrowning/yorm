@@ -12,7 +12,7 @@ import yorm
 from . import strip
 
 
-@yorm.attr(value=yorm.standard.Integer)
+@yorm.attr(value=yorm.converters.standard.Integer)
 @yorm.sync("path/to/{self.name}.yml")
 class Sample:
 

@@ -8,8 +8,8 @@ import logging
 import pytest
 
 from yorm import sync
-from yorm.standard import Object, String, Integer, Float, Boolean
-from yorm.extended import Markdown
+from yorm.converters import Object, String, Integer, Float, Boolean
+from yorm.converters import Markdown
 
 from . import strip, refresh_file_modification_times
 from .samples import *  # pylint: disable=W0401,W0614
@@ -28,10 +28,11 @@ def test_imports():
 
     # Classes
     from yorm import Mappable  # base class for mapped objects
-    from yorm import Converter  # base class for converters
-    from yorm.standard import String  # and others
-    from yorm.extended import Markdown  # and others
-    from yorm.container import List  # and others
+    from yorm import Convertible  # base class for converters
+    from yorm.converters import Integer
+    from yorm.converters.standard import String
+    from yorm.converters.extended import Markdown
+    from yorm.converters.container import List
 
     # Decorators
     from yorm import sync  # enables mapping on a class's instance objects

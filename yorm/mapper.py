@@ -114,9 +114,9 @@ class BaseHelper(metaclass=abc.ABCMeta):
             try:
                 converter = attrs[name]
             except KeyError:
-                # TODO: determine if this runtime import is the best way to do this
-                from . import standard
-                converter = standard.match(name, data)
+                # TODO: determine if runtime import is the best way to avoid cyclic import
+                from .converters import match
+                converter = match(name, data)
                 attrs[name] = converter
             value = converter.to_value(data)
             log.trace("value fetched: '{}' = {}".format(name, repr(value)))

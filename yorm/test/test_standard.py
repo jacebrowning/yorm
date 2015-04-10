@@ -6,7 +6,7 @@
 
 import pytest
 
-from yorm import standard
+from yorm.converters import Object, String, Integer, Float, Boolean
 
 
 class TestObject:
@@ -32,12 +32,12 @@ class TestObject:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert value == standard.Object.to_value(data)
+        assert value == Object.to_value(data)
 
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert data == standard.Object.to_data(value)
+        assert data == Object.to_data(value)
 
 
 class TestString:
@@ -63,12 +63,12 @@ class TestString:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert value == standard.String.to_value(data)
+        assert value == String.to_value(data)
 
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert data == standard.String.to_data(value)
+        assert data == String.to_data(value)
 
 
 class TestInteger:
@@ -93,17 +93,17 @@ class TestInteger:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert value == standard.Integer.to_value(data)
+        assert value == Integer.to_value(data)
 
     def test_to_value_error(self):
         """Verify an exception is raised for unconvertible values."""
         with pytest.raises(ValueError):
-            standard.Integer.to_value("abc")
+            Integer.to_value("abc")
 
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert data == standard.Integer.to_data(value)
+        assert data == Integer.to_data(value)
 
 
 class TestFloat:
@@ -128,17 +128,17 @@ class TestFloat:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert value == standard.Float.to_value(data)
+        assert value == Float.to_value(data)
 
     def test_to_value_error(self):
         """Verify an exception is raised for unconvertible values."""
         with pytest.raises(ValueError):
-            standard.Integer.to_value("abc")
+            Integer.to_value("abc")
 
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert data == standard.Float.to_data(value)
+        assert data == Float.to_data(value)
 
 
 class TestBoolean:
@@ -179,12 +179,12 @@ class TestBoolean:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert value == standard.Boolean.to_value(data)
+        assert value == Boolean.to_value(data)
 
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert data == standard.Boolean.to_data(value)
+        assert data == Boolean.to_data(value)
 
 
 if __name__ == '__main__':

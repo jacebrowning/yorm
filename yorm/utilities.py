@@ -3,7 +3,7 @@
 import uuid
 
 from . import common
-from .base import MAPPER, Mappable
+from .base.mappable import MAPPER, Mappable
 from .mapper import Mapper
 
 log = common.logger(__name__)
