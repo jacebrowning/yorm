@@ -10,11 +10,11 @@ log = common.logger(__name__)
 
 class ContainerMeta(abc.ABCMeta):
 
-    """Metaclass to initialize `yorm_attrs` on class declaration."""
+    """Metaclass to initialize `attrs` on class declaration."""
 
     def __init__(cls, name, bases, nmspc):
         super().__init__(name, bases, nmspc)
-        cls.yorm_attrs = {}
+        cls._yorm_attrs = {}
 
 
 class Dictionary(dict, metaclass=ContainerMeta):
@@ -36,7 +36,7 @@ class Dictionary(dict, metaclass=ContainerMeta):
         value = cls.default()
 
         # Convert object attributes to a dictionary
-        yorm_attrs = cls.yorm_attrs.copy()
+        yorm_attrs = cls._yorm_attrs.copy()
         if isinstance(obj, cls):
             items = obj.__dict__.items()
             dictionary = {k: v for k, v in items if k in yorm_attrs}
@@ -49,7 +49,7 @@ class Dictionary(dict, metaclass=ContainerMeta):
                 converter = yorm_attrs.pop(name)
             except KeyError:
                 converter = standard.match(name, data, nested=True)
-                cls.yorm_attrs[name] = converter
+                cls._yorm_attrs[name] = converter
             value[name] = converter.to_value(data)
 
         # Create default values for unmapped converters
@@ -66,7 +66,7 @@ class Dictionary(dict, metaclass=ContainerMeta):
 
         data = {}
 
-        for name, converter in cls.yorm_attrs.items():
+        for name, converter in cls._yorm_attrs.items():
             data[name] = converter.to_data(value.get(name, None))
 
         return data
@@ -120,7 +120,7 @@ class List(list, metaclass=ContainerMeta):
     @common.classproperty
     def item_type(cls):  # pylint: disable=E0213
         """Get the converter class for all items."""
-        return cls.yorm_attrs.get(cls.ALL)
+        return cls._yorm_attrs.get(cls.ALL)
 
     @classmethod
     def to_value(cls, obj):  # pylint: disable=E0213

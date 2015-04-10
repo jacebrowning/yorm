@@ -182,8 +182,8 @@ class MockMappable(Mappable):
 
     """Sample mappable class."""
 
-    yorm_attrs = []
     yorm_mapper = Mock()
+    yorm_mapper.attrs = {}
 
 
 # sample mapped classes #######################################################

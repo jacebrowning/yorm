@@ -17,8 +17,8 @@ class MockMapper(Mapper):
 
     """Mapped file with stubbed file IO."""
 
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, obj, path, attrs):
+        super().__init__(obj, path, attrs)
         self._mock_file = None
         self._mock_modified = True
         self.exists = True
@@ -56,12 +56,12 @@ class SampleMappable(Mappable):
         self.var3 = None
         logging.debug("sample initialized")
 
-        self.yorm_path = "mock/path/to/sample.yml"
-        self.yorm_attrs = {'var1': String,
-                           'var2': Integer,
-                           'var3': Boolean}
-        self.yorm_mapper = MockMapper(self.yorm_path)
-        self.yorm_mapper.store(self, self.yorm_attrs)
+        path = "mock/path/to/sample.yml"
+        attrs = {'var1': String,
+                 'var2': Integer,
+                 'var3': Boolean}
+        self.yorm_mapper = MockMapper(self, path, attrs)
+        self.yorm_mapper.store()
         self.yorm_mapper.auto = True
 
     def __repr__(self):

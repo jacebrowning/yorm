@@ -7,46 +7,61 @@ from . import common
 log = common.logger(__name__)
 
 
+MAPPER = 'yorm_mapper'
+ATTRS = '_yorm_attrs'
+
+
 class Mappable(metaclass=abc.ABCMeta):
 
     """Base class for objects with attributes that map to YAML."""
 
     def __getattribute__(self, name):
-        if name.startswith('yorm_'):
+        if name == MAPPER:
             return object.__getattribute__(self, name)
+
+        mapper = getattr(self, MAPPER, None)
 
         try:
             value = object.__getattribute__(self, name)
         except AttributeError:
-            self.yorm_mapper.fetch(self, self.yorm_attrs)
+            if mapper:
+                mapper.fetch()
             value = object.__getattribute__(self, name)
         else:
-            if name in self.yorm_attrs:
-                self.yorm_mapper.fetch(self, self.yorm_attrs)
+            if mapper and name in mapper.attrs:
+                mapper.fetch()
                 value = object.__getattribute__(self, name)
 
         return value
 
     def __setattr__(self, name, value):
-        if hasattr(self, 'yorm_attrs') and name in self.yorm_attrs:
-            converter = self.yorm_attrs[name]
+        mapper = getattr(self, MAPPER, None)
+
+        if mapper and name in mapper.attrs:
+            converter = mapper.attrs[name]
             value = converter.to_value(value)
 
         object.__setattr__(self, name, value)
 
-        if hasattr(self, 'yorm_attrs') and name in self.yorm_attrs:
-            if hasattr(self, 'yorm_mapper') and self.yorm_mapper.auto:
-                self.yorm_mapper.store(self, self.yorm_attrs)
+        log.critical(name)
+        if mapper:
+            log.critical(mapper.attrs)
+
+        if mapper and name in mapper.attrs:
+            if mapper.auto:
+                self.yorm_mapper.store()
             else:
                 log.trace("automatic storage is off")
 
     def __enter__(self):
         log.debug("turning off automatic storage...")
-        self.yorm_mapper.auto = False
+        mapper = getattr(self, MAPPER)
+        mapper.auto = False
 
     def __exit__(self, *_):
         log.debug("turning on automatic storage...")
-        self.yorm_mapper.store(self, self.yorm_attrs)
+        mapper = getattr(self, MAPPER)
+        mapper.store()
 
 
 class Converter(metaclass=abc.ABCMeta):

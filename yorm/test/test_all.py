@@ -55,7 +55,7 @@ class TestStandard:
         """Verify standard attribute types dump/load correctly (decorator)."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        assert "path/to/default/sample.yml" == sample.yorm_path
+        assert "path/to/default/sample.yml" == sample.yorm_mapper.path
 
         # check defaults
         assert {} == sample.object
@@ -77,7 +77,7 @@ class TestStandard:
         sample.false = True
 
         # check file values
-        with open(sample.yorm_path, 'r') as stream:
+        with open(sample.yorm_mapper.path, 'r') as stream:
             text = stream.read()
         assert strip("""
         array:
@@ -104,7 +104,7 @@ class TestStandard:
         string: "abc"
         'true': null
         """)
-        with open(sample.yorm_path, 'w') as stream:
+        with open(sample.yorm_mapper.path, 'w') as stream:
             stream.write(text)
 
         # check object values
@@ -129,7 +129,7 @@ class TestStandard:
                  'true': Boolean,
                  'false': Boolean}
         sample = sync(_sample, "path/to/directory/sample.yml", attrs)
-        assert "path/to/directory/sample.yml" == sample.yorm_path
+        assert "path/to/directory/sample.yml" == sample.yorm_mapper.path
 
         # check defaults
         assert {} == sample.object
@@ -151,7 +151,7 @@ class TestStandard:
         sample.false = 1
 
         # check file values
-        with open(sample.yorm_path, 'r') as stream:
+        with open(sample.yorm_mapper.path, 'r') as stream:
             text = stream.read()
         assert strip("""
         array:
@@ -182,20 +182,20 @@ class TestStandard:
             sample.number_real = 4.2
 
             # check for unchanged file values
-            with open(sample.yorm_path, 'r') as stream:
+            with open(sample.yorm_mapper.path, 'r') as stream:
                 text = stream.read()
             assert "" == text
 
             # check for changed file values
-        with open(sample.yorm_path, 'r') as stream:
+        with open(sample.yorm_mapper.path, 'r') as stream:
             text = stream.read()
         assert strip("""
         number_real: 4.2
         string: abc
         """) == text
 
-    def test_no_auto(self, tmpdir):
-        """Verify standard attribute types dump/load correctly (auto)."""
+    def test_auto_off(self, tmpdir):
+        """Verify standard attribute types dump/load correctly (auto off)."""
         tmpdir.chdir()
         sample = SampleDecoratedNoAuto()
 
@@ -204,16 +204,16 @@ class TestStandard:
         sample.number_real = 4.2
 
         # check for unchanged file values
-        with open(sample.yorm_path, 'r') as stream:
+        with open(sample.yorm_mapper.path, 'r') as stream:
             text = stream.read()
         assert "" == text
 
         # store value
-        sample.yorm_mapper.store(sample, sample.yorm_attrs)
+        sample.yorm_mapper.store()
         sample.yorm_mapper.auto = True
 
         # check for changed file values
-        with open(sample.yorm_path, 'r') as stream:
+        with open(sample.yorm_mapper.path, 'r') as stream:
             text = stream.read()
         assert strip("""
         number_real: 4.2
@@ -221,7 +221,7 @@ class TestStandard:
         """) == text
 
     def test_no_path(self, tmpdir):
-        """Verify standard attribute types dump/load correctly (path)."""
+        """Verify standard attribute types dump/load correctly (no path)."""
         tmpdir.chdir()
         sample = sync(SampleDecoratedNoPath(), "sample.yml")
 
@@ -230,7 +230,7 @@ class TestStandard:
         sample.number_real = 4.2
 
         # check for changed file values
-        with open(sample.yorm_path, 'r') as stream:
+        with open(sample.yorm_mapper.path, 'r') as stream:
             text = stream.read()
         assert strip("""
         number_real: 4.2
@@ -264,7 +264,7 @@ class TestContainers:
                           {}]
 
         # check file values
-        with open(sample.yorm_path, 'r') as stream:
+        with open(sample.yorm_mapper.path, 'r') as stream:
             text = stream.read()
         assert strip("""
         count: 5
@@ -292,7 +292,7 @@ class TestContainers:
           status: false
         - status: true
         """)
-        with open(sample.yorm_path, 'w') as stream:
+        with open(sample.yorm_mapper.path, 'w') as stream:
             stream.write(text)
 
         # check object values
@@ -313,26 +313,26 @@ class TestContainers:
         object: {'key': 'value'}
         array: [1, '2', '3.0']
         """)
-        with open(sample.yorm_path, 'w') as stream:
+        with open(sample.yorm_mapper.path, 'w') as stream:
             stream.write(text)
 
         # (a mapped attribute must be read first to trigger retrieving)
-        sample.yorm_mapper.fetch(sample, sample.yorm_attrs)
+        sample.yorm_mapper.fetch()
 
         # check object values
         assert {'key': 'value'} == sample.object
         assert [1, '2', '3.0'] == sample.array
 
         # check object types
-        assert Object == sample.yorm_attrs['object']
-        assert Object == sample.yorm_attrs['array']
+        assert Object == sample.yorm_mapper.attrs['object']
+        assert Object == sample.yorm_mapper.attrs['array']
 
         # change object values
         sample.object = None  # pylint: disable=W0201
         sample.array = "abc"  # pylint: disable=W0201
 
         # check file values
-        with open(sample.yorm_path, 'r') as stream:
+        with open(sample.yorm_mapper.path, 'r') as stream:
             text = stream.read()
         assert strip("""
         array: abc
@@ -363,7 +363,7 @@ class TestExtended:
         """)
 
         # check file values
-        with open(sample.yorm_path, 'r') as stream:
+        with open(sample.yorm_mapper.path, 'r') as stream:
             text = stream.read()
         assert strip("""
         text: |
@@ -379,7 +379,7 @@ class TestExtended:
           This is a
           sentence.
         """)
-        with open(sample.yorm_path, 'w') as stream:
+        with open(sample.yorm_mapper.path, 'w') as stream:
             stream.write(text)
 
         # check object values
@@ -403,7 +403,7 @@ class TestCustom:
         sample.level = '1.2.3'
 
         # check file values
-        with open(sample.yorm_path, 'r') as stream:
+        with open(sample.yorm_mapper.path, 'r') as stream:
             text = stream.read()
         assert strip("""
         level: 1.2.3
@@ -414,7 +414,7 @@ class TestCustom:
         text = strip("""
         level: 1
         """)
-        with open(sample.yorm_path, 'w') as stream:
+        with open(sample.yorm_mapper.path, 'w') as stream:
             stream.write(text)
 
         # check object values
@@ -431,7 +431,7 @@ class TestInit:
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
         sample2 = SampleStandardDecorated('sample')
-        assert sample2.yorm_path == sample.yorm_path
+        assert sample2.yorm_mapper.path == sample.yorm_mapper.path
 
         refresh_file_modification_times()
 

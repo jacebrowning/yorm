@@ -31,7 +31,8 @@ class TestDictionary:
 
     def setup_method(self, _):
         """Reset the class' mapped attributes before each test."""
-        SampleDictionary.yorm_attrs = {'abc': Integer}
+        # TODO: remove pylint comment
+        SampleDictionary._yorm_attrs = {'abc': Integer}  # pylint: disable=W0212
 
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
@@ -56,7 +57,7 @@ class TestDictionary:
         value = {'var1': 1, 'var2': '2'}
         value2 = dictionary.to_value(dictionary)
         assert value == value2
-        # keys are not accesible as attributes
+        # keys are not accessible as attributes
         assert not hasattr(value2, 'var1')
         assert not hasattr(value2, 'var2')
         assert not hasattr(value2, 'var3')
