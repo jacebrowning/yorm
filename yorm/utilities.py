@@ -3,7 +3,7 @@
 import uuid
 
 from . import common
-from .base import MAPPER, ATTRS, Mappable
+from .base import MAPPER, Mappable
 from .mapper import Mapper
 
 log = common.logger(__name__)
@@ -37,23 +37,23 @@ def sync_object(instance, path, attrs=None, auto=True):
     :param auto: automatically store attribute to file
 
     """
-    attrs = attrs or getattr(instance, ATTRS, {})
     _check_base(instance, mappable=False)
+
+    attrs = attrs or common.ATTRS[instance.__class__]
 
     class Mapped(Mappable, instance.__class__):
 
         """Original class with `Mappable` as the base."""
 
     mapper = Mapper(instance, path, attrs)
-
     if not mapper.exists:
         mapper.create()
         if auto:
             mapper.store()
     else:
         mapper.fetch()
-
     mapper.auto = auto
+
     setattr(instance, MAPPER, mapper)
     instance.__class__ = Mapped
 
@@ -74,9 +74,6 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
 
     def decorator(cls):
         """Class decorator."""
-        _attrs = getattr(cls, ATTRS, {})
-        _attrs.update(attrs)
-        setattr(cls, ATTRS, _attrs)
 
         class Mapped(Mappable, cls):
 
@@ -85,25 +82,26 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
             def __init__(self, *_args, **_kwargs):
                 super().__init__(*_args, **_kwargs)
 
-                format_spec2 = {}
+                format_values = {}
                 for key, value in format_spec.items():
-                    format_spec2[key] = getattr(self, value)
+                    format_values[key] = getattr(self, value)
                 if '{' + UUID + '}' in path_format:
-                    format_spec2[UUID] = uuid.uuid4().hex
-                format_spec2['self'] = self
+                    format_values[UUID] = uuid.uuid4().hex
+                format_values['self'] = self
 
-                path = path_format.format(**format_spec2)
-                attrs = getattr(self, ATTRS)
+                path = path_format.format(**format_values)
+                attrs.update(common.ATTRS[self.__class__])
+                attrs.update(common.ATTRS[cls])
+
                 mapper = Mapper(self, path, attrs)
-
                 if not mapper.exists:
                     mapper.create()
                     if auto:
                         mapper.store()
                 else:
                     mapper.fetch()
-
                 mapper.auto = auto
+
                 self.yorm_mapper = mapper
 
         return Mapped
@@ -119,12 +117,8 @@ def attr(**kwargs):
     """
     def decorator(cls):
         """Class decorator."""
-        attrs = getattr(cls, ATTRS, {})
-
         for name, converter in kwargs.items():
-            attrs[name] = converter
-
-        setattr(cls, ATTRS, attrs)
+            common.ATTRS[cls][name] = converter
 
         return cls
 

@@ -8,7 +8,6 @@ log = common.logger(__name__)
 
 
 MAPPER = 'yorm_mapper'
-ATTRS = '_yorm_attrs'
 
 
 class Mappable(metaclass=abc.ABCMeta):
@@ -43,7 +42,6 @@ class Mappable(metaclass=abc.ABCMeta):
 
         object.__setattr__(self, name, value)
 
-        log.critical(name)
         if mapper:
             log.critical(mapper.attrs)
 

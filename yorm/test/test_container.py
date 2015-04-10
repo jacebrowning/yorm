@@ -5,6 +5,7 @@
 
 import pytest
 
+from yorm import common
 from yorm.container import Dictionary, List
 from yorm.standard import String, Integer
 
@@ -31,8 +32,7 @@ class TestDictionary:
 
     def setup_method(self, _):
         """Reset the class' mapped attributes before each test."""
-        # TODO: remove pylint comment
-        SampleDictionary._yorm_attrs = {'abc': Integer}  # pylint: disable=W0212
+        common.ATTRS[SampleDictionary] = {'abc': Integer}
 
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):

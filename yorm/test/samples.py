@@ -136,9 +136,6 @@ class StringList(List):
 
     """Sample list container."""
 
-    # TODO: this shouldn't be required for the tests to pass
-    yorm_attrs = {'all': String}
-
 
 class UnknownList(List):
 

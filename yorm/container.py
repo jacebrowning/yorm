@@ -1,23 +1,12 @@
 """Converter classes for abstract container types."""
 
-import abc
-
 from . import common
 from . import standard
 
 log = common.logger(__name__)
 
 
-class ContainerMeta(abc.ABCMeta):
-
-    """Metaclass to initialize `attrs` on class declaration."""
-
-    def __init__(cls, name, bases, nmspc):
-        super().__init__(name, bases, nmspc)
-        cls._yorm_attrs = {}
-
-
-class Dictionary(dict, metaclass=ContainerMeta):
+class Dictionary(dict):
 
     """Base class for a dictionary of attribute converters."""
 
@@ -36,24 +25,24 @@ class Dictionary(dict, metaclass=ContainerMeta):
         value = cls.default()
 
         # Convert object attributes to a dictionary
-        yorm_attrs = cls._yorm_attrs.copy()
+        attrs = common.ATTRS[cls].copy()
         if isinstance(obj, cls):
             items = obj.__dict__.items()
-            dictionary = {k: v for k, v in items if k in yorm_attrs}
+            dictionary = {k: v for k, v in items if k in attrs}
         else:
             dictionary = cls.to_dict(obj)
 
         # Map object attributes to converters
         for name, data in dictionary.items():
             try:
-                converter = yorm_attrs.pop(name)
+                converter = attrs.pop(name)
             except KeyError:
                 converter = standard.match(name, data, nested=True)
-                cls._yorm_attrs[name] = converter
+                common.ATTRS[cls][name] = converter
             value[name] = converter.to_value(data)
 
         # Create default values for unmapped converters
-        for name, converter in yorm_attrs.items():
+        for name, converter in attrs.items():
             log.trace("adding missing nested key '{}'...".format(name))
             value[name] = converter.to_value(None)
 
@@ -66,7 +55,7 @@ class Dictionary(dict, metaclass=ContainerMeta):
 
         data = {}
 
-        for name, converter in cls._yorm_attrs.items():
+        for name, converter in common.ATTRS[cls].items():
             data[name] = converter.to_data(value.get(name, None))
 
         return data
@@ -101,7 +90,7 @@ class Dictionary(dict, metaclass=ContainerMeta):
             return {}
 
 
-class List(list, metaclass=ContainerMeta):
+class List(list):
 
     """Base class for a homogeneous list of attribute converters."""
 
@@ -120,7 +109,7 @@ class List(list, metaclass=ContainerMeta):
     @common.classproperty
     def item_type(cls):  # pylint: disable=E0213
         """Get the converter class for all items."""
-        return cls._yorm_attrs.get(cls.ALL)
+        return common.ATTRS[cls].get(cls.ALL)
 
     @classmethod
     def to_value(cls, obj):  # pylint: disable=E0213

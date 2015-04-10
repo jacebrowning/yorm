@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import collections
 import logging
 
 import yaml
@@ -23,6 +24,9 @@ logging.Logger.trace = _trace
 
 logger = logging.getLogger
 log = logger(__name__)
+
+
+ATTRS = collections.defaultdict(dict)
 
 
 # exception classes ##########################################################
