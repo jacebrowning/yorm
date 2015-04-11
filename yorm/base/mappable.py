@@ -46,6 +46,22 @@ class Mappable(metaclass=abc.ABCMeta):
         if mapper and mapper.auto and name in mapper.attrs:
             self.yorm_mapper.store()
 
+    def __getitem__(self, key):
+        """Trigger object update when reading an index."""
+        mapper = getattr(self, MAPPER, None)
+        if mapper and mapper.auto:
+            self.yorm_mapper.fetch()
+
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, value):
+        """Trigger file update when setting an index."""
+        super().__setitem__(key, value)
+
+        mapper = getattr(self, MAPPER, None)
+        if mapper and mapper.auto:
+            self.yorm_mapper.store()
+
     def append(self, value):
         """Trigger file update when appending items."""
         super().append(value)
