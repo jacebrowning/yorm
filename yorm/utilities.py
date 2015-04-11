@@ -3,7 +3,7 @@
 import uuid
 
 from . import common
-from .base import Mappable
+from .base.mappable import MAPPER, Mappable
 from .mapper import Mapper
 
 log = common.logger(__name__)
@@ -37,27 +37,25 @@ def sync_object(instance, path, attrs=None, auto=True):
     :param auto: automatically store attribute to file
 
     """
-    attrs = attrs or {}
     _check_base(instance, mappable=False)
+
+    attrs = attrs or common.ATTRS[instance.__class__]
 
     class Mapped(Mappable, instance.__class__):
 
         """Original class with `Mappable` as the base."""
 
-    instance.__class__ = Mapped
-
-    instance.yorm_attrs = attrs or getattr(instance, 'yorm_attrs', attrs)
-    instance.yorm_path = path
-    instance.yorm_mapper = Mapper(instance.yorm_path)
-
-    if not instance.yorm_mapper.exists:
-        instance.yorm_mapper.create(instance)
+    mapper = Mapper(instance, path, attrs)
+    if not mapper.exists:
+        mapper.create()
         if auto:
-            instance.yorm_mapper.store(instance, instance.yorm_attrs)
+            mapper.store()
     else:
-        instance.yorm_mapper.fetch(instance, instance.yorm_attrs)
+        mapper.fetch()
+    mapper.auto = auto
 
-    instance.yorm_mapper.auto = auto
+    setattr(instance, MAPPER, mapper)
+    instance.__class__ = Mapped
 
     return instance
 
@@ -76,10 +74,6 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
 
     def decorator(cls):
         """Class decorator."""
-        if hasattr(cls, 'yorm_attrs'):
-            cls.yorm_attrs.update(attrs)
-        else:
-            cls.yorm_attrs = attrs
 
         class Mapped(Mappable, cls):
 
@@ -88,24 +82,27 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
             def __init__(self, *_args, **_kwargs):
                 super().__init__(*_args, **_kwargs)
 
-                format_spec2 = {}
+                format_values = {}
                 for key, value in format_spec.items():
-                    format_spec2[key] = getattr(self, value)
+                    format_values[key] = getattr(self, value)
                 if '{' + UUID + '}' in path_format:
-                    format_spec2[UUID] = uuid.uuid4().hex
-                format_spec2['self'] = self
+                    format_values[UUID] = uuid.uuid4().hex
+                format_values['self'] = self
 
-                self.yorm_path = path_format.format(**format_spec2)
-                self.yorm_mapper = Mapper(self.yorm_path)
+                path = path_format.format(**format_values)
+                attrs.update(common.ATTRS[self.__class__])
+                attrs.update(common.ATTRS[cls])
 
-                if not self.yorm_mapper.exists:
-                    self.yorm_mapper.create(self)
+                mapper = Mapper(self, path, attrs)
+                if not mapper.exists:
+                    mapper.create()
                     if auto:
-                        self.yorm_mapper.store(self, self.yorm_attrs)
+                        mapper.store()
                 else:
-                    self.yorm_mapper.fetch(self, self.yorm_attrs)
+                    mapper.fetch()
+                mapper.auto = auto
 
-                self.yorm_mapper.auto = auto
+                self.yorm_mapper = mapper
 
         return Mapped
 
@@ -120,10 +117,9 @@ def attr(**kwargs):
     """
     def decorator(cls):
         """Class decorator."""
-        if not hasattr(cls, 'yorm_attrs'):
-            cls.yorm_attrs = {}
         for name, converter in kwargs.items():
-            cls.yorm_attrs[name] = converter
+            common.ATTRS[cls][name] = converter
+
         return cls
 
     return decorator
@@ -157,7 +153,7 @@ def update_object(instance, force=True):
     """
     _check_base(instance, mappable=True)
 
-    instance.yorm_mapper.fetch(instance, instance.yorm_attrs, force=force)
+    instance.yorm_mapper.fetch(force=force)
 
 
 def update_file(instance):
@@ -168,7 +164,7 @@ def update_file(instance):
     """
     _check_base(instance, mappable=True)
 
-    instance.yorm_mapper.store(instance, instance.yorm_attrs)
+    instance.yorm_mapper.store()
 
 
 def _check_base(obj, mappable=True):

@@ -13,10 +13,10 @@ if not sys.version_info >= PYTHON_VERSION:  # pragma: no cover (manual test)
     exit("Python {}.{}+ is required.".format(*PYTHON_VERSION))
 
 try:
-    from . import standard, extended, container
     from .utilities import UUID
     from .utilities import sync, sync_object, sync_instances, attr
     from .utilities import update, update_object, update_file
-    from .base import Mappable, Converter
+    from .base.mappable import Mappable
+    from .base.convertible import Convertible
 except ImportError:  # pragma: no cover (manual test)
     pass

@@ -1,6 +1,7 @@
 """Core YAML mapping functionality."""
 
 import os
+import abc
 import functools
 
 import yaml
@@ -23,17 +24,6 @@ def file_required(method):
     return decorated_method
 
 
-def fake_required(method):
-    """Decorator for methods that require 'settings.fake' to be set."""
-    @functools.wraps(method)
-    def decorated_method(self, *args, **kwargs):
-        """Decorated method."""
-        if not settings.fake:
-            raise AttributeError("'fake' only available with 'settings.fake'")
-        return method(self, *args, **kwargs)
-    return decorated_method
-
-
 def prefix(obj):
     """Prefix a string with a fake designator if enabled."""
     fake = "(fake) " if settings.fake else ""
@@ -41,9 +31,9 @@ def prefix(obj):
     return fake + name
 
 
-class Mapper:
+class BaseHelper(metaclass=abc.ABCMeta):
 
-    """Utility class to manipulate YAML files.
+    """Utility class to map attributes to text files.
 
     To start mapping attributes to a file:
 
@@ -69,22 +59,26 @@ class Mapper:
         self.exists = os.path.isfile(self.path)
         self._activity = False
         self._timestamp = 0
-        self._fake = ""
+        self._fake = None
 
     def __str__(self):
         return str(self.path)
 
     @property
-    @fake_required
-    def fake(self):
+    def text(self):
         """Get fake file contents (if enabled)."""
-        return self._fake
+        if settings.fake:
+            return self._fake
+        else:
+            return self._read()
 
-    @fake.setter
-    @fake_required
-    def fake(self, text):
+    @text.setter
+    def text(self, text):
         """Set fake file contents (if enabled)."""
-        self._fake = text
+        if settings.fake:
+            self._fake = text
+        else:
+            self._write(text)
         self.modified = True
 
     def create(self, obj):
@@ -120,9 +114,9 @@ class Mapper:
             try:
                 converter = attrs[name]
             except KeyError:
-                # TODO: determine if this runtime import is the best way to do this
-                from . import standard
-                converter = standard.match(name, data)
+                # TODO: determine if runtime import is the best way to avoid cyclic import
+                from .converters import match
+                converter = match(name, data)
                 attrs[name] = converter
             value = converter.to_value(data)
             log.trace("value fetched: '{}' = {}".format(name, repr(value)))
@@ -142,21 +136,21 @@ class Mapper:
 
         """
         if settings.fake:
-            return self.fake
+            return self._fake
         else:
             return common.read_text(self.path)
 
-    @staticmethod
-    def _load(text, path):
-        """Load YAML data from text.
+    @abc.abstractstaticmethod
+    def _load(text, path):  # pragma: no cover (abstract method)
+        """Parsed data from text.
 
         :param text: text read from a file
         :param path: path to the file (for displaying errors)
 
-        :return: dictionary of YAML data
+        :return: dictionary of parsed data
 
         """
-        return common.load_yaml(text, path)
+        raise NotImplementedError
 
     @file_required
     def store(self, obj, attrs):
@@ -186,16 +180,16 @@ class Mapper:
         self.modified = False
         self._activity = False
 
-    @staticmethod
-    def _dump(data):
-        """Dump YAML data to text.
+    @abc.abstractstaticmethod
+    def _dump(data):  # pragma: no cover (abstract method)
+        """Dump data to text.
 
-        :param data: dictionary of YAML data
+        :param data: dictionary of data
 
         :return: text to write to a file
 
         """
-        return yaml.dump(data, default_flow_style=False, allow_unicode=True)
+        raise NotImplementedError
 
     @file_required
     def _write(self, text):
@@ -206,7 +200,7 @@ class Mapper:
 
         """
         if settings.fake:
-            self.fake = text
+            self._fake = text
         else:
             common.write_text(text, self.path)
 
@@ -251,3 +245,52 @@ class Mapper:
             self.exists = False
         else:
             log.warning("already deleted: %s", self)
+
+
+class Helper(BaseHelper):
+
+    """Utility class to map attributes to YAML files."""
+
+    @staticmethod
+    def _load(text, path):
+        """Load YAML data from text.
+
+        :param text: text read from a file
+        :param path: path to the file (for displaying errors)
+
+        :return: dictionary of YAML data
+
+        """
+        return common.load_yaml(text, path)
+
+    @staticmethod
+    def _dump(data):
+        """Dump YAML data to text.
+
+        :param data: dictionary of YAML data
+
+        :return: text to write to a file
+
+        """
+        return yaml.dump(data, default_flow_style=False, allow_unicode=True)
+
+
+class Mapper(Helper):
+
+    """Maps an object's attribute to YAML files."""
+
+    def __init__(self, obj, path, attrs):
+        super().__init__(path)
+        self.obj = obj
+        self.attrs = attrs
+
+    def create(self):  # pylint: disable=W0221
+        return super().create(self.obj)
+
+    @file_required
+    def fetch(self, force=False):  # pylint: disable=W0221
+        return super().fetch(self.obj, self.attrs, force=force)
+
+    @file_required
+    def store(self):  # pylint: disable=W0221
+        return super().store(self.obj, self.attrs)

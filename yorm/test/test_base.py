@@ -6,9 +6,10 @@
 import pytest
 import logging
 
-from yorm.base import Mappable, Converter
+from yorm.base.mappable import Mappable
+from yorm.base.convertible import Convertible
 from yorm.mapper import Mapper
-from yorm.standard import String, Integer, Boolean
+from yorm.converters import String, Integer, Boolean
 
 from . import strip
 
@@ -17,8 +18,8 @@ class MockMapper(Mapper):
 
     """Mapped file with stubbed file IO."""
 
-    def __init__(self, path):
-        super().__init__(path)
+    def __init__(self, obj, path, attrs):
+        super().__init__(obj, path, attrs)
         self._mock_file = None
         self._mock_modified = True
         self.exists = True
@@ -56,12 +57,12 @@ class SampleMappable(Mappable):
         self.var3 = None
         logging.debug("sample initialized")
 
-        self.yorm_path = "mock/path/to/sample.yml"
-        self.yorm_attrs = {'var1': String,
-                           'var2': Integer,
-                           'var3': Boolean}
-        self.yorm_mapper = MockMapper(self.yorm_path)
-        self.yorm_mapper.store(self, self.yorm_attrs)
+        path = "mock/path/to/sample.yml"
+        attrs = {'var1': String,
+                 'var2': Integer,
+                 'var3': Boolean}
+        self.yorm_mapper = MockMapper(self, path, attrs)
+        self.yorm_mapper.store()
         self.yorm_mapper.auto = True
 
     def __repr__(self):
@@ -147,25 +148,6 @@ class TestMappable:
         with pytest.raises(ValueError):
             print(self.sample.var1)
 
-    def test_context_manager(self):
-        """Verify the context manager delays write."""
-        with self.sample:
-            self.sample.var1 = "abc123"
-
-            text = self.sample.yorm_mapper._read()
-            assert strip("""
-            var1: ''
-            var2: 0
-            var3: false
-            """) == text
-
-        text = self.sample.yorm_mapper._read()
-        assert strip("""
-        var1: abc123
-        var2: 0
-        var3: false
-        """) == text
-
     def test_new(self):
         """Verify new attributes are added to the object."""
         text = strip("""
@@ -186,14 +168,14 @@ class TestMappable:
 
 class TestConverter:
 
-    """Unit tests for the `Converter` class."""
+    """Unit tests for the `Convertible` class."""
 
     def test_not_implemented(self):
-        """Verify `Converter` cannot be used directly."""
+        """Verify `Convertible` cannot be used directly."""
         with pytest.raises(NotImplementedError):
-            Converter.to_value(None)  # pylint: disable=E1120
+            Convertible.to_value(None)  # pylint: disable=E1120
         with pytest.raises(NotImplementedError):
-            Converter.to_data(None)  # pylint: disable=E1120
+            Convertible.to_data(None)  # pylint: disable=E1120
 
 
 if __name__ == '__main__':

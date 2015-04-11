@@ -11,13 +11,13 @@ import yorm
 from . import strip
 
 
-@yorm.attr(status=yorm.standard.Boolean)
-class NestedDict(yorm.container.Dictionary):
+@yorm.attr(status=yorm.converters.Boolean)
+class NestedDict(yorm.converters.Dictionary):
     pass
 
 
 @yorm.attr(all=NestedDict)
-class NestedList(yorm.container.List):
+class NestedList(yorm.converters.List):
     pass
 
 
@@ -41,7 +41,7 @@ class TestNesting:
           status: false
         nested_list:
         - status: false
-        """) == top.yorm_mapper.fake
+        """) == top.yorm_mapper.text
 
     def test_dict_set_triggers_update(self):
         top = Top()
@@ -50,7 +50,7 @@ class TestNesting:
         nested_dict:
           status: true
         nested_list: []
-        """) == top.yorm_mapper.fake
+        """) == top.yorm_mapper.text
 
     def test_dict_in_list_triggers_update(self):
         top = Top()
@@ -60,14 +60,14 @@ class TestNesting:
           status: false
         nested_list:
         - status: true
-        """) == top.yorm_mapper.fake
+        """) == top.yorm_mapper.text
         top.nested_list[0]['status'] = False
         assert strip("""
         nested_dict:
           status: false
         nested_list:
         - status: false
-        """) == top.yorm_mapper.fake
+        """) == top.yorm_mapper.text
 
 
 if __name__ == '__main__':

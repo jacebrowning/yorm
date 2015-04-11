@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# pylint:disable=R0201
+# pylint:disable=R0201,C0111
 
 """Integration tests for the `yorm.settings.fake` option."""
 
@@ -12,7 +12,7 @@ import yorm
 from . import strip
 
 
-@yorm.attr(value=yorm.standard.Integer)
+@yorm.attr(value=yorm.converters.standard.Integer)
 @yorm.sync("path/to/{self.name}.yml")
 class Sample:
 
@@ -26,16 +26,15 @@ class Sample:
 @patch('yorm.settings.fake', True)
 class TestFake:
 
-    """Integration tests with `yorm.fake` enabled."""
+    """Integration tests with `yorm.settings.fake` enabled."""
 
-    def test_fake(self, tmpdir):
-        """Verify no file is created with fake enabled."""
+    def test_no_file_create_when_fake(self, tmpdir):
         tmpdir.chdir()
         sample = Sample('sample')
 
         # ensure no file is created
-        assert "path/to/sample.yml" == sample.yorm_path
-        assert not os.path.exists(sample.yorm_path)
+        assert "path/to/sample.yml" == sample.yorm_mapper.path
+        assert not os.path.exists(sample.yorm_mapper.path)
 
         # change object values
         sample.value = 42
@@ -43,29 +42,28 @@ class TestFake:
         # check fake file
         assert strip("""
         value: 42
-        """) == sample.yorm_mapper.fake
+        """) == sample.yorm_mapper.text
 
         # ensure no file is created
-        assert not os.path.exists(sample.yorm_path)
+        assert not os.path.exists(sample.yorm_mapper.path)
 
         # change fake file
-        sample.yorm_mapper.fake = "value2: abc\n"
+        sample.yorm_mapper.text = "value: 0\n"
 
         # check object values
-        assert "abc" == sample.value2
+        assert 0 == sample.value
 
         # ensure no file is created
-        assert not os.path.exists(sample.yorm_path)
+        assert not os.path.exists(sample.yorm_mapper.path)
 
-    def test_modified(self, tmpdir):
-        """Verify fake file modifications are correct."""
+    def test_fake_changes_indicate_modified(self, tmpdir):
         tmpdir.chdir()
         sample = Sample('sample')
 
         assert False is sample.yorm_mapper.modified
         assert 0 == sample.value
 
-        sample.yorm_mapper.fake = "value: 42\n"
+        sample.yorm_mapper.text = "value: 42\n"
 
         assert True is sample.yorm_mapper.modified
         assert 42 == sample.value
@@ -74,18 +72,25 @@ class TestFake:
 
 class TestReal:
 
-    """Integration tests with `yorm.fake` disabled."""
+    """Integration tests with `yorm.settings.fake` disabled."""
 
-    def test_error_when_real(self, tmpdir):
-        """Verify it is an error to use fake file IO with fake disabled."""
+    def test_setting_text_updates_attributes(self, tmpdir):
         tmpdir.chdir()
         sample = Sample('sample')
 
-        with pytest.raises(AttributeError):
-            print(sample.yorm_mapper.fake)
+        sample.yorm_mapper.text = "value: 42"
 
-        with pytest.raises(AttributeError):
-            sample.yorm_mapper.fake = None
+        assert 42 == sample.value
+
+    def test_setting_attributes_update_text(self, tmpdir):
+        tmpdir.chdir()
+        sample = Sample('sample')
+
+        sample.value = 42
+
+        assert strip("""
+        value: 42
+        """) == sample.yorm_mapper.text
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@
 
 import pytest
 
-from yorm.extended import Markdown, AttributeDictionary, SortedList
+from yorm.converters import Markdown, AttributeDictionary, SortedList
 
 from .samples import *  # pylint: disable=W0401,W0614
 
