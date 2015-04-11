@@ -2,17 +2,18 @@
 
 from unittest.mock import Mock
 
-from yorm.base import Mappable, Converter
+from yorm.base.mappable import Mappable
+from yorm.base.convertible import Convertible
 from yorm.utilities import sync, attr
-from yorm.container import Dictionary, List
-from yorm.standard import String, Integer, Float, Boolean
-from yorm.extended import AttributeDictionary, SortedList
+from yorm.converters import Dictionary, List
+from yorm.converters import String, Integer, Float, Boolean
+from yorm.converters import AttributeDictionary, SortedList
 
 
 # sample converters ###########################################################
 
 
-class Level(Converter):
+class Level(Convertible):
 
     """Sample custom attribute."""
 
@@ -41,7 +42,7 @@ class Level(Converter):
 # mock containers #############################################################
 
 
-class MockConverter(Converter):
+class MockConverter(Convertible):
 
     """Sample converter class."""
 
@@ -136,9 +137,6 @@ class StringList(List):
 
     """Sample list container."""
 
-    # TODO: this shouldn't be required for the tests to pass
-    yorm_attrs = {'all': String}
-
 
 class UnknownList(List):
 
@@ -182,8 +180,8 @@ class MockMappable(Mappable):
 
     """Sample mappable class."""
 
-    yorm_attrs = []
     yorm_mapper = Mock()
+    yorm_mapper.attrs = {}
 
 
 # sample mapped classes #######################################################
@@ -247,7 +245,7 @@ class SampleStandardDecorated:
 
 @attr(string=String, number_real=Float)
 @sync("sample.yml", auto=False)
-class SampleDecoratedNoAuto:
+class SampleDecoratedAutoOff:
 
     """Sample class with automatic storage turned off."""
 
@@ -256,7 +254,7 @@ class SampleDecoratedNoAuto:
         self.number_real = 0.0
 
     def __repr__(self):
-        return "<no auto {}>".format(id(self))
+        return "<auto off {}>".format(id(self))
 
 
 @attr(string=String, number_real=Float)

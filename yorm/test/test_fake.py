@@ -12,7 +12,7 @@ import yorm
 from . import strip
 
 
-@yorm.attr(value=yorm.standard.Integer)
+@yorm.attr(value=yorm.converters.standard.Integer)
 @yorm.sync("path/to/{self.name}.yml")
 class Sample:
 
@@ -33,8 +33,8 @@ class TestFake:
         sample = Sample('sample')
 
         # ensure no file is created
-        assert "path/to/sample.yml" == sample.yorm_path
-        assert not os.path.exists(sample.yorm_path)
+        assert "path/to/sample.yml" == sample.yorm_mapper.path
+        assert not os.path.exists(sample.yorm_mapper.path)
 
         # change object values
         sample.value = 42
@@ -45,7 +45,7 @@ class TestFake:
         """) == sample.yorm_mapper.text
 
         # ensure no file is created
-        assert not os.path.exists(sample.yorm_path)
+        assert not os.path.exists(sample.yorm_mapper.path)
 
         # change fake file
         sample.yorm_mapper.text = "value: 0\n"
@@ -54,7 +54,7 @@ class TestFake:
         assert 0 == sample.value
 
         # ensure no file is created
-        assert not os.path.exists(sample.yorm_path)
+        assert not os.path.exists(sample.yorm_mapper.path)
 
     def test_fake_changes_indicate_modified(self, tmpdir):
         tmpdir.chdir()

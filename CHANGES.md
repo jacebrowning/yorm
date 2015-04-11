@@ -4,17 +4,19 @@ Changelog
 0.4 (dev)
 ---------
 
-- TBD
+- Moved all converters into the `yorm.converters` package.
+- Rename `Converter` to `Convertible`.
+- Remove the context manager in mapped objects.
 
 0.3.2 (2015-04-07)
 ------------------
 
-- Fix object overwrite when calling `utilities.update`.
+- Fixed object overwrite when calling `utilities.update`.
 
 0.3.1 (2015-04-06)
 ------------------
 
-- Fix infinite recursion with properties that rely on other mapped attributes.
+- Fixed infinite recursion with properties that rely on other mapped attributes.
 
 0.3 (2015-03-10)
 ----------------

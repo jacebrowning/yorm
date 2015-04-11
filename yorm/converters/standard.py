@@ -1,12 +1,12 @@
-"""Converter classes for builtin types."""
+"""Convertible classes for builtin types."""
 
-from . import common
-from .base import Converter
+from .. import common
+from ..base.convertible import Convertible
 
 log = common.logger(__name__)
 
 
-class Object(Converter):  # pylint: disable=W0223
+class Object(Convertible):  # pylint: disable=W0223
 
     """Base class for standard types (mapped directly to YAML)."""
 
@@ -21,7 +21,7 @@ class Object(Converter):  # pylint: disable=W0223
 
 class String(Object):
 
-    """Converter for the `str` type."""
+    """Convertible for the `str` type."""
 
     TYPE = str
     DEFAULT = ""
@@ -41,7 +41,7 @@ class String(Object):
 
 class Integer(Object):
 
-    """Converter for the `int` type."""
+    """Convertible for the `int` type."""
 
     TYPE = int
     DEFAULT = 0
@@ -61,7 +61,7 @@ class Integer(Object):
 
 class Float(Object):
 
-    """Converter for the `float` type."""
+    """Convertible for the `float` type."""
 
     TYPE = float
     DEFAULT = 0.0
@@ -78,7 +78,7 @@ class Float(Object):
 
 class Boolean(Object):
 
-    """Converter for the `bool` type."""
+    """Convertible for the `bool` type."""
 
     TYPE = bool
     DEFAULT = False
