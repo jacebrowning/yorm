@@ -63,9 +63,9 @@ class Top:
 
 
 @patch('yorm.settings.fake', True)
-class TestNesting:
+class TestListModification:
 
-    def test_list_append_triggers_update(self):
+    def test_list_append_triggers_store(self):
         top = Top()
         top.nested_list.append({'number': 1})
         assert strip("""
@@ -76,7 +76,7 @@ class TestNesting:
         - number: 1.0
         """) == top.yorm_mapper.text
 
-    def test_list_index_triggers_update(self):
+    def test_list_index_triggers_store(self):
         top = Top()
         top.nested_list = [{'number': 1.5}]
         assert strip("""
@@ -95,7 +95,19 @@ class TestNesting:
         - number: 1.6
         """) == top.yorm_mapper.text
 
-    def test_dict_set_triggers_update(self):
+    def test_list_index_triggers_fetch(self):
+        top = Top()
+        top.yorm_mapper.text = strip("""
+        nested_list:
+        - number: 1.7
+        """)
+        assert 1.7 == top.nested_list[0].number
+
+
+@patch('yorm.settings.fake', True)
+class TestDictionaryModification:
+
+    def test_dict_set_triggers_store(self):
         top = Top()
         top.nested_dict.number = 2
         assert strip("""
@@ -105,7 +117,11 @@ class TestNesting:
         nested_list: []
         """) == top.yorm_mapper.text
 
-    def test_list_item_value_change_triggers_update(self):
+
+@patch('yorm.settings.fake', True)
+class TestNestedModification:
+
+    def test_list_item_value_change_triggers_store(self):
         top = Top()
         top.nested_list = [{'number': 3}]
         assert strip("""
@@ -124,7 +140,7 @@ class TestNesting:
         - number: 4.0
         """) == top.yorm_mapper.text
 
-    def test_dict_item_value_change_triggers_update(self):
+    def test_dict_item_value_change_triggers_store(self):
         top = Top()
         top.nested_dict = {'numbers': [5]}
         assert strip("""

@@ -1,6 +1,7 @@
 """Base class for mapped objects."""
 
 import abc
+import functools
 
 from .. import common
 
@@ -10,7 +11,31 @@ log = common.logger(__name__)
 MAPPER = 'yorm_mapper'
 
 
-class Mappable(metaclass=abc.ABCMeta):
+def fetch_before(method):
+    """Decorator for methods that should fetch before call."""
+    @functools.wraps(method)
+    def decorated_method(self, *args, **kwargs):
+        """Decorated method."""
+        mapper = getattr(self, MAPPER)
+        mapper.fetch()
+        return method(self, *args, **kwargs)
+    return decorated_method
+
+
+def store_after(method):
+    """Decorator for methods that should store after call."""
+    @functools.wraps(method)
+    def decorated_method(self, *args, **kwargs):
+        """Decorated method."""
+        result = method(self, *args, **kwargs)
+        mapper = getattr(self, MAPPER, None)
+        if mapper and mapper.auto:
+            mapper.store()
+        return result
+    return decorated_method
+
+
+class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
 
     """Base class for objects with attributes mapped to file."""
 
@@ -40,32 +65,23 @@ class Mappable(metaclass=abc.ABCMeta):
 
     def __setattr__(self, name, value):
         """Trigger file update when setting attributes."""
-        object.__setattr__(self, name, value)
+        super().__setattr__(name, value)
 
         mapper = getattr(self, MAPPER, None)
         if mapper and mapper.auto and name in mapper.attrs:
             self.yorm_mapper.store()
 
+    @fetch_before
     def __getitem__(self, key):
         """Trigger object update when reading an index."""
-        mapper = getattr(self, MAPPER, None)
-        if mapper and mapper.auto:
-            self.yorm_mapper.fetch()
-
         return super().__getitem__(key)
 
+    @store_after
     def __setitem__(self, key, value):
         """Trigger file update when setting an index."""
         super().__setitem__(key, value)
 
-        mapper = getattr(self, MAPPER, None)
-        if mapper and mapper.auto:
-            self.yorm_mapper.store()
-
+    @store_after
     def append(self, value):
         """Trigger file update when appending items."""
         super().append(value)
-
-        mapper = getattr(self, MAPPER, None)
-        if mapper and mapper.auto:
-            self.yorm_mapper.store()
