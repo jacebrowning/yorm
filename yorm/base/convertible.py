@@ -21,5 +21,5 @@ class Convertible(metaclass=abc.ABCMeta):
 
     @abc.abstractclassmethod
     def to_data(cls, obj):  # pylint: disable=E0213
-        """Convert the attribute's value to something easily serialized."""
+        """Convert the attribute's value for optimal dumping to YAML."""
         raise NotImplementedError("method must be implemented in subclasses")

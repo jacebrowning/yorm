@@ -163,32 +163,10 @@ class TestStandard:
         'true': false
         """) == sample.yorm_mapper.text
 
-    def test_with(self, tmpdir):
-        """Verify standard attribute types dump/load correctly (with)."""
-        tmpdir.chdir()
-        _sample = SampleStandard()
-        attrs = {'string': String,
-                 'number_real': Float}
-        sample = sync(_sample, "sample.yml", attrs, auto=False)
-
-        # change object values
-        with sample:
-            sample.string = "abc"
-            sample.number_real = 4.2
-
-            # check for unchanged file values
-            assert "" == sample.yorm_mapper.text
-
-        # check for changed file values
-        assert strip("""
-        number_real: 4.2
-        string: abc
-        """) == sample.yorm_mapper.text
-
     def test_auto_off(self, tmpdir):
-        """Verify standard attribute types dump/load correctly (auto off)."""
+        """Verify the file is empty with auto off."""
         tmpdir.chdir()
-        sample = SampleDecoratedNoAuto()
+        sample = SampleDecoratedAutoOff()
 
         # change object values
         sample.string = "abc"
@@ -198,13 +176,13 @@ class TestStandard:
         assert "" == sample.yorm_mapper.text
 
         # store value
-        sample.yorm_mapper.store()
         sample.yorm_mapper.auto = True
+        sample.string = "def"
 
         # check for changed file values
         assert strip("""
         number_real: 4.2
-        string: abc
+        string: def
         """) == sample.yorm_mapper.text
 
     def test_no_path(self, tmpdir):

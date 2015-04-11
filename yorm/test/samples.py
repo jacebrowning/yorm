@@ -245,7 +245,7 @@ class SampleStandardDecorated:
 
 @attr(string=String, number_real=Float)
 @sync("sample.yml", auto=False)
-class SampleDecoratedNoAuto:
+class SampleDecoratedAutoOff:
 
     """Sample class with automatic storage turned off."""
 
@@ -254,7 +254,7 @@ class SampleDecoratedNoAuto:
         self.number_real = 0.0
 
     def __repr__(self):
-        return "<no auto {}>".format(id(self))
+        return "<auto off {}>".format(id(self))
 
 
 @attr(string=String, number_real=Float)

@@ -6,6 +6,7 @@ Changelog
 
 - Moved all converters into the `yorm.converters` package.
 - Rename `Converter` to `Convertible`.
+- Remove the context manager in mapped objects.
 
 0.3.2 (2015-04-07)
 ------------------

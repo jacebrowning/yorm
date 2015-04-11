@@ -58,6 +58,16 @@ class TestSyncObject:
         assert not mock_fetch.called
         assert mock_store.called
 
+    def test_store_no_auto(self):
+        """Verify store is not called with auto off."""
+        attrs = {'var1': MockConverter}
+        sample = utilities.sync(self.Sample(), "sample.yml", attrs, auto=False)
+        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
+            with patch.object(sample.yorm_mapper, 'store') as mock_store:
+                setattr(sample, 'var1', None)
+        assert not mock_fetch.called
+        assert not mock_store.called
+
     def test_fetch(self):
         """Verify fetch is called when getting an attribute."""
         attrs = {'var1': MockConverter}
@@ -132,6 +142,11 @@ class TestSyncInstances:
 
         """Sample decorated class using a single path."""
 
+    @utilities.sync("sample.yml", attrs={'var1': MockConverter}, auto=False)
+    class SampleDecoratedWithAttributesAutoOff:
+
+        """Sample decorated class using a single path."""
+
     def test_no_attrs(self):
         """Verify mapping can be enabled with no attributes."""
         sample = self.SampleDecorated()
@@ -187,6 +202,15 @@ class TestSyncInstances:
                 setattr(sample, 'var1', None)
         assert not mock_fetch.called
         assert mock_store.called
+
+    def test_store_auto_off(self):
+        """Verify store is not called with auto off."""
+        sample = self.SampleDecoratedWithAttributesAutoOff()
+        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
+            with patch.object(sample.yorm_mapper, 'store') as mock_store:
+                setattr(sample, 'var1', None)
+        assert not mock_fetch.called
+        assert not mock_store.called
 
     def test_fetch(self):
         """Verify fetch is called when getting an attribute."""

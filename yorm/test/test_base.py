@@ -148,25 +148,6 @@ class TestMappable:
         with pytest.raises(ValueError):
             print(self.sample.var1)
 
-    def test_context_manager(self):
-        """Verify the context manager delays write."""
-        with self.sample:
-            self.sample.var1 = "abc123"
-
-            text = self.sample.yorm_mapper._read()
-            assert strip("""
-            var1: ''
-            var2: 0
-            var3: false
-            """) == text
-
-        text = self.sample.yorm_mapper._read()
-        assert strip("""
-        var1: abc123
-        var2: 0
-        var3: false
-        """) == text
-
     def test_new(self):
         """Verify new attributes are added to the object."""
         text = strip("""
