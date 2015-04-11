@@ -33,6 +33,7 @@ def test_imports():
     from yorm.converters.standard import String
     from yorm.converters.extended import Markdown
     from yorm.converters.container import List
+    assert yorm.converters.Integer
 
     # Decorators
     from yorm import sync  # enables mapping on a class's instance objects
