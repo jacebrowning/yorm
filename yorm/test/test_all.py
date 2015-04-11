@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# pylint:disable=R0201
+# pylint:disable=R0201,C0111
 
 """Integration tests for the `yorm` package."""
 
@@ -51,6 +51,10 @@ def test_imports():
 class TestStandard:
 
     """Integration tests for standard attribute types."""
+
+    class EmptyDictionary(Dictionary):
+
+        pass
 
     def test_decorator(self, tmpdir):
         """Verify standard attribute types dump/load correctly (decorator)."""
@@ -118,7 +122,7 @@ class TestStandard:
         """Verify standard attribute types dump/load correctly (function)."""
         tmpdir.chdir()
         _sample = SampleStandard()
-        attrs = {'object': SingleKeyDictionary,
+        attrs = {'object': self.EmptyDictionary,
                  'array': IntegerList,
                  'string': String,
                  'number_int': Integer,
@@ -139,7 +143,7 @@ class TestStandard:
         assert None is sample.null
 
         # change object values
-        sample.object = {'key2': 'value'}
+        sample.object = {'key': 'value'}
         sample.array = [1, 2, 3]
         sample.string = "Hello, world!"
         sample.number_int = 42
@@ -157,32 +161,36 @@ class TestStandard:
         number_int: 42
         number_real: 4.2
         object:
-          key: ''
-          key2: value
+          key: value
         string: Hello, world!
         'true': false
         """) == sample.yorm_mapper.text
 
     def test_auto_off(self, tmpdir):
-        """Verify the file is empty with auto off."""
+        """Verify file updates are disabled with auto off."""
         tmpdir.chdir()
         sample = SampleDecoratedAutoOff()
 
-        # change object values
-        sample.string = "abc"
-        sample.number_real = 4.2
-
-        # check for unchanged file values
-        assert "" == sample.yorm_mapper.text
+        # check for default values
+        assert strip("""
+        string: ''
+        """) == sample.yorm_mapper.text
 
         # store value
+        sample.string = "hello"
+
+        # check for unchanged file values
+        assert strip("""
+        string: ''
+        """) == sample.yorm_mapper.text
+
+        # enable auto and store value
         sample.yorm_mapper.auto = True
-        sample.string = "def"
+        sample.string = "world"
 
         # check for changed file values
         assert strip("""
-        number_real: 4.2
-        string: def
+        string: world
         """) == sample.yorm_mapper.text
 
     def test_no_path(self, tmpdir):

@@ -1,12 +1,13 @@
 """Converter classes for abstract container types."""
 
 from .. import common
+from ..base.convertible import Convertible
 from . import standard
 
 log = common.logger(__name__)
 
 
-class Dictionary(dict):
+class Dictionary(Convertible, dict):
 
     """Base class for a dictionary of attribute converters."""
 
@@ -90,7 +91,7 @@ class Dictionary(dict):
             return {}
 
 
-class List(list):
+class List(Convertible, list):
 
     """Base class for a homogeneous list of attribute converters."""
 

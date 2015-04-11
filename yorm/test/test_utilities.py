@@ -14,6 +14,7 @@ from .samples import *  # pylint: disable=W0401,W0614
 
 @patch('yorm.common.write_text', Mock())
 @patch('yorm.common.stamp', Mock())
+@patch('yorm.common.read_text', Mock(return_value=""))
 class TestSyncObject:
 
     """Unit tests for the `sync_object` function."""
@@ -42,10 +43,10 @@ class TestSyncObject:
             utilities.sync(sample, "sample.yml")
 
     @patch('os.path.isfile', Mock(return_value=True))
-    @patch('yorm.common.read_text', Mock(return_value="abc: 123"))
     def test_init_existing(self):
         """Verify an existing file is read."""
-        sample = utilities.sync(self.Sample(), "sample.yml")
+        with patch('yorm.common.read_text', Mock(return_value="abc: 123")):
+            sample = utilities.sync(self.Sample(), "sample.yml")
         assert 123 == sample.abc
 
     def test_store(self):
@@ -82,6 +83,7 @@ class TestSyncObject:
 @patch('yorm.common.create_dirname', Mock())
 @patch('yorm.common.write_text', Mock())
 @patch('yorm.common.stamp', Mock())
+@patch('yorm.common.read_text', Mock(return_value=""))
 class TestSyncInstances:
 
     """Unit tests for the `sync_instances` decorator."""
@@ -160,10 +162,10 @@ class TestSyncInstances:
         assert ['var1'] == list(sample.yorm_mapper.attrs.keys())
 
     @patch('os.path.isfile', Mock(return_value=True))
-    @patch('yorm.common.read_text', Mock(return_value="abc: 123"))
     def test_init_existing(self):
         """Verify an existing file is read."""
-        sample = self.SampleDecorated()
+        with patch('yorm.common.read_text', Mock(return_value="abc: 123")):
+            sample = self.SampleDecorated()
         assert 123 == sample.abc
 
     @patch('uuid.uuid4', Mock(return_value=Mock(hex='abc123')))
@@ -224,6 +226,7 @@ class TestSyncInstances:
 
 @patch('yorm.common.write_text', Mock())
 @patch('yorm.common.stamp', Mock())
+@patch('yorm.common.read_text', Mock(return_value=""))
 class TestAttr:
 
     """Unit tests for the `attr` decorator."""

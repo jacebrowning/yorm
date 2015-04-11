@@ -15,7 +15,8 @@ class Mappable(metaclass=abc.ABCMeta):
     """Base class for objects with attributes mapped to file."""
 
     def __getattribute__(self, name):
-        if name == MAPPER:
+        """Trigger object update when reading attributes."""
+        if name in ('__dict__', MAPPER):
             # avoid infinite recursion (attribute requested in this function)
             return object.__getattribute__(self, name)
         mapper = getattr(self, MAPPER, None)
@@ -38,16 +39,17 @@ class Mappable(metaclass=abc.ABCMeta):
         return value
 
     def __setattr__(self, name, value):
-        mapper = getattr(self, MAPPER, None)
-
-        # Convert the value to the mapped type
-        if mapper and name in mapper.attrs:
-            converter = mapper.attrs[name]
-            value = converter.to_value(value)
-
-        # Set the attribute's new value
+        """Trigger file update when setting attributes."""
         object.__setattr__(self, name, value)
 
-        # Store the attribute to disk
+        mapper = getattr(self, MAPPER, None)
         if mapper and mapper.auto and name in mapper.attrs:
+            self.yorm_mapper.store()
+
+    def append(self, value):
+        """Trigger file update when appending items."""
+        super().append(value)
+
+        mapper = getattr(self, MAPPER, None)
+        if mapper and mapper.auto:
             self.yorm_mapper.store()

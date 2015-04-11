@@ -90,12 +90,6 @@ class EmptyDictionary(Dictionary):
     """Sample dictionary container."""
 
 
-@attr(key=String)
-class SingleKeyDictionary(Dictionary):
-
-    """Sample dictionary container."""
-
-
 @attr(all=Integer)
 class IntegerList(List):
 
@@ -243,7 +237,7 @@ class SampleStandardDecorated:
         return "<decorated {}>".format(id(self))
 
 
-@attr(string=String, number_real=Float)
+@attr(string=String)
 @sync("sample.yml", auto=False)
 class SampleDecoratedAutoOff:
 
@@ -251,7 +245,6 @@ class SampleDecoratedAutoOff:
 
     def __init__(self):
         self.string = ""
-        self.number_real = 0.0
 
     def __repr__(self):
         return "<auto off {}>".format(id(self))
