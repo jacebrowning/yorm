@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-# pylint:disable=W0201,W0613,R0201,W0212
+# pylint:disable=W0201,W0613,R0201,W0212,C0111
 
 """Unit tests for the `base` module."""
 
 import pytest
 import logging
 
-from yorm.base.mappable import Mappable
+from yorm.base.mappable import get_mapper, Mappable
 from yorm.base.convertible import Convertible
 from yorm.mapper import Mapper
 from yorm.converters import String, Integer, Boolean
@@ -51,6 +51,7 @@ class SampleMappable(Mappable):
     """Sample mappable class with hard-coded settings."""
 
     def __init__(self):
+        self.yorm_mapper = None
         logging.debug("initializing sample...")
         self.var1 = None
         self.var2 = None
@@ -69,6 +70,21 @@ class SampleMappable(Mappable):
 
 
 # tests ########################################################################
+
+
+class TestGetMapper:
+
+    """Unit tests for the `get_mapper` function."""
+
+    def test_mappable_required(self):
+        with pytest.raises(TypeError):
+            print(get_mapper(None))
+
+    def test_yorm_mapper_required(self):
+        sample = SampleMappable()
+        del sample.yorm_mapper
+        with pytest.raises(AttributeError):
+            print(get_mapper(sample))
 
 
 class TestMappable:

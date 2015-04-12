@@ -11,28 +11,48 @@ log = common.logger(__name__)
 MAPPER = 'yorm_mapper'
 
 
+def get_mapper(obj):
+    """Get `Mapper` instance attached to an object."""
+    if not isinstance(obj, Mappable):
+        msg = "object {!r} must be a `Mappable` instance".format(obj)
+        raise TypeError(msg)
+    try:
+        mapper = getattr(obj, MAPPER)
+    except AttributeError:
+        msg = "mapped {!r} missing {!r} attribute".format(obj, MAPPER)
+        if isinstance(obj, (dict, list)):
+            log.warning(msg)
+            return None
+        else:
+            raise AttributeError(msg) from None
+    else:
+        return mapper
+
+
 def fetch_before(method):
     """Decorator for methods that should fetch before call."""
     @functools.wraps(method)
-    def decorated_method(self, *args, **kwargs):
+    def fetch_before(self, *args, **kwargs):  # pylint: disable=W0621
         """Decorated method."""
-        mapper = getattr(self, MAPPER)
+        log.debug("fetching before call to %r...", method)
+        mapper = get_mapper(self)
         mapper.fetch()
         return method(self, *args, **kwargs)
-    return decorated_method
+    return fetch_before
 
 
 def store_after(method):
     """Decorator for methods that should store after call."""
     @functools.wraps(method)
-    def decorated_method(self, *args, **kwargs):
+    def store_after(self, *args, **kwargs):  # pylint: disable=W0621
         """Decorated method."""
         result = method(self, *args, **kwargs)
-        mapper = getattr(self, MAPPER, None)
+        log.debug("storing after call to %r...", method)
+        mapper = get_mapper(self)
         if mapper and mapper.auto:
             mapper.store()
         return result
-    return decorated_method
+    return store_after
 
 
 class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
@@ -41,10 +61,10 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
 
     def __getattribute__(self, name):
         """Trigger object update when reading attributes."""
-        if name in ('__dict__', MAPPER):
+        if name in ('__dict__', '__class__', MAPPER):
             # avoid infinite recursion (attribute requested in this function)
             return object.__getattribute__(self, name)
-        mapper = getattr(self, MAPPER, None)
+        mapper = get_mapper(self)
 
         # Get the attribute's current value
         try:
@@ -66,10 +86,12 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
     def __setattr__(self, name, value):
         """Trigger file update when setting attributes."""
         super().__setattr__(name, value)
+        if name in ('__dict__', MAPPER):
+            return
 
-        mapper = getattr(self, MAPPER, None)
+        mapper = get_mapper(self)
         if mapper and mapper.auto and name in mapper.attrs:
-            self.yorm_mapper.store()
+            mapper.store()
 
     @fetch_before
     def __getitem__(self, key):
@@ -80,6 +102,11 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
     def __setitem__(self, key, value):
         """Trigger file update when setting an index."""
         super().__setitem__(key, value)
+
+    @store_after
+    def __delitem__(self, key):
+        """Trigger file update when deleting an index."""
+        super().__delitem__(key)
 
     @store_after
     def append(self, value):

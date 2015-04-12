@@ -16,7 +16,7 @@ log = common.logger(__name__)
 def file_required(method):
     """Decorator for methods that require the file to exist."""
     @functools.wraps(method)
-    def decorated_method(self, *args, **kwargs):
+    def file_required(self, *args, **kwargs):  # pylint: disable=W0621
         """Decorated method."""
         if not self.path:
             log.trace("%r maps to nothing", self)
@@ -25,7 +25,7 @@ def file_required(method):
             msg = "cannot access deleted: {}".format(self.path)
             raise common.FileError(msg)
         return method(self, *args, **kwargs)
-    return decorated_method
+    return file_required
 
 
 def prefix(obj):
@@ -133,18 +133,20 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
     def _remap(self, obj):
         """Restore mapping on nested attributes."""
-        log.trace("restoring mapping on %r...", obj)
-
         if isinstance(obj, Mappable):
+            log.trace("restoring mapping on %r...", obj)
             mapper = Mapper(obj, None, common.ATTRS[obj.__class__], root=self)
             setattr(obj, MAPPER, mapper)
 
-        if isinstance(obj, dict):
-            for obj2 in obj.values():
-                self._remap(obj2)
-        elif isinstance(obj, list):
-            for obj2 in obj:
-                self._remap(obj2)
+            if isinstance(obj, dict):
+                for obj2 in obj.values():
+                    self._remap(obj2)
+            else:
+                assert isinstance(obj, list)
+                for obj2 in obj:
+                    self._remap(obj2)
+        else:
+            log.trace("%r is not mapped", obj)
 
     @file_required
     def _read(self):

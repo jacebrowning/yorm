@@ -78,6 +78,7 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
             """Original class with `Mappable` as the base."""
 
             def __init__(self, *_args, **_kwargs):
+                setattr(self, MAPPER, None)
                 super().__init__(*_args, **_kwargs)
 
                 format_values = {}
@@ -92,12 +93,12 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
                 attrs.update(common.ATTRS[cls])
                 mapper = Mapper(self, path, attrs, auto=auto)
 
+                setattr(self, MAPPER, mapper)
+
                 if not mapper.exists:
                     mapper.create()
                     mapper.store()
                 mapper.fetch(force=True)
-
-                setattr(self, MAPPER, mapper)
 
         return Mapped
 
