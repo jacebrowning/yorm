@@ -19,11 +19,12 @@ def get_mapper(obj):
     try:
         mapper = getattr(obj, MAPPER)
     except AttributeError:
-        msg = "mapped {!r} missing {!r} attribute".format(obj, MAPPER)
         if isinstance(obj, (dict, list)):
+            msg = "mapped container missing {!r} attribute".format(MAPPER)
             log.warning(msg)
             return None
         else:
+            msg = "mapped {!r} missing {!r} attribute".format(obj, MAPPER)
             raise AttributeError(msg) from None
     else:
         return mapper
