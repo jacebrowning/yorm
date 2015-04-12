@@ -27,6 +27,7 @@ class NestedDictionary2(yorm.converters.AttributeDictionary):
         self.number = 0
 
     def __repr__(self):
+        print(self.number)  # trigger a potential recursion issue
         return "<nested-dictionary-2 {}>".format((id(self)))
 
 

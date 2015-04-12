@@ -19,7 +19,6 @@ def file_required(method):
     def file_required(self, *args, **kwargs):  # pylint: disable=W0621
         """Decorated method."""
         if not self.path:
-            log.trace("%r maps to nothing", self)
             return None
         if not self.exists:
             msg = "cannot access deleted: {}".format(self.path)
@@ -314,13 +313,17 @@ class Mapper(Helper):
         super().create(self.obj)
 
     def fetch(self, force=False):  # pylint: disable=W0221
-        if self.root:
+        if self.root and not self._activity:
+            self._activity = True
             log.debug("%r triggered fetch in root", self)
             self.root.fetch(force=force)
+            self._activity = False
         super().fetch(self.obj, self.attrs, force=force)
 
     def store(self):  # pylint: disable=W0221
-        if self.root:
+        if self.root and not self._activity:
+            self._activity = True
             log.debug("%r triggered store in root", self)
             self.root.store()
+            self._activity = False
         super().store(self.obj, self.attrs)
