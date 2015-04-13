@@ -22,6 +22,9 @@ class Sample:
         self.name = name
         self.value = 0
 
+    def __repr__(self):
+        return "<sample {}>".format(id(self))
+
 
 @patch('yorm.settings.fake', True)
 class TestFake:

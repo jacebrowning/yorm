@@ -3,11 +3,12 @@
 import abc
 
 from .. import common
+from .mappable import Mappable
 
 log = common.logger(__name__)
 
 
-class Convertible(metaclass=abc.ABCMeta):
+class Convertible(Mappable, metaclass=abc.ABCMeta):
 
     """Base class for attribute converters."""
 

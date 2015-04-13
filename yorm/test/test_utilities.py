@@ -14,6 +14,7 @@ from .samples import *  # pylint: disable=W0401,W0614
 
 @patch('yorm.common.write_text', Mock())
 @patch('yorm.common.stamp', Mock())
+@patch('yorm.common.read_text', Mock(return_value=""))
 class TestSyncObject:
 
     """Unit tests for the `sync_object` function."""
@@ -42,46 +43,17 @@ class TestSyncObject:
             utilities.sync(sample, "sample.yml")
 
     @patch('os.path.isfile', Mock(return_value=True))
-    @patch('yorm.common.read_text', Mock(return_value="abc: 123"))
     def test_init_existing(self):
         """Verify an existing file is read."""
-        sample = utilities.sync(self.Sample(), "sample.yml")
+        with patch('yorm.common.read_text', Mock(return_value="abc: 123")):
+            sample = utilities.sync(self.Sample(), "sample.yml")
         assert 123 == sample.abc
-
-    def test_store(self):
-        """Verify store is called when setting an attribute."""
-        attrs = {'var1': MockConverter}
-        sample = utilities.sync(self.Sample(), "sample.yml", attrs)
-        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
-            with patch.object(sample.yorm_mapper, 'store') as mock_store:
-                setattr(sample, 'var1', None)
-        assert not mock_fetch.called
-        assert mock_store.called
-
-    def test_store_no_auto(self):
-        """Verify store is not called with auto off."""
-        attrs = {'var1': MockConverter}
-        sample = utilities.sync(self.Sample(), "sample.yml", attrs, auto=False)
-        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
-            with patch.object(sample.yorm_mapper, 'store') as mock_store:
-                setattr(sample, 'var1', None)
-        assert not mock_fetch.called
-        assert not mock_store.called
-
-    def test_fetch(self):
-        """Verify fetch is called when getting an attribute."""
-        attrs = {'var1': MockConverter}
-        sample = utilities.sync(self.Sample(), "sample.yml", attrs)
-        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
-            with patch.object(sample.yorm_mapper, 'store') as mock_store:
-                getattr(sample, 'var1', None)
-        assert mock_fetch.called
-        assert not mock_store.called
 
 
 @patch('yorm.common.create_dirname', Mock())
 @patch('yorm.common.write_text', Mock())
 @patch('yorm.common.stamp', Mock())
+@patch('yorm.common.read_text', Mock(return_value=""))
 class TestSyncInstances:
 
     """Unit tests for the `sync_instances` decorator."""
@@ -160,10 +132,10 @@ class TestSyncInstances:
         assert ['var1'] == list(sample.yorm_mapper.attrs.keys())
 
     @patch('os.path.isfile', Mock(return_value=True))
-    @patch('yorm.common.read_text', Mock(return_value="abc: 123"))
     def test_init_existing(self):
         """Verify an existing file is read."""
-        sample = self.SampleDecorated()
+        with patch('yorm.common.read_text', Mock(return_value="abc: 123")):
+            sample = self.SampleDecorated()
         assert 123 == sample.abc
 
     @patch('uuid.uuid4', Mock(return_value=Mock(hex='abc123')))
@@ -194,36 +166,10 @@ class TestSyncInstances:
         assert "A/B/C.yml" == sample1.yorm_mapper.path
         assert "1/2/3.yml" == sample2.yorm_mapper.path
 
-    def test_store(self):
-        """Verify store is called when setting an attribute."""
-        sample = self.SampleDecoratedWithAttributes()
-        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
-            with patch.object(sample.yorm_mapper, 'store') as mock_store:
-                setattr(sample, 'var1', None)
-        assert not mock_fetch.called
-        assert mock_store.called
-
-    def test_store_auto_off(self):
-        """Verify store is not called with auto off."""
-        sample = self.SampleDecoratedWithAttributesAutoOff()
-        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
-            with patch.object(sample.yorm_mapper, 'store') as mock_store:
-                setattr(sample, 'var1', None)
-        assert not mock_fetch.called
-        assert not mock_store.called
-
-    def test_fetch(self):
-        """Verify fetch is called when getting an attribute."""
-        sample = self.SampleDecoratedWithAttributes()
-        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
-            with patch.object(sample.yorm_mapper, 'store') as mock_store:
-                getattr(sample, 'var1', None)
-        assert mock_fetch.called
-        assert not mock_store.called
-
 
 @patch('yorm.common.write_text', Mock())
 @patch('yorm.common.stamp', Mock())
+@patch('yorm.common.read_text', Mock(return_value=""))
 class TestAttr:
 
     """Unit tests for the `attr` decorator."""

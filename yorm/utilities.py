@@ -45,14 +45,12 @@ def sync_object(instance, path, attrs=None, auto=True):
 
         """Original class with `Mappable` as the base."""
 
-    mapper = Mapper(instance, path, attrs)
+    mapper = Mapper(instance, path, attrs, auto=auto)
+
     if not mapper.exists:
         mapper.create()
-        if auto:
-            mapper.store()
-    else:
-        mapper.fetch()
-    mapper.auto = auto
+        mapper.store()
+    mapper.fetch(force=True)
 
     setattr(instance, MAPPER, mapper)
     instance.__class__ = Mapped
@@ -80,6 +78,7 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
             """Original class with `Mappable` as the base."""
 
             def __init__(self, *_args, **_kwargs):
+                setattr(self, MAPPER, None)
                 super().__init__(*_args, **_kwargs)
 
                 format_values = {}
@@ -92,17 +91,14 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
                 path = path_format.format(**format_values)
                 attrs.update(common.ATTRS[self.__class__])
                 attrs.update(common.ATTRS[cls])
+                mapper = Mapper(self, path, attrs, auto=auto)
 
-                mapper = Mapper(self, path, attrs)
+                setattr(self, MAPPER, mapper)
+
                 if not mapper.exists:
                     mapper.create()
-                    if auto:
-                        mapper.store()
-                else:
-                    mapper.fetch()
-                mapper.auto = auto
-
-                self.yorm_mapper = mapper
+                    mapper.store()
+                mapper.fetch(force=True)
 
         return Mapped
 
@@ -151,9 +147,11 @@ def update_object(instance, force=True):
     :param force: update the object even if the file appears unchanged
 
     """
+    log.info("manually synchronizing %r from its file...", instance)
     _check_base(instance, mappable=True)
 
-    instance.yorm_mapper.fetch(force=force)
+    mapper = getattr(instance, MAPPER)
+    mapper.fetch(force=force)
 
 
 def update_file(instance):
@@ -162,9 +160,11 @@ def update_file(instance):
     :param instance: object with patched YAML mapping behavior
 
     """
+    log.info("manually synchronizing %r to its file...", instance)
     _check_base(instance, mappable=True)
 
-    instance.yorm_mapper.store()
+    mapper = getattr(instance, MAPPER)
+    mapper.store()
 
 
 def _check_base(obj, mappable=True):

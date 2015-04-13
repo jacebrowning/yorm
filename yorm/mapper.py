@@ -8,6 +8,7 @@ import yaml
 
 from . import common
 from . import settings
+from .base.mappable import MAPPER, Mappable
 
 log = common.logger(__name__)
 
@@ -15,13 +16,15 @@ log = common.logger(__name__)
 def file_required(method):
     """Decorator for methods that require the file to exist."""
     @functools.wraps(method)
-    def decorated_method(self, *args, **kwargs):
+    def file_required(self, *args, **kwargs):  # pylint: disable=W0621
         """Decorated method."""
+        if not self.path:
+            return None
         if not self.exists:
             msg = "cannot access deleted: {}".format(self.path)
             raise common.FileError(msg)
         return method(self, *args, **kwargs)
-    return decorated_method
+    return file_required
 
 
 def prefix(obj):
@@ -53,10 +56,10 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
     """
 
-    def __init__(self, path):
+    def __init__(self, path, auto=True):
         self.path = path
-        self.auto = False
-        self.exists = os.path.isfile(self.path)
+        self.auto = auto
+        self.exists = self.path and os.path.isfile(self.path)
         self._activity = False
         self._timestamp = 0
         self._fake = None
@@ -120,11 +123,29 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 attrs[name] = converter
             value = converter.to_value(data)
             log.trace("value fetched: '{}' = {}".format(name, repr(value)))
+            self._remap(value)
             setattr(obj, name, value)
 
         # Set meta attributes
         self.modified = False
         self._activity = False
+
+    def _remap(self, obj):
+        """Restore mapping on nested attributes."""
+        if isinstance(obj, Mappable):
+            log.trace("restoring mapping on %r...", obj)
+            mapper = Mapper(obj, None, common.ATTRS[obj.__class__], root=self)
+            setattr(obj, MAPPER, mapper)
+
+            if isinstance(obj, dict):
+                for obj2 in obj.values():
+                    self._remap(obj2)
+            else:
+                assert isinstance(obj, list)
+                for obj2 in obj:
+                    self._remap(obj2)
+        else:
+            log.trace("%r is not mapped", obj)
 
     @file_required
     def _read(self):
@@ -177,7 +198,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
         self._write(text)
 
         # Set meta attributes
-        self.modified = False
+        self.modified = True
         self._activity = False
 
     @abc.abstractstaticmethod
@@ -209,11 +230,11 @@ class BaseHelper(metaclass=abc.ABCMeta):
         """Determine if the file has been modified."""
         if settings.fake:
             changes = self._timestamp is not None
-            log.trace("file is %smodified (it is fake)",
+            log.trace("(fake) file is %smodified",
                       "" if changes else "not ")
             return changes
         elif not self.exists:
-            log.trace("file is modified (it is deleted)")
+            log.trace("file is modified (deletion)")
             return True
         else:
             was = self._timestamp
@@ -279,18 +300,30 @@ class Mapper(Helper):
 
     """Maps an object's attribute to YAML files."""
 
-    def __init__(self, obj, path, attrs):
-        super().__init__(path)
+    def __init__(self, obj, path, attrs, auto=True, root=None):  # pylint: disable=R0913
+        super().__init__(path, auto=auto)
         self.obj = obj
         self.attrs = attrs
+        self.root = root
+
+    def __repr__(self):
+        return "<mapper: {!r} => {!r}>".format(self.obj, self.path)
 
     def create(self):  # pylint: disable=W0221
-        return super().create(self.obj)
+        super().create(self.obj)
 
-    @file_required
     def fetch(self, force=False):  # pylint: disable=W0221
-        return super().fetch(self.obj, self.attrs, force=force)
+        if self.root and not self._activity:
+            self._activity = True
+            log.debug("%r triggered fetch in root", self)
+            self.root.fetch(force=force)
+            self._activity = False
+        super().fetch(self.obj, self.attrs, force=force)
 
-    @file_required
     def store(self):  # pylint: disable=W0221
-        return super().store(self.obj, self.attrs)
+        if self.root and not self._activity:
+            self._activity = True
+            log.debug("%r triggered store in root", self)
+            self.root.store()
+            self._activity = False
+        super().store(self.obj, self.attrs)
