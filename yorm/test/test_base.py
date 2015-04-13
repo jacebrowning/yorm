@@ -5,6 +5,7 @@
 
 import pytest
 import logging
+from unittest.mock import Mock
 
 from yorm.base.mappable import get_mapper, Mappable
 from yorm.base.convertible import Convertible
@@ -52,6 +53,7 @@ class SampleMappable(Mappable):
 
     def __init__(self):
         self.yorm_mapper = None
+
         logging.debug("initializing sample...")
         self.var1 = None
         self.var2 = None
@@ -179,6 +181,73 @@ class TestMappable:
         self.sample.yorm_mapper._write(text)
         with pytest.raises(ValueError):
             print(self.sample.var1)
+
+
+class TestMappableTriggers:
+
+    class MockList:
+
+        def append(self, value):
+            print(value)
+
+    class MockDict(Mappable, dict):
+
+        pass
+
+    class Sample(MockList, MockDict):
+
+        yorm_mapper = Mock()
+        yorm_mapper.attrs = []
+        yorm_mapper.fetch = Mock()
+        yorm_mapper.store = Mock()
+
+    def setup_method(self, method):
+        """Create an mappable instance for tests."""
+        self.sample = self.Sample()
+        self.sample.yorm_mapper.fetch.reset_mock()
+        self.sample.yorm_mapper.store.reset_mock()
+
+    def test_getattribute(self):
+        with pytest.raises(AttributeError):
+            getattr(self.sample, 'foo')
+        assert 1 == self.sample.yorm_mapper.fetch.call_count
+        assert 0 == self.sample.yorm_mapper.store.call_count
+
+    def test_setattr(self):
+        self.sample.yorm_mapper.attrs.append('foo')
+        setattr(self.sample, 'foo', 'bar')
+        assert 0 == self.sample.yorm_mapper.fetch.call_count
+        assert 1 == self.sample.yorm_mapper.store.call_count
+
+    def test_getitem(self):
+        with pytest.raises(KeyError):
+            print(self.sample['foo'])
+        assert 1 == self.sample.yorm_mapper.fetch.call_count
+        assert 0 == self.sample.yorm_mapper.store.call_count
+
+    def test_setitem(self):
+        self.sample['foo'] = 'bar'
+        assert 0 == self.sample.yorm_mapper.fetch.call_count
+        assert 1 == self.sample.yorm_mapper.store.call_count
+
+    def test_delitem(self):
+        self.sample['foo'] = 'bar'
+        self.sample.yorm_mapper.store.reset_mock()
+        del self.sample['foo']
+        assert 0 == self.sample.yorm_mapper.fetch.call_count
+        assert 1 == self.sample.yorm_mapper.store.call_count
+
+    def test_append(self):
+        self.sample.append('foo')
+        assert 0 == self.sample.yorm_mapper.fetch.call_count
+        # assert 1 == self.sample.yorm_mapper.store.call_count
+
+    def test_store_and_fetch_can_handle_missing_mapper(self):
+        sample = self.MockDict()
+        sample.yorm_mapper = None
+        sample[0] = 0
+        print(sample[0])
+        assert None is sample.yorm_mapper
 
 
 class TestConverter:

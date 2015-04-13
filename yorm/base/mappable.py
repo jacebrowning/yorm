@@ -20,8 +20,6 @@ def get_mapper(obj):
         mapper = getattr(obj, MAPPER)
     except AttributeError:
         if isinstance(obj, (dict, list)):
-            msg = "mapped container missing {!r} attribute".format(MAPPER)
-            log.warning(msg)
             return None
         else:
             msg = "mapped {!r} missing {!r} attribute".format(obj, MAPPER)
@@ -35,9 +33,10 @@ def fetch_before(method):
     @functools.wraps(method)
     def fetch_before(self, *args, **kwargs):  # pylint: disable=W0621
         """Decorated method."""
-        log.debug("fetching before call to %r...", method)
         mapper = get_mapper(self)
-        mapper.fetch()
+        if mapper:
+            log.debug("fetching before call to %r...", method)
+            mapper.fetch()
         return method(self, *args, **kwargs)
     return fetch_before
 
@@ -48,9 +47,9 @@ def store_after(method):
     def store_after(self, *args, **kwargs):  # pylint: disable=W0621
         """Decorated method."""
         result = method(self, *args, **kwargs)
-        log.debug("storing after call to %r...", method)
         mapper = get_mapper(self)
         if mapper and mapper.auto:
+            log.debug("storing after call to %r...", method)
             mapper.store()
         return result
     return store_after

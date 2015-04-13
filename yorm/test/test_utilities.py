@@ -49,36 +49,6 @@ class TestSyncObject:
             sample = utilities.sync(self.Sample(), "sample.yml")
         assert 123 == sample.abc
 
-    def test_store(self):
-        """Verify store is called when setting an attribute."""
-        attrs = {'var1': MockConverter}
-        sample = utilities.sync(self.Sample(), "sample.yml", attrs)
-        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
-            with patch.object(sample.yorm_mapper, 'store') as mock_store:
-                setattr(sample, 'var1', None)
-        assert not mock_fetch.called
-        assert mock_store.called
-
-    def test_store_no_auto(self):
-        """Verify store is not called with auto off."""
-        attrs = {'var1': MockConverter}
-        sample = utilities.sync(self.Sample(), "sample.yml", attrs, auto=False)
-        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
-            with patch.object(sample.yorm_mapper, 'store') as mock_store:
-                setattr(sample, 'var1', None)
-        assert not mock_fetch.called
-        assert not mock_store.called
-
-    def test_fetch(self):
-        """Verify fetch is called when getting an attribute."""
-        attrs = {'var1': MockConverter}
-        sample = utilities.sync(self.Sample(), "sample.yml", attrs)
-        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
-            with patch.object(sample.yorm_mapper, 'store') as mock_store:
-                getattr(sample, 'var1', None)
-        assert mock_fetch.called
-        assert not mock_store.called
-
 
 @patch('yorm.common.create_dirname', Mock())
 @patch('yorm.common.write_text', Mock())
@@ -195,33 +165,6 @@ class TestSyncInstances:
         sample2 = self.SampleDecoratedAttributesCombination(1, 2, 3)
         assert "A/B/C.yml" == sample1.yorm_mapper.path
         assert "1/2/3.yml" == sample2.yorm_mapper.path
-
-    def test_store(self):
-        """Verify store is called when setting an attribute."""
-        sample = self.SampleDecoratedWithAttributes()
-        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
-            with patch.object(sample.yorm_mapper, 'store') as mock_store:
-                setattr(sample, 'var1', None)
-        assert not mock_fetch.called
-        assert mock_store.called
-
-    def test_store_auto_off(self):
-        """Verify store is not called with auto off."""
-        sample = self.SampleDecoratedWithAttributesAutoOff()
-        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
-            with patch.object(sample.yorm_mapper, 'store') as mock_store:
-                setattr(sample, 'var1', None)
-        assert not mock_fetch.called
-        assert not mock_store.called
-
-    def test_fetch(self):
-        """Verify fetch is called when getting an attribute."""
-        sample = self.SampleDecoratedWithAttributes()
-        with patch.object(sample.yorm_mapper, 'fetch') as mock_fetch:
-            with patch.object(sample.yorm_mapper, 'store') as mock_store:
-                getattr(sample, 'var1', None)
-        assert mock_fetch.called
-        assert not mock_store.called
 
 
 @patch('yorm.common.write_text', Mock())
