@@ -117,6 +117,41 @@ class TestList:
             UnknownList.to_data(None)
 
 
+class TestExtensions:
+
+    """Unit tests for extensions to the container classes."""
+
+    class FindMixin:
+
+        def find(self, value):
+            for value2 in self:
+                if value.lower() == value2.lower():
+                    return value2
+            return None
+
+    @yorm.attr(a=yorm.converters.String)
+    class MyDictionary(Dictionary, FindMixin):
+        pass
+
+    @yorm.attr(all=yorm.converters.String)
+    class MyList(List, FindMixin):
+        pass
+
+    def test_converted_dict_keeps_type(self):
+        my_dict = self.MyDictionary()
+        my_dict['a'] = 1
+        my_dict2 = self.MyDictionary.to_value(my_dict)
+        assert 'a' == my_dict2.find('A')
+        assert None is my_dict2.find('B')
+
+    def test_converted_list_keeps_type(self):
+        my_list = self.MyList()
+        my_list.append('a')
+        my_list2 = self.MyList.to_value(my_list)
+        assert 'a' == my_list2.find('A')
+        assert None is my_list2.find('B')
+
+
 @patch('yorm.settings.fake', True)
 class TestReservedNames:
 

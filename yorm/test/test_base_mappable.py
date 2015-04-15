@@ -7,9 +7,10 @@ import pytest
 import logging
 from unittest.mock import Mock
 
+import yorm
 from yorm.base.mappable import get_mapper, Mappable
 from yorm.mapper import Mapper
-from yorm.converters import String, Integer, Boolean
+from yorm.converters import String, Integer, Boolean, List, Dictionary
 
 from . import strip
 
@@ -45,6 +46,17 @@ class MockMapper(Mapper):
 
 # sample classes ###############################################################
 
+@yorm.attr(all=Integer)
+class IntegerList(List):
+
+    """List of integers."""
+
+
+@yorm.attr(status=Boolean)
+class StatusDictionary(Dictionary):
+
+    """Dictionary of statuses."""
+
 
 class SampleMappable(Mappable):
 
@@ -57,12 +69,16 @@ class SampleMappable(Mappable):
         self.var1 = None
         self.var2 = None
         self.var3 = None
+        self.var4 = None
+        self.var5 = None
         logging.debug("sample initialized")
 
         path = "mock/path/to/sample.yml"
         attrs = {'var1': String,
                  'var2': Integer,
-                 'var3': Boolean}
+                 'var3': Boolean,
+                 'var4': IntegerList,
+                 'var5': StatusDictionary}
         self.yorm_mapper = MockMapper(self, path, attrs)
         self.yorm_mapper.store()
 
@@ -103,6 +119,9 @@ class TestMappable:
         var1: ''
         var2: 0
         var3: false
+        var4: []
+        var5:
+          status: false
         """) == text
 
     def test_set(self):
@@ -110,11 +129,17 @@ class TestMappable:
         self.sample.var1 = "abc123"
         self.sample.var2 = 1
         self.sample.var3 = True
+        self.sample.var4 = [42]
+        self.sample.var5 = {'status': True}
         text = self.sample.yorm_mapper._read()
         assert strip("""
         var1: abc123
         var2: 1
         var3: true
+        var4:
+        - 42
+        var5:
+          status: true
         """) == text
 
     def test_set_converted(self):
@@ -122,11 +147,16 @@ class TestMappable:
         self.sample.var1 = 42
         self.sample.var2 = "1"
         self.sample.var3 = 'off'
+        self.sample.var4 = None
+        self.sample.var5 = {'status': 1}
         text = self.sample.yorm_mapper._read()
         assert strip("""
         var1: '42'
         var2: 1
         var3: false
+        var4: []
+        var5:
+          status: true
         """) == text
 
     def test_set_error(self):
@@ -181,22 +211,63 @@ class TestMappable:
         with pytest.raises(ValueError):
             print(self.sample.var1)
 
+    @staticmethod
+    def _log_ref(name, var, ref):
+        logging.info("%s: %r", name, var)
+        logging.info("%s_ref: %r", name, ref)
+        logging.info("%s ID: %s", name, id(var))
+        logging.info("%s_ref ID: %s", name, id(ref))
+        assert id(ref) == id(var)
+        assert ref == var
+
+    def test_alias_list(self):
+        """Verify a referenced list triggers updates."""
+        yorm.update_object(self.sample)
+        var4_ref = self.sample.var4
+        self._log_ref('var4', self.sample.var4, var4_ref)
+        assert [] == self.sample.var4
+
+        logging.info("appending 42 to var4_ref...")
+        var4_ref.append(42)
+        self._log_ref('var4', self.sample.var4, var4_ref)
+        assert [42] == self.sample.var4
+
+        logging.info("appending 2015 to var4_ref...")
+        var4_ref.append(2015)
+        assert [42, 2015] == self.sample.var4
+
+    def test_alias_dict(self):
+        """Verify a referenced dictionary triggers updates."""
+        yorm.update_object(self.sample)
+        var5_ref = self.sample.var5
+        self._log_ref('var5', self.sample.var5, var5_ref)
+        assert {'status': False} == self.sample.var5
+
+        logging.info("setting status=True in var5_ref...")
+        var5_ref['status'] = True
+        self._log_ref('var5', self.sample.var5, var5_ref)
+        assert {'status': True} == self.sample.var5
+
+        logging.info("setting status=False in var5_ref...")
+        var5_ref['status'] = False
+        self._log_ref('var5', self.sample.var5, var5_ref)
+        assert {'status': False} == self.sample.var5
+
 
 class TestMappableTriggers:
+
+    class MockDict(Mappable, dict):
+        pass
 
     class MockList:
 
         def append(self, value):
             print(value)
 
-    class MockDict(Mappable, dict):
-
-        pass
-
-    class Sample(MockList, MockDict):
+    class Sample(MockDict, MockList):
 
         yorm_mapper = Mock()
-        yorm_mapper.attrs = []
+        yorm_mapper.attrs = {}
         yorm_mapper.fetch = Mock()
         yorm_mapper.store = Mock()
 
@@ -213,7 +284,7 @@ class TestMappableTriggers:
         assert 0 == self.sample.yorm_mapper.store.call_count
 
     def test_setattr(self):
-        self.sample.yorm_mapper.attrs.append('foo')
+        self.sample.yorm_mapper.attrs['foo'] = Mock()
         setattr(self.sample, 'foo', 'bar')
         assert 0 == self.sample.yorm_mapper.fetch.call_count
         assert 1 == self.sample.yorm_mapper.store.call_count
@@ -232,6 +303,7 @@ class TestMappableTriggers:
     def test_delitem(self):
         self.sample['foo'] = 'bar'
         self.sample.yorm_mapper.store.reset_mock()
+
         del self.sample['foo']
         assert 0 == self.sample.yorm_mapper.fetch.call_count
         assert 1 == self.sample.yorm_mapper.store.call_count
@@ -239,9 +311,20 @@ class TestMappableTriggers:
     def test_append(self):
         self.sample.append('foo')
         assert 0 == self.sample.yorm_mapper.fetch.call_count
-        # assert 1 == self.sample.yorm_mapper.store.call_count
+        assert 1 == self.sample.yorm_mapper.store.call_count
 
-    def test_store_and_fetch_can_handle_missing_mapper(self):
+    def test_iter(self):
+        self.sample.append('foo')
+        self.sample.append('bar')
+        self.sample.yorm_mapper.fetch.reset_mock()
+        self.sample.yorm_mapper.store.reset_mock()
+
+        for item in self.sample:
+            print(item)
+        assert 1 == self.sample.yorm_mapper.fetch.call_count
+        assert 0 == self.sample.yorm_mapper.store.call_count
+
+    def test_handle_missing_mapper(self):
         sample = self.MockDict()
         sample.yorm_mapper = None
         sample[0] = 0

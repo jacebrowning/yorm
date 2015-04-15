@@ -4,6 +4,7 @@
 """Integration tests for nested attributes."""
 
 from unittest.mock import patch
+import logging
 
 import pytest
 
@@ -13,12 +14,34 @@ from . import strip
 
 
 @yorm.attr(all=yorm.converters.Float)
+class NestedList3(yorm.converters.List):
+
+    def __repr__(self):
+        return "<nested-list-3 {}>".format((id(self)))
+
+
+@yorm.attr(number=yorm.converters.Float)
+@yorm.attr(nested_list_3=NestedList3)
+class NestedDictionary3(yorm.converters.AttributeDictionary):
+
+    def __init__(self):
+        super().__init__()
+        self.number = 0
+        self.nested_list_3 = []
+
+    def __repr__(self):
+        print(self.number)  # trigger a potential recursion issue
+        return "<nested-dictionary-3 {}>".format((id(self)))
+
+
+@yorm.attr(all=yorm.converters.Float)
 class NestedList2(yorm.converters.List):
 
     def __repr__(self):
         return "<nested-list-2 {}>".format((id(self)))
 
 
+@yorm.attr(nested_dict_3=NestedDictionary3)
 @yorm.attr(number=yorm.converters.Float)
 class NestedDictionary2(yorm.converters.AttributeDictionary):
 
@@ -32,13 +55,13 @@ class NestedDictionary2(yorm.converters.AttributeDictionary):
 
 
 @yorm.attr(number=yorm.converters.Float)
-@yorm.attr(numbers=NestedList2)
+@yorm.attr(nested_list_2=NestedList2)
 class NestedDictionary(yorm.converters.AttributeDictionary):
 
     def __init__(self):
         super().__init__()
         self.number = 0
-        self.numbers = []
+        self.nested_list_2 = []
 
     def __repr__(self):
         return "<nested-dictionary {}>".format((id(self)))
@@ -68,13 +91,17 @@ class TestTop:
 
     def test_append_triggers_store(self):
         top = Top()
+        logging.info("appending dictionary to list...")
         top.nested_list.append({'number': 1})
         assert strip("""
         nested_dict:
+          nested_list_2: []
           number: 0.0
-          numbers: []
         nested_list:
-        - number: 1.0
+        - nested_dict_3:
+            nested_list_3: []
+            number: 0.0
+          number: 1.0
         """) == top.yorm_mapper.text
 
     def test_set_by_index_triggers_store(self):
@@ -82,18 +109,24 @@ class TestTop:
         top.nested_list = [{'number': 1.5}]
         assert strip("""
         nested_dict:
+          nested_list_2: []
           number: 0.0
-          numbers: []
         nested_list:
-        - number: 1.5
+        - nested_dict_3:
+            nested_list_3: []
+            number: 0.0
+          number: 1.5
         """) == top.yorm_mapper.text
         top.nested_list[0] = {'number': 1.6}
         assert strip("""
         nested_dict:
+          nested_list_2: []
           number: 0.0
-          numbers: []
         nested_list:
-        - number: 1.6
+        - nested_dict_3:
+            nested_list_3: []
+            number: 0.0
+          number: 1.6
         """) == top.yorm_mapper.text
 
     def test_get_by_index_triggers_fetch(self):
@@ -109,19 +142,28 @@ class TestTop:
         top.nested_list = [{'number': 1.8}, {'number': 1.9}]
         assert strip("""
         nested_dict:
+          nested_list_2: []
           number: 0.0
-          numbers: []
         nested_list:
-        - number: 1.8
-        - number: 1.9
+        - nested_dict_3:
+            nested_list_3: []
+            number: 0.0
+          number: 1.8
+        - nested_dict_3:
+            nested_list_3: []
+            number: 0.0
+          number: 1.9
         """) == top.yorm_mapper.text
         del top.nested_list[0]
         assert strip("""
         nested_dict:
+          nested_list_2: []
           number: 0.0
-          numbers: []
         nested_list:
-        - number: 1.9
+        - nested_dict_3:
+            nested_list_3: []
+            number: 0.0
+          number: 1.9
         """) == top.yorm_mapper.text
 
     def test_set_dict_as_attribute_triggers_store(self):
@@ -129,8 +171,8 @@ class TestTop:
         top.nested_dict.number = 2
         assert strip("""
         nested_dict:
+          nested_list_2: []
           number: 2.0
-          numbers: []
         nested_list: []
         """) == top.yorm_mapper.text
 
@@ -138,43 +180,88 @@ class TestTop:
 @patch('yorm.settings.fake', True)
 class TestNested:
 
-    def test_list_item_value_change_triggers_store(self):
+    def test_1x_nested_list_item_value_change_triggers_store(self):
         top = Top()
         top.nested_list = [{'number': 3}]
         assert strip("""
         nested_dict:
+          nested_list_2: []
           number: 0.0
-          numbers: []
         nested_list:
-        - number: 3.0
+        - nested_dict_3:
+            nested_list_3: []
+            number: 0.0
+          number: 3.0
         """) == top.yorm_mapper.text
         top.nested_list[0].number = 4
         assert strip("""
         nested_dict:
+          nested_list_2: []
           number: 0.0
-          numbers: []
         nested_list:
-        - number: 4.0
+        - nested_dict_3:
+            nested_list_3: []
+            number: 0.0
+          number: 4.0
         """) == top.yorm_mapper.text
 
-    def test_dict_item_value_change_triggers_store(self):
+    def test_1x_nested_dict_item_value_change_triggers_store(self):
         top = Top()
-        top.nested_dict = {'numbers': [5]}
+        top.nested_dict = {'nested_list_2': [5]}
         assert strip("""
         nested_dict:
-          number: 0.0
-          numbers:
+          nested_list_2:
           - 5.0
+          number: 0.0
         nested_list: []
         """) == top.yorm_mapper.text
-        top.nested_dict.numbers.append(6)
+        top.nested_dict.nested_list_2.append(6)
         assert strip("""
         nested_dict:
-          number: 0.0
-          numbers:
+          nested_list_2:
           - 5.0
           - 6.0
+          number: 0.0
         nested_list: []
+        """) == top.yorm_mapper.text
+
+    def test_dict_in_list_value_change_triggers_store(self):
+        top = Top()
+        top.nested_list.append(None)
+        top.nested_list[0].nested_dict_3.number = 8
+        assert strip("""
+        nested_dict:
+          nested_list_2: []
+          number: 0.0
+        nested_list:
+        - nested_dict_3:
+            nested_list_3: []
+            number: 8.0
+          number: 0.0
+        """) == top.yorm_mapper.text
+
+    def test_list_in_dict_append_triggers_store(self):
+        top = Top()
+        top.nested_list.append(None)
+        top.nested_list.append(None)
+        for nested_dict_2 in top.nested_list:
+            nested_dict_2.number = 9
+            nested_dict_2.nested_dict_3.nested_list_3.append(10)
+        assert strip("""
+        nested_dict:
+          nested_list_2: []
+          number: 0.0
+        nested_list:
+        - nested_dict_3:
+            nested_list_3:
+            - 10.0
+            number: 0.0
+          number: 9.0
+        - nested_dict_3:
+            nested_list_3:
+            - 10.0
+            number: 0.0
+          number: 9.0
         """) == top.yorm_mapper.text
 
 
