@@ -35,7 +35,7 @@ def fetch_before(method):
         """Decorated method."""
         mapper = get_mapper(self)
         if mapper:
-            log.debug("fetching before call to %r...", method)
+            log.debug("fetch before call: %s", method.__name__)
             mapper.fetch()
         return method(self, *args, **kwargs)
     return fetch_before
@@ -48,8 +48,8 @@ def store_after(method):
         """Decorated method."""
         result = method(self, *args, **kwargs)
         mapper = get_mapper(self)
-        if mapper and mapper.auto:
-            log.debug("storing after call to %r...", method)
+        if mapper:
+            log.debug("store after call: %s", method.__name__)
             mapper.store()
         return result
     return store_after
@@ -64,6 +64,7 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
         if name in ('__dict__', '__class__', MAPPER):
             # avoid infinite recursion (attribute requested in this function)
             return object.__getattribute__(self, name)
+
         mapper = get_mapper(self)
 
         # Get the attribute's current value
@@ -90,7 +91,7 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
             return
 
         mapper = get_mapper(self)
-        if mapper and mapper.auto and name in mapper.attrs:
+        if mapper and name in mapper.attrs:
             mapper.store()
 
     @fetch_before

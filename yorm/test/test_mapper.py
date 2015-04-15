@@ -8,12 +8,13 @@ import pytest
 from unittest.mock import patch, Mock
 
 from yorm import mapper
+from yorm.converters import Integer
 
 
 @patch('yorm.settings.fake', True)
-class TestFake:
+class TestHelperFake:
 
-    """Unit tests for fake mappings."""
+    """Unit tests for fake mappings using the `Helper` class."""
 
     def test_create(self):
         """Verify fake files can be created."""
@@ -33,20 +34,21 @@ class TestFake:
     def test_modified(self):
         """Verify fake files can be modified."""
         mapped = mapper.Helper("fake/path/to/file")
+        assert mapped.modified
+
         mapped.create(None)
-
-        assert not mapped.modified
-
-        mapped.modified = True
         assert mapped.modified
 
         mapped.modified = False
         assert not mapped.modified
 
+        mapped.modified = True
+        assert mapped.modified
 
-class TestReal:
 
-    """Unit tests for real mappings."""
+class TestHelperReal:
+
+    """Unit tests for real mappings using the `Helper` class."""
 
     def test_create(self, tmpdir):
         """Verify files can be created."""
@@ -86,12 +88,15 @@ class TestReal:
         """Verify files track modifications."""
         tmpdir.chdir()
         mapped = mapper.Helper("real/path/to/file")
-        mapped.create(None)
+        assert mapped.modified
 
+        mapped.create(None)
+        assert mapped.modified
+
+        mapped.modified = False
         assert not mapped.modified
 
         mapped.modified = True
-
         assert mapped.modified
 
     def test_modified_deleted(self):
@@ -99,6 +104,30 @@ class TestReal:
         mapped = mapper.Helper("fake/path/to/file")
 
         assert mapped.modified
+
+
+class TestMapper:
+
+    """Unit tests for the `Mapper` class."""
+
+    def test_auto_off(self, tmpdir):
+        """Verify storage is delayed with auto off."""
+        tmpdir.chdir()
+        attrs = {'number': Integer}
+        mapped = mapper.Mapper(None, "real/path/to/file", attrs, auto=False)
+        assert False is mapped.auto
+
+        mapped.create()
+        assert "" == mapped.text
+        assert False is mapped.auto
+
+        mapped.store()
+        assert "" == mapped.text
+        assert False is mapped.auto
+
+        mapped.store(force=True)
+        assert "number: 0\n" == mapped.text
+        assert False is mapped.auto
 
 
 if __name__ == '__main__':

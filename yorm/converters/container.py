@@ -44,8 +44,8 @@ class Dictionary(Convertible, dict):
 
         # Create default values for unmapped converters
         for name, converter in attrs.items():
-            log.trace("adding missing nested key '{}'...".format(name))
             value[name] = converter.to_value(None)
+            log.warn("added missing nested key '%s'...", name)
 
         return value
 

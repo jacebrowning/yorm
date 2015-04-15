@@ -69,19 +69,24 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
     @property
     def text(self):
-        """Get fake file contents (if enabled)."""
+        """Get file contents."""
+        log.info("getting contents of %s...", prefix(self))
         if settings.fake:
-            return self._fake
+            text = self._fake
         else:
-            return self._read()
+            text = self._read()
+        log.trace("text read: %r", text)
+        return text
 
     @text.setter
     def text(self, text):
-        """Set fake file contents (if enabled)."""
+        """Set file contents."""
+        log.info("setting contents of %s...", prefix(self))
         if settings.fake:
             self._fake = text
         else:
             self._write(text)
+        log.trace("text wrote: %r", text)
         self.modified = True
 
     def create(self, obj):
@@ -93,7 +98,6 @@ class BaseHelper(metaclass=abc.ABCMeta):
         if not settings.fake:
             common.create_dirname(self.path)
             common.touch(self.path)
-        self.modified = False
         self.exists = True
 
     @file_required
@@ -105,7 +109,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
             return
         self._activity = True
         _force = "force-" if force else ""
-        log.debug("%sfetching %r from %s...", _force, obj, prefix(self))
+        log.info("%sfetching %r from %s...", _force, obj, prefix(self))
 
         # Parse data from file
         text = self._read()
@@ -114,6 +118,8 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
         # Update attributes
         for name, data in data.items():
+
+            # Find a matching converter
             try:
                 converter = attrs[name]
             except KeyError:
@@ -121,6 +127,8 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 from .converters import match
                 converter = match(name, data)
                 attrs[name] = converter
+
+            # Convert the loaded attribute
             value = converter.to_value(data)
             log.trace("value fetched: '{}' = {}".format(name, repr(value)))
             self._remap(value)
@@ -133,7 +141,6 @@ class BaseHelper(metaclass=abc.ABCMeta):
     def _remap(self, obj):
         """Restore mapping on nested attributes."""
         if isinstance(obj, Mappable):
-            log.trace("restoring mapping on %r...", obj)
             mapper = Mapper(obj, None, common.ATTRS[obj.__class__], root=self)
             setattr(obj, MAPPER, mapper)
 
@@ -144,8 +151,6 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 assert isinstance(obj, list)
                 for obj2 in obj:
                     self._remap(obj2)
-        else:
-            log.trace("%r is not mapped", obj)
 
     @file_required
     def _read(self):
@@ -174,20 +179,24 @@ class BaseHelper(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @file_required
-    def store(self, obj, attrs):
+    def store(self, obj, attrs, force=False):
         """Format and save the object's mapped attributes to its file."""
         if self._activity:
             return
+        if not self.auto and not force:
+            log.debug("automatic storage is off ")
+            return
         self._activity = True
-        log.debug("storing %r to %s...", obj, prefix(self))
+        _force = "force-" if force else ""
+        log.info("%sstoring %r to %s...", _force, obj, prefix(self))
 
         # Format the data items
         data = {}
         for name, converter in attrs.items():
             try:
                 value = getattr(obj, name)
-            except AttributeError as exc:
-                log.debug(exc)
+            except AttributeError:
+                log.warn("added missing attribute '%s'", name)
                 value = None
             data2 = converter.to_data(value)
             log.trace("data to store: '%s' = %r", name, data2)
@@ -230,32 +239,26 @@ class BaseHelper(metaclass=abc.ABCMeta):
         """Determine if the file has been modified."""
         if settings.fake:
             changes = self._timestamp is not None
-            log.trace("(fake) file is %smodified",
-                      "" if changes else "not ")
             return changes
         elif not self.exists:
-            log.trace("file is modified (deletion)")
             return True
         else:
             was = self._timestamp
             now = common.stamp(self.path)
-            log.trace("file is %smodified (%s -> %s)",
-                      "not " if was == now else "",
-                      was, now)
             return was != now
 
     @modified.setter
     def modified(self, changes):
         """Mark the file as modified if there are changes."""
         if changes:
-            log.trace("marked %s as modified", prefix("file"))
+            log.debug("marked %s as modified", prefix(self))
             self._timestamp = 0
         else:
             if settings.fake:
                 self._timestamp = None
             else:
                 self._timestamp = common.stamp(self.path)
-            log.trace("marked %s as not modified", prefix("file"))
+            log.debug("marked %s as unmodified", prefix(self))
 
     def delete(self):
         """Delete the object's file from the file system."""
@@ -306,24 +309,19 @@ class Mapper(Helper):
         self.attrs = attrs
         self.root = root
 
-    def __repr__(self):
-        return "<mapper: {!r} => {!r}>".format(self.obj, self.path)
-
     def create(self):  # pylint: disable=W0221
         super().create(self.obj)
 
     def fetch(self, force=False):  # pylint: disable=W0221
-        if self.root and not self._activity:
+        if self.root and self.root.auto and not self._activity:
             self._activity = True
-            log.debug("%r triggered fetch in root", self)
             self.root.fetch(force=force)
             self._activity = False
         super().fetch(self.obj, self.attrs, force=force)
 
-    def store(self):  # pylint: disable=W0221
-        if self.root and not self._activity:
+    def store(self, force=False):  # pylint: disable=W0221
+        if self.root and self.root.auto and not self._activity:
             self._activity = True
-            log.debug("%r triggered store in root", self)
-            self.root.store()
+            self.root.store(force=force)
             self._activity = False
-        super().store(self.obj, self.attrs)
+        super().store(self.obj, self.attrs, force=force)

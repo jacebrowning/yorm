@@ -95,7 +95,7 @@ depends: depends-ci depends-dev
 .PHONY: depends-ci
 depends-ci: env Makefile $(DEPENDS_CI)
 $(DEPENDS_CI): Makefile
-	$(PIP) install --upgrade pip pep8 pep257 pylint pytest pytest-capturelog coverage
+	$(PIP) install --upgrade pip pep8 pep257 pylint coverage pytest pytest-cov pytest-capturelog
 	touch $(DEPENDS_CI)  # flag to indicate dependencies are installed
 
 .PHONY: depends-dev
@@ -162,25 +162,24 @@ fix: depends-dev
 
 # Testing ######################################################################
 
+PYTEST_CORE_OPTS := --doctest-modules
+PYTEST_COV_OPTS := --cov=$(PACKAGE) --cov-report=term-missing --cov-report=html
+PYTEST_CAPTURELOG_OPTS := --log-format="%(name)-25s %(funcName)-20s %(lineno)3d %(levelname)s: %(message)s"
+PYTEST_OPTS := $(PYTEST_CORE_OPTS) $(PYTEST_COV_OPTS) $(PYTEST_CAPTURELOG_OPTS)
+
 .PHONY: test
 test: depends-ci .clean-test
-	$(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
-ifndef TRAVIS
-	$(COVERAGE) html --directory .coverage-html
-	$(COVERAGE) report --show-missing --fail-under=$(UNIT_TEST_COVERAGE)
-endif
+	$(PYTEST) $(PYTEST_OPTS) $(PACKAGE)
+	$(COVERAGE) report --fail-under=$(UNIT_TEST_COVERAGE) > /dev/null
 
 .PHONY: tests
 tests: depends-ci .clean-test
-	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
-ifndef TRAVIS
-	$(COVERAGE) html --directory .coverage-html
-	$(COVERAGE) report --show-missing --fail-under=$(INTEGRATION_TEST_COVERAGE)
-endif
+	TEST_INTEGRATION=1 $(PYTEST) $(PYTEST_OPTS) $(PACKAGE) --exitfirst
+	$(COVERAGE) report --fail-under=$(INTEGRATION_TEST_COVERAGE) > /dev/null
 
 .PHONY: read-coverage
 read-coverage:
-	$(OPEN) .coverage-html/index.html
+	$(OPEN) htmlcov/index.html
 
 # Cleanup ######################################################################
 
@@ -207,7 +206,7 @@ clean-all: clean clean-env .clean-workspace
 
 .PHONY: .clean-test
 .clean-test:
-	rm -rf .coverage .coverage-html
+	rm -rf .coverage htmlcov
 
 .PHONY: .clean-dist
 .clean-dist:
