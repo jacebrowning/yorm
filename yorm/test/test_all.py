@@ -32,7 +32,7 @@ def test_imports():
     from yorm.converters import Integer
     from yorm.converters.standard import String
     from yorm.converters.extended import Markdown
-    from yorm.converters.container import List
+    from yorm.converters.containers import List
     assert yorm.converters.Integer
 
     # Decorators

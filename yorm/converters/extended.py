@@ -5,7 +5,7 @@ import re
 import yaml
 
 from .standard import String, Integer, Float, Boolean
-from .container import Dictionary, List
+from .containers import Dictionary, List
 
 
 # standard types with None as a default #######################################

@@ -8,7 +8,6 @@ import logging
 from unittest.mock import Mock
 
 from yorm.base.mappable import get_mapper, Mappable
-from yorm.base.convertible import Convertible
 from yorm.mapper import Mapper
 from yorm.converters import String, Integer, Boolean
 
@@ -248,18 +247,6 @@ class TestMappableTriggers:
         sample[0] = 0
         print(sample[0])
         assert None is sample.yorm_mapper
-
-
-class TestConverter:
-
-    """Unit tests for the `Convertible` class."""
-
-    def test_not_implemented(self):
-        """Verify `Convertible` cannot be used directly."""
-        with pytest.raises(NotImplementedError):
-            Convertible.to_value(None)  # pylint: disable=E1120
-        with pytest.raises(NotImplementedError):
-            Convertible.to_data(None)  # pylint: disable=E1120
 
 
 if __name__ == '__main__':
