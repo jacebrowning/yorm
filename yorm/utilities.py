@@ -37,6 +37,7 @@ def sync_object(instance, path, attrs=None, auto=True):
     :param auto: automatically store attribute to file
 
     """
+    log.info("mapping object...")
     _check_base(instance, mappable=False)
 
     attrs = attrs or common.ATTRS[instance.__class__]
@@ -49,11 +50,12 @@ def sync_object(instance, path, attrs=None, auto=True):
 
     if not mapper.exists:
         mapper.create()
-        mapper.store()
+        mapper.store(force=True)
     mapper.fetch(force=True)
 
     setattr(instance, MAPPER, mapper)
     instance.__class__ = Mapped
+    log.info("mapped %r to '%s'", instance, path)
 
     return instance
 
@@ -81,6 +83,7 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
                 setattr(self, MAPPER, None)
                 super().__init__(*_args, **_kwargs)
 
+                log.info("mapping instance of %r to '%s'...", cls, path_format)
                 format_values = {}
                 for key, value in format_spec.items():
                     format_values[key] = getattr(self, value)
@@ -93,12 +96,13 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
                 attrs.update(common.ATTRS[cls])
                 mapper = Mapper(self, path, attrs, auto=auto)
 
-                setattr(self, MAPPER, mapper)
-
                 if not mapper.exists:
                     mapper.create()
-                    mapper.store()
+                    mapper.store(force=True)
                 mapper.fetch(force=True)
+
+                setattr(self, MAPPER, mapper)
+                log.info("mapped %r to '%s'", self, path)
 
         return Mapped
 
@@ -147,24 +151,25 @@ def update_object(instance, force=True):
     :param force: update the object even if the file appears unchanged
 
     """
-    log.info("manually synchronizing %r from its file...", instance)
+    log.info("manually updating %r from file...", instance)
     _check_base(instance, mappable=True)
 
     mapper = getattr(instance, MAPPER)
     mapper.fetch(force=force)
 
 
-def update_file(instance):
+def update_file(instance, force=True):
     """Synchronize changes into a mapped object's file.
 
     :param instance: object with patched YAML mapping behavior
+    :param force: update the file even if automatic sync is off
 
     """
-    log.info("manually synchronizing %r to its file...", instance)
+    log.info("manually saving %r to file...", instance)
     _check_base(instance, mappable=True)
 
     mapper = getattr(instance, MAPPER)
-    mapper.store()
+    mapper.store(force=force)
 
 
 def _check_base(obj, mappable=True):
