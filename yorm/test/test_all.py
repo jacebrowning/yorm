@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # pylint:disable=R0201,C0111
 
-"""Integration tests for the `yorm` package."""
-
-import logging
+"""Integration tests for the package."""
 
 import pytest
 
@@ -15,37 +13,6 @@ from . import strip, refresh_file_modification_times
 from .samples import *  # pylint: disable=W0401,W0614
 
 integration = pytest.mark.integration
-
-
-def test_imports():
-    """Verify the package namespace is correct."""
-    # pylint: disable=W0404,W0612,W0621
-
-    import yorm
-
-    # Constants
-    from yorm import UUID  # filename placeholder
-
-    # Classes
-    from yorm import Mappable  # base class for mapped objects
-    from yorm import Convertible  # base class for converters
-    from yorm.converters import Integer
-    from yorm.converters.standard import String
-    from yorm.converters.extended import Markdown
-    from yorm.converters.containers import List
-    assert yorm.converters.Integer
-
-    # Decorators
-    from yorm import sync  # enables mapping on a class's instance objects
-    from yorm import sync_instances  # alias for the class decorator
-    from yorm import attr  # alternate API to identify mapped attributes
-
-    # Functions
-    from yorm import sync  # enables mapping on an instance object
-    from yorm import sync_object  # alias for the mapping function
-    from yorm import update  # fetch (if necessary) and store a mapped object
-    from yorm import update_object  # fetch (optional force) a mapped object
-    from yorm import update_file  # store a mapped object
 
 
 @integration
@@ -192,21 +159,6 @@ class TestStandard:
         # check for changed file values
         assert strip("""
         string: world
-        """) == sample.yorm_mapper.text
-
-    def test_no_path(self, tmpdir):
-        """Verify standard attribute types dump/load correctly (no path)."""
-        tmpdir.chdir()
-        sample = sync(SampleDecoratedNoPath(), "sample.yml")
-
-        # change object values
-        sample.string = "abc"
-        sample.number_real = 4.2
-
-        # check for changed file values
-        assert strip("""
-        number_real: 4.2
-        string: abc
         """) == sample.yorm_mapper.text
 
 
@@ -375,73 +327,6 @@ class TestCustom:
 
         # check object values
         assert '1' == sample.level
-
-
-@integration
-class TestInit:
-
-    """Integration tests for initializing mapped classes."""
-
-    def test_fetch_from_existing(self, tmpdir):
-        """Verify attributes are updated from an existing file."""
-        tmpdir.chdir()
-        sample = SampleStandardDecorated('sample')
-        sample2 = SampleStandardDecorated('sample')
-        assert sample2.yorm_mapper.path == sample.yorm_mapper.path
-
-        refresh_file_modification_times()
-
-        logging.info("changing values in object 1...")
-        sample.object = {'key2': 'value'}
-        sample.array = [0, 1, 2]
-        sample.string = "Hello, world!"
-        sample.number_int = 42
-        sample.number_real = 4.2
-        sample.true = True
-        sample.false = False
-
-        logging.info("reading changed values in object 2...")
-        assert 'value' == sample2.object.get('key2')
-        assert [0, 1, 2] == sample2.array
-        assert "Hello, world!" == sample2.string
-        assert 42 == sample2.number_int
-        assert 4.2 == sample2.number_real
-        assert True is sample2.true
-        assert False is sample2.false
-
-
-@integration
-class TestDelete:
-
-    """Integration tests for deleting files."""
-
-    def test_read(self, tmpdir):
-        """Verify a deleted file cannot be read from."""
-        tmpdir.chdir()
-        sample = SampleStandardDecorated('sample')
-        sample.yorm_mapper.delete()
-
-        with pytest.raises(FileNotFoundError):
-            print(sample.string)
-
-        with pytest.raises(FileNotFoundError):
-            sample.string = "def456"
-
-    def test_write(self, tmpdir):
-        """Verify a deleted file cannot be written to."""
-        tmpdir.chdir()
-        sample = SampleStandardDecorated('sample')
-        sample.yorm_mapper.delete()
-
-        with pytest.raises(FileNotFoundError):
-            sample.string = "def456"
-
-    def test_multiple(self, tmpdir):
-        """Verify a deleted file can be deleted again."""
-        tmpdir.chdir()
-        sample = SampleStandardDecorated('sample')
-        sample.yorm_mapper.delete()
-        sample.yorm_mapper.delete()
 
 
 if __name__ == '__main__':
