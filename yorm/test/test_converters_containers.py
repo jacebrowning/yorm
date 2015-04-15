@@ -1,14 +1,18 @@
 #!/usr/bin/env python
-# pylint:disable=R0201
+# pylint:disable=R0201,C0111
 
 """Unit tests for the `container` module."""
 
+from unittest.mock import patch
+
 import pytest
 
+import yorm
 from yorm import common
 from yorm.converters import Dictionary, List
 from yorm.converters import String, Integer
 
+from . import strip
 from .samples import *  # pylint: disable=W0401,W0614
 
 
@@ -111,6 +115,31 @@ class TestList:
             UnknownList.to_value(None)
         with pytest.raises(NotImplementedError):
             UnknownList.to_data(None)
+
+
+@patch('yorm.settings.fake', True)
+class TestReservedNames:
+
+    class MyObject:
+
+        def __init__(self, items=None):
+            self.items = items or []
+
+    def test_list_named_items(self):
+        obj = self.MyObject()
+        yorm.sync_object(obj, "fake/path", {'items': StringList})
+
+        obj.items.append('foo')
+        assert strip("""
+        items:
+        - foo
+        """) == obj.yorm_mapper.text
+
+        obj.yorm_mapper.text = strip("""
+        items:
+        - bar
+        """)
+        assert ['bar'] == obj.items
 
 
 if __name__ == '__main__':
