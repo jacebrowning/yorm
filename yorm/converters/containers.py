@@ -18,7 +18,7 @@ class Dictionary(Convertible, dict):
             msg = "Dictionary class must be subclassed to use"
             raise NotImplementedError(msg)
 
-        return dict()
+        return cls.__new__(cls)
 
     @classmethod
     def to_value(cls, obj):  # pylint: disable=E0213
@@ -28,8 +28,13 @@ class Dictionary(Convertible, dict):
         # Convert object attributes to a dictionary
         attrs = common.ATTRS[cls].copy()
         if isinstance(obj, cls):
-            items = obj.__dict__.items()
-            dictionary = {k: v for k, v in items if k in attrs}
+            dictionary = {}
+            for k, v in obj.items():
+                if k in attrs:
+                    dictionary[k] = v
+            for k, v in obj.__dict__.items():
+                if k in attrs:
+                    dictionary[k] = v
         else:
             dictionary = cls.to_dict(obj)
 
