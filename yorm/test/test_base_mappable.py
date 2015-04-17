@@ -211,48 +211,6 @@ class TestMappable:
         with pytest.raises(ValueError):
             print(self.sample.var1)
 
-    @staticmethod
-    def _log_ref(name, var, ref):
-        logging.info("%s: %r", name, var)
-        logging.info("%s_ref: %r", name, ref)
-        logging.info("%s ID: %s", name, id(var))
-        logging.info("%s_ref ID: %s", name, id(ref))
-        assert id(ref) == id(var)
-        assert ref == var
-
-    def test_alias_list(self):
-        """Verify a referenced list triggers updates."""
-        yorm.update_object(self.sample)
-        var4_ref = self.sample.var4
-        self._log_ref('var4', self.sample.var4, var4_ref)
-        assert [] == self.sample.var4
-
-        logging.info("appending 42 to var4_ref...")
-        var4_ref.append(42)
-        self._log_ref('var4', self.sample.var4, var4_ref)
-        assert [42] == self.sample.var4
-
-        logging.info("appending 2015 to var4_ref...")
-        var4_ref.append(2015)
-        assert [42, 2015] == self.sample.var4
-
-    def test_alias_dict(self):
-        """Verify a referenced dictionary triggers updates."""
-        yorm.update_object(self.sample)
-        var5_ref = self.sample.var5
-        self._log_ref('var5', self.sample.var5, var5_ref)
-        assert {'status': False} == self.sample.var5
-
-        logging.info("setting status=True in var5_ref...")
-        var5_ref['status'] = True
-        self._log_ref('var5', self.sample.var5, var5_ref)
-        assert {'status': True} == self.sample.var5
-
-        logging.info("setting status=False in var5_ref...")
-        var5_ref['status'] = False
-        self._log_ref('var5', self.sample.var5, var5_ref)
-        assert {'status': False} == self.sample.var5
-
 
 class TestMappableTriggers:
 

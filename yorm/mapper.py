@@ -62,7 +62,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
         self.exists = self.path and os.path.isfile(self.path)
         self._activity = False
         self._timestamp = 0
-        self._fake = None
+        self._fake = ""
 
     def __str__(self):
         return str(self.path)
@@ -129,10 +129,28 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 attrs[name] = converter
 
             # Convert the loaded attribute
-            value = converter.to_value(data)
-            log.trace("value fetched: '{}' = {}".format(name, repr(value)))
-            self._remap(value)
-            setattr(obj, name, value)
+            old_value = getattr(obj, name, None)
+            new_value = converter.to_value(data)
+            log.trace("value fetched: '{}' = {}".format(name, repr(new_value)))
+
+            # Set a new attribute or insert into existing container
+            if all((isinstance(new_value, dict),
+                    isinstance(old_value, dict),
+                    isinstance(old_value, Mappable))):
+                log.trace("updating existing dict %r...", old_value)
+                old_value.clear()
+                old_value.update(new_value)
+                self._remap(old_value)
+            elif all((isinstance(new_value, list),
+                      isinstance(old_value, list),
+                      isinstance(old_value, Mappable))):
+                log.trace("updating existing list %r...", old_value)
+                old_value[:] = new_value[:]
+                self._remap(old_value)
+            else:
+                log.trace("setting an attribute...")
+                self._remap(new_value)
+                setattr(obj, name, new_value)
 
         # Set meta attributes
         self.modified = False

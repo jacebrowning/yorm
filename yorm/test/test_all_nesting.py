@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# pylint:disable=R0201,C0111
+# pylint:disable=W0201,W0613,R0201,C0111
 
 """Integration tests for nested attributes."""
 
@@ -11,6 +11,12 @@ import pytest
 import yorm
 
 from . import strip
+
+
+@yorm.attr(status=yorm.converters.Boolean)
+class StatusDictionary(yorm.converters.Dictionary):
+
+    pass
 
 
 @yorm.attr(all=yorm.converters.Float)
@@ -87,7 +93,7 @@ class Top:
 
 
 @patch('yorm.settings.fake', True)
-class TestTop:
+class TestNestedOnce:
 
     def test_append_triggers_store(self):
         top = Top()
@@ -178,9 +184,9 @@ class TestTop:
 
 
 @patch('yorm.settings.fake', True)
-class TestNested:
+class TestNestedTwice:
 
-    def test_1x_nested_list_item_value_change_triggers_store(self):
+    def test_nested_list_item_value_change_triggers_store(self):
         top = Top()
         top.nested_list = [{'number': 3}]
         assert strip("""
@@ -205,7 +211,7 @@ class TestNested:
           number: 4.0
         """) == top.yorm_mapper.text
 
-    def test_1x_nested_dict_item_value_change_triggers_store(self):
+    def test_nested_dict_item_value_change_triggers_store(self):
         top = Top()
         top.nested_dict = {'nested_list_2': [5]}
         assert strip("""
@@ -263,6 +269,81 @@ class TestNested:
             number: 0.0
           number: 9.0
         """) == top.yorm_mapper.text
+
+
+@patch('yorm.settings.fake', True)
+class TestAliases:
+
+    @yorm.attr(var4=NestedList3)
+    @yorm.attr(var5=StatusDictionary)
+    @yorm.sync("fake/path")
+    class Sample:
+
+        def __repr__(self):
+            return "<sample {}>".format(id(self))
+
+    def setup_method(self, method):
+        self.sample = self.Sample()
+
+    @staticmethod
+    def _log_ref(name, var, ref):
+        logging.info("%s: %r", name, var)
+        logging.info("%s_ref: %r", name, ref)
+        logging.info("%s ID: %s", name, id(var))
+        logging.info("%s_ref ID: %s", name, id(ref))
+        assert id(ref) == id(var)
+        assert ref == var
+
+    def test_alias_list(self):
+        yorm.update_object(self.sample)
+        var4_ref = self.sample.var4
+        self._log_ref('var4', self.sample.var4, var4_ref)
+        assert [] == self.sample.var4
+
+        logging.info("appending 42 to var4_ref...")
+        var4_ref.append(42)
+        self._log_ref('var4', self.sample.var4, var4_ref)
+        assert [42] == self.sample.var4
+
+        logging.info("appending 2015 to var4_ref...")
+        var4_ref.append(2015)
+        assert [42, 2015] == self.sample.var4
+
+    def test_alias_dict(self):
+        yorm.update_object(self.sample)
+        var5_ref = self.sample.var5
+        self._log_ref('var5', self.sample.var5, var5_ref)
+        assert {'status': False} == self.sample.var5
+
+        logging.info("setting status=True in var5_ref...")
+        var5_ref['status'] = True
+        self._log_ref('var5', self.sample.var5, var5_ref)
+        assert {'status': True} == self.sample.var5
+
+        logging.info("setting status=False in var5_ref...")
+        var5_ref['status'] = False
+        self._log_ref('var5', self.sample.var5, var5_ref)
+        assert {'status': False} == self.sample.var5
+
+    def test_alias_dict_in_list(self):
+        top = Top()
+        top.nested_list.append(None)
+        ref1 = top.nested_list[0]
+        ref2 = top.nested_list[0].nested_dict_3
+        ref3 = top.nested_list[0].nested_dict_3.nested_list_3
+        yorm.update(top)
+        assert id(ref1) == id(top.nested_list[0])
+        assert id(ref2) == id(top.nested_list[0].nested_dict_3)
+        assert id(ref3) == id(top.nested_list[0].nested_dict_3.nested_list_3)
+
+    def test_alias_list_in_dict(self):
+        top = Top()
+        top.nested_dict.number = 1
+        ref1 = top.nested_dict
+        ref2 = top.nested_dict.nested_list2
+        yorm.update(top)
+        assert id(ref1) == top.nested_dict
+        assert id(ref2) == top.nested_dict.nested_list2
 
 
 if __name__ == '__main__':
