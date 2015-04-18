@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # pylint:disable=W0201,W0613,R0201,W0212,C0111
 
-"""Unit tests for the `base` module."""
+"""Unit tests for the `base.mappable` module."""
 
 import pytest
 import logging

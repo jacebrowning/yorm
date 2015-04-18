@@ -1,13 +1,13 @@
 """Converter classes for abstract container types."""
 
 from .. import common
-from ..base.convertible import Convertible
+from ..base.container import Container
 from . import standard
 
 log = common.logger(__name__)
 
 
-class Dictionary(Convertible, dict):
+class Dictionary(Container, dict):
 
     """Base class for a dictionary of attribute converters."""
 
@@ -21,22 +21,21 @@ class Dictionary(Convertible, dict):
         return cls.__new__(cls)
 
     @classmethod
-    def to_value(cls, obj):  # pylint: disable=E0213
-        """Convert all loaded values back to its original attribute types."""
+    def to_value(cls, data):
         value = cls.default()
 
         # Convert object attributes to a dictionary
         attrs = common.ATTRS[cls].copy()
-        if isinstance(obj, cls):
+        if isinstance(data, cls):
             dictionary = {}
-            for k, v in obj.items():
+            for k, v in data.items():
                 if k in attrs:
                     dictionary[k] = v
-            for k, v in obj.__dict__.items():
+            for k, v in data.__dict__.items():
                 if k in attrs:
                     dictionary[k] = v
         else:
-            dictionary = cls.to_dict(obj)
+            dictionary = to_dict(data)
 
         # Map object attributes to converters
         for name, data in dictionary.items():
@@ -45,19 +44,28 @@ class Dictionary(Convertible, dict):
             except KeyError:
                 converter = standard.match(name, data, nested=True)
                 common.ATTRS[cls][name] = converter
-            value[name] = converter.to_value(data)
+
+            # Convert the loaded data
+            if issubclass(converter, Container):
+                container = converter()
+                container.apply(data)
+                value[name] = container
+            else:
+                value[name] = converter.to_value(data)
 
         # Create default values for unmapped converters
         for name, converter in attrs.items():
-            value[name] = converter.to_value(None)
+            if issubclass(converter, Container):
+                value[name] = converter()
+            else:
+                value[name] = converter.to_value(None)
             log.warn("added missing nested key '%s'...", name)
 
         return value
 
     @classmethod
-    def to_data(cls, obj):  # pylint: disable=E0213
-        """Convert all attribute values for optimal dumping to YAML."""
-        value = cls.to_value(obj)
+    def to_data(cls, value):
+        value = cls.to_value(value)
 
         data = {}
 
@@ -66,41 +74,22 @@ class Dictionary(Convertible, dict):
 
         return data
 
-    @staticmethod
-    def to_dict(obj):
-        """Convert a dictionary-like object to a dictionary.
-
-        >>> Dictionary.to_dict({'key': 42})
-        {'key': 42}
-
-        >>> Dictionary.to_dict("key=42")
-        {'key': '42'}
-
-        >>> Dictionary.to_dict("key")
-        {'key': None}
-
-        >>> Dictionary.to_dict(None)
-        {}
-
-        """
-        if isinstance(obj, dict):
-            return obj
-        elif isinstance(obj, str):
-            text = obj.strip()
-            parts = text.split('=')
-            if len(parts) == 2:
-                return {parts[0]: parts[1]}
-            else:
-                return {text: None}
-        else:
-            return {}
+    def apply(self, data):
+        value = self.to_value(data)
+        self.clear()
+        self.update(value)
 
 
-class List(Convertible, list):
+class List(Container, list):
 
     """Base class for a homogeneous list of attribute converters."""
 
     ALL = 'all'
+
+    @common.classproperty
+    def item_type(cls):  # pylint: disable=E0213
+        """Get the converter class for all items."""
+        return common.ATTRS[cls].get(cls.ALL)
 
     @classmethod
     def default(cls):
@@ -112,59 +101,91 @@ class List(Convertible, list):
 
         return cls.__new__(cls)
 
-    @common.classproperty
-    def item_type(cls):  # pylint: disable=E0213
-        """Get the converter class for all items."""
-        return common.ATTRS[cls].get(cls.ALL)
-
     @classmethod
-    def to_value(cls, obj):  # pylint: disable=E0213
-        """Convert all loaded values back to the original attribute type."""
+    def to_value(cls, data):
         value = cls.default()
 
-        for item in cls.to_list(obj):
-            value.append(cls.item_type.to_value(item))
+        for item in to_list(data):
+            if issubclass(cls.item_type, Container):
+                container = cls.item_type()  # pylint: disable=E1120
+                container.apply(item)
+                value.append(container)
+            else:
+                value.append(cls.item_type.to_value(item))
 
         return value
 
     @classmethod
-    def to_data(cls, obj):  # pylint: disable=E0213
-        """Convert all attribute values for optimal dumping to YAML."""
-        value = cls.to_value(obj)
+    def to_data(cls, value):
+        value = cls.to_value(value)
 
         data = []
 
-        for item in value:
-            data.append(cls.item_type.to_data(item))
+        if value:
+            for item in value:
+                data.append(cls.item_type.to_data(item))
 
         return data
 
-    @staticmethod
-    def to_list(obj):
-        """Convert a list-like object to a list.
+    def apply(self, data):
+        value = self.to_value(data)
+        self[:] = value[:]
 
-        >>> List.to_list([1, 2, 3])
-        [1, 2, 3]
 
-        >>> List.to_list("a,b,c")
-        ['a', 'b', 'c']
+def to_dict(obj):
+    """Convert a dictionary-like object to a dictionary.
 
-        >>> List.to_list("item")
-        ['item']
+    >>> to_dict({'key': 42})
+    {'key': 42}
 
-        >>> List.to_list(None)
-        []
+    >>> to_dict("key=42")
+    {'key': '42'}
 
-        """
-        if isinstance(obj, list):
-            return obj
-        elif isinstance(obj, str):
-            text = obj.strip()
-            if ',' in text and ' ' not in text:
-                return text.split(',')
-            else:
-                return text.split()
-        elif obj is not None:
-            return [obj]
+    >>> to_dict("key")
+    {'key': None}
+
+    >>> to_dict(None)
+    {}
+
+    """
+    if isinstance(obj, dict):
+        return obj
+    elif isinstance(obj, str):
+        text = obj.strip()
+        parts = text.split('=')
+        if len(parts) == 2:
+            return {parts[0]: parts[1]}
         else:
-            return []
+            return {text: None}
+    else:
+        return {}
+
+
+def to_list(obj):
+    """Convert a list-like object to a list.
+
+    >>> to_list([1, 2, 3])
+    [1, 2, 3]
+
+    >>> to_list("a,b,c")
+    ['a', 'b', 'c']
+
+    >>> to_list("item")
+    ['item']
+
+    >>> to_list(None)
+    []
+
+    """
+    if isinstance(obj, list):
+        return obj
+    elif isinstance(obj, str):
+        text = obj.strip()
+        if ',' in text and ' ' not in text:
+            return text.split(',')
+        else:
+            return text.split()
+    elif obj is not None:
+        return [obj]
+    else:
+        return []

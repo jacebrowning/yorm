@@ -8,7 +8,10 @@ log = common.logger(__name__)
 
 class Object(Convertible):  # pylint: disable=W0223
 
-    """Base class for standard types (mapped directly to YAML)."""
+    """Base class for immutable types."""
+
+    TYPE = None  # type for inferred converters (set in subclasses)
+    DEFAULT = None  # default value for conversion (set in subclasses)
 
     @classmethod
     def to_value(cls, obj):
