@@ -1,15 +1,58 @@
 """Converter classes for abstract container types."""
 
 from .. import common
-from ..base.convertible import Convertible
+from ..base.container import Container
 from . import standard
 
 log = common.logger(__name__)
 
 
-class Dictionary(Convertible, dict):
+class Dictionary(Container, dict):
 
     """Base class for a dictionary of attribute converters."""
+
+    def apply(self, data):
+        value = self.to_value(data)
+        self.clear()
+        self.update(value)
+
+    @classmethod
+    def to_value(cls, data):
+        value = cls.default()
+
+        # Convert object attributes to a dictionary
+        attrs = common.ATTRS[cls].copy()
+        if isinstance(data, cls):
+            items = data.__dict__.items()
+            dictionary = {k: v for k, v in items if k in attrs}
+        else:
+            dictionary = cls.to_dict(data)
+
+        # Map object attributes to converters
+        for name, data in dictionary.items():
+            try:
+                converter = attrs.pop(name)
+            except KeyError:
+                converter = standard.match(name, data, nested=True)
+                common.ATTRS[cls][name] = converter
+
+            # Convert the loaded data
+            if issubclass(converter, Container):
+                container = converter()
+                container.apply(data)
+                value[name] = container
+            else:
+                value[name] = converter.to_value(data)
+
+        # Create default values for unmapped converters
+        for name, converter in attrs.items():
+            if issubclass(converter, Container):
+                value[name] = converter()
+            else:
+                value[name] = converter.to_value(None)
+            log.warn("added missing nested key '%s'...", name)
+
+        return value
 
     @classmethod
     def default(cls):
@@ -19,47 +62,6 @@ class Dictionary(Convertible, dict):
             raise NotImplementedError(msg)
 
         return dict()
-
-    @classmethod
-    def to_value(cls, obj):  # pylint: disable=E0213
-        """Convert all loaded values back to its original attribute types."""
-        value = cls.default()
-
-        # Convert object attributes to a dictionary
-        attrs = common.ATTRS[cls].copy()
-        if isinstance(obj, cls):
-            items = obj.__dict__.items()
-            dictionary = {k: v for k, v in items if k in attrs}
-        else:
-            dictionary = cls.to_dict(obj)
-
-        # Map object attributes to converters
-        for name, data in dictionary.items():
-            try:
-                converter = attrs.pop(name)
-            except KeyError:
-                converter = standard.match(name, data, nested=True)
-                common.ATTRS[cls][name] = converter
-            value[name] = converter.to_value(data)
-
-        # Create default values for unmapped converters
-        for name, converter in attrs.items():
-            value[name] = converter.to_value(None)
-            log.warn("added missing nested key '%s'...", name)
-
-        return value
-
-    @classmethod
-    def to_data(cls, obj):  # pylint: disable=E0213
-        """Convert all attribute values for optimal dumping to YAML."""
-        value = cls.to_value(obj)
-
-        data = {}
-
-        for name, converter in common.ATTRS[cls].items():
-            data[name] = converter.to_data(value.get(name, None))
-
-        return data
 
     @staticmethod
     def to_dict(obj):
@@ -90,12 +92,41 @@ class Dictionary(Convertible, dict):
         else:
             return {}
 
+    @classmethod
+    def to_data(cls, value):
+        value = cls.to_value(value)
 
-class List(Convertible, list):
+        data = {}
+
+        for name, converter in common.ATTRS[cls].items():
+            data[name] = converter.to_data(value.get(name, None))
+
+        return data
+
+
+class List(Container, list):
 
     """Base class for a homogeneous list of attribute converters."""
 
     ALL = 'all'
+
+    def apply(self, data):
+        value = self.to_value(data)
+        self[:] = value[:]
+
+    @classmethod
+    def to_value(cls, data):
+        value = cls.default()
+
+        for item in cls.to_list(data):
+            if issubclass(cls.item_type, Container):
+                container = cls.item_type()  # pylint: disable=E1120
+                container.apply(item)
+                value.append(container)
+            else:
+                value.append(cls.item_type.to_value(item))
+
+        return value
 
     @classmethod
     def default(cls):
@@ -106,33 +137,6 @@ class List(Convertible, list):
             raise NotImplementedError("List subclass must specify item type")
 
         return cls.__new__(cls)
-
-    @common.classproperty
-    def item_type(cls):  # pylint: disable=E0213
-        """Get the converter class for all items."""
-        return common.ATTRS[cls].get(cls.ALL)
-
-    @classmethod
-    def to_value(cls, obj):  # pylint: disable=E0213
-        """Convert all loaded values back to the original attribute type."""
-        value = cls.default()
-
-        for item in cls.to_list(obj):
-            value.append(cls.item_type.to_value(item))
-
-        return value
-
-    @classmethod
-    def to_data(cls, obj):  # pylint: disable=E0213
-        """Convert all attribute values for optimal dumping to YAML."""
-        value = cls.to_value(obj)
-
-        data = []
-
-        for item in value:
-            data.append(cls.item_type.to_data(item))
-
-        return data
 
     @staticmethod
     def to_list(obj):
@@ -163,3 +167,20 @@ class List(Convertible, list):
             return [obj]
         else:
             return []
+
+    @common.classproperty
+    def item_type(cls):  # pylint: disable=E0213
+        """Get the converter class for all items."""
+        return common.ATTRS[cls].get(cls.ALL)
+
+    @classmethod
+    def to_data(cls, value):
+        value = cls.to_value(value)
+
+        data = []
+
+        if value:
+            for item in value:
+                data.append(cls.item_type.to_data(item))
+
+        return data

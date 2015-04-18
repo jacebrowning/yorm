@@ -9,6 +9,7 @@ import yaml
 from . import common
 from . import settings
 from .base.mappable import MAPPER, Mappable
+from .base.container import Container
 
 log = common.logger(__name__)
 
@@ -129,10 +130,19 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 attrs[name] = converter
 
             # Convert the loaded attribute
-            value = converter.to_value(data)
-            log.trace("value fetched: '{}' = {}".format(name, repr(value)))
-            self._remap(value)
-            setattr(obj, name, value)
+            if issubclass(converter, Container):
+                container = getattr(obj, name, None)
+                if not isinstance(container, converter):
+                    container = converter()
+                    setattr(container, MAPPER, self)
+                    setattr(obj, name, container)
+                container.apply(data)
+                self._remap(container)
+            else:
+                value = converter.to_value(data)
+                log.trace("value fetched: '{}' = {}".format(name, repr(value)))
+                self._remap(value)
+                setattr(obj, name, value)
 
         # Set meta attributes
         self.modified = False
@@ -198,7 +208,13 @@ class BaseHelper(metaclass=abc.ABCMeta):
             except AttributeError:
                 log.warn("added missing attribute '%s'", name)
                 value = None
-            data2 = converter.to_data(value)
+
+            # TODO: add comment
+            if isinstance(value, Container):
+                data2 = value.format()
+            else:
+                data2 = converter.to_data(value)
+
             log.trace("data to store: '%s' = %r", name, data2)
             data[name] = data2
 
