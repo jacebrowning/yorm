@@ -148,13 +148,14 @@ pep8: depends-ci
 
 .PHONY: pep257
 pep257: depends-ci
-# D102: docstring missing (checked by PyLint)
+# D102: Docstring missing (checked by PyLint)
 # D202: No blank lines allowed *after* function docstring
 	$(PEP257) $(PACKAGE) --ignore=D102,D202
 
 .PHONY: pylint
 pylint: depends-ci
-	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc
+# R0912: Too many branches (checked by IDE)
+	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc --disable=R0912
 
 .PHONY: fix
 fix: depends-dev
@@ -164,7 +165,7 @@ fix: depends-dev
 
 PYTEST_CORE_OPTS := --doctest-modules
 PYTEST_COV_OPTS := --cov=$(PACKAGE) --cov-report=term-missing --cov-report=html
-PYTEST_CAPTURELOG_OPTS := --log-format="%(name)-25s %(funcName)-20s %(lineno)3d %(levelname)s: %(message)s"
+PYTEST_CAPTURELOG_OPTS := --log-format="%(name)-26s %(funcName)-20s %(lineno)3d %(levelname)s: %(message)s"
 PYTEST_OPTS := $(PYTEST_CORE_OPTS) $(PYTEST_COV_OPTS) $(PYTEST_CAPTURELOG_OPTS)
 
 .PHONY: test

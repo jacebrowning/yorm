@@ -134,15 +134,14 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 container = getattr(obj, name, None)
                 if not isinstance(container, converter):
                     container = converter()
-                    setattr(container, MAPPER, self)
                     setattr(obj, name, container)
                 container.apply(data)
                 self._remap(container)
+                log.trace("value fetched: '%s' = %r", name, container)
             else:
                 value = converter.to_value(data)
-                log.trace("value fetched: '{}' = {}".format(name, repr(value)))
-                self._remap(value)
                 setattr(obj, name, value)
+                log.trace("value fetched: '%s' = %r", name, value)
 
         # Set meta attributes
         self.modified = False
@@ -209,7 +208,6 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 log.warn("added missing attribute '%s'", name)
                 value = None
 
-            # TODO: add comment
             if isinstance(value, Container):
                 data2 = value.format()
             else:

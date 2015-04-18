@@ -27,8 +27,13 @@ class Dictionary(Container, dict):
         # Convert object attributes to a dictionary
         attrs = common.ATTRS[cls].copy()
         if isinstance(data, cls):
-            items = data.__dict__.items()
-            dictionary = {k: v for k, v in items if k in attrs}
+            dictionary = {}
+            for k, v in data.items():
+                if k in attrs:
+                    dictionary[k] = v
+            for k, v in data.__dict__.items():
+                if k in attrs:
+                    dictionary[k] = v
         else:
             dictionary = to_dict(data)
 
