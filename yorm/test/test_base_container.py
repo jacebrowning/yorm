@@ -16,6 +16,10 @@ class TestContainer:
         """Verify `Container` cannot be used directly."""
         with pytest.raises(TypeError):
             Container()  # pylint: disable=E0110
+        with pytest.raises(NotImplementedError):
+            Container.default()
+        with pytest.raises(NotImplementedError):
+            Container.apply(None, None)
 
 
 if __name__ == '__main__':

@@ -15,6 +15,11 @@ class Container(Convertible, Mappable):
 
     """Base class for mutable types."""
 
+    @abc.abstractclassmethod
+    def default(cls):
+        """Create an empty container."""
+        raise NotImplementedError(MESSAGE)
+
     @abc.abstractmethod
     def apply(self, data):  # pylint: disable=E0213
         """Update the container's values with the loaded data."""
@@ -23,7 +28,3 @@ class Container(Convertible, Mappable):
     def format(self):  # pylint: disable=E0213
         """Convert the container's values to data optimized for dumping."""
         return self.to_data(self)
-
-    @abc.abstractclassmethod
-    def to_data(cls, value):
-        raise NotImplementedError(MESSAGE)

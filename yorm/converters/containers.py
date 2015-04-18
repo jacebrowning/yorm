@@ -11,10 +11,14 @@ class Dictionary(Container, dict):
 
     """Base class for a dictionary of attribute converters."""
 
-    def apply(self, data):
-        value = self.to_value(data)
-        self.clear()
-        self.update(value)
+    @classmethod
+    def default(cls):
+        """Create an uninitialized object."""
+        if cls is Dictionary:
+            msg = "Dictionary class must be subclassed to use"
+            raise NotImplementedError(msg)
+
+        return dict()
 
     @classmethod
     def to_value(cls, data):
@@ -26,7 +30,7 @@ class Dictionary(Container, dict):
             items = data.__dict__.items()
             dictionary = {k: v for k, v in items if k in attrs}
         else:
-            dictionary = cls.to_dict(data)
+            dictionary = to_dict(data)
 
         # Map object attributes to converters
         for name, data in dictionary.items():
@@ -55,44 +59,6 @@ class Dictionary(Container, dict):
         return value
 
     @classmethod
-    def default(cls):
-        """Create an uninitialized object."""
-        if cls is Dictionary:
-            msg = "Dictionary class must be subclassed to use"
-            raise NotImplementedError(msg)
-
-        return dict()
-
-    @staticmethod
-    def to_dict(obj):
-        """Convert a dictionary-like object to a dictionary.
-
-        >>> Dictionary.to_dict({'key': 42})
-        {'key': 42}
-
-        >>> Dictionary.to_dict("key=42")
-        {'key': '42'}
-
-        >>> Dictionary.to_dict("key")
-        {'key': None}
-
-        >>> Dictionary.to_dict(None)
-        {}
-
-        """
-        if isinstance(obj, dict):
-            return obj
-        elif isinstance(obj, str):
-            text = obj.strip()
-            parts = text.split('=')
-            if len(parts) == 2:
-                return {parts[0]: parts[1]}
-            else:
-                return {text: None}
-        else:
-            return {}
-
-    @classmethod
     def to_data(cls, value):
         value = cls.to_value(value)
 
@@ -103,6 +69,11 @@ class Dictionary(Container, dict):
 
         return data
 
+    def apply(self, data):
+        value = self.to_value(data)
+        self.clear()
+        self.update(value)
+
 
 class List(Container, list):
 
@@ -110,23 +81,10 @@ class List(Container, list):
 
     ALL = 'all'
 
-    def apply(self, data):
-        value = self.to_value(data)
-        self[:] = value[:]
-
-    @classmethod
-    def to_value(cls, data):
-        value = cls.default()
-
-        for item in cls.to_list(data):
-            if issubclass(cls.item_type, Container):
-                container = cls.item_type()  # pylint: disable=E1120
-                container.apply(item)
-                value.append(container)
-            else:
-                value.append(cls.item_type.to_value(item))
-
-        return value
+    @common.classproperty
+    def item_type(cls):  # pylint: disable=E0213
+        """Get the converter class for all items."""
+        return common.ATTRS[cls].get(cls.ALL)
 
     @classmethod
     def default(cls):
@@ -138,40 +96,19 @@ class List(Container, list):
 
         return cls.__new__(cls)
 
-    @staticmethod
-    def to_list(obj):
-        """Convert a list-like object to a list.
+    @classmethod
+    def to_value(cls, data):
+        value = cls.default()
 
-        >>> List.to_list([1, 2, 3])
-        [1, 2, 3]
-
-        >>> List.to_list("a,b,c")
-        ['a', 'b', 'c']
-
-        >>> List.to_list("item")
-        ['item']
-
-        >>> List.to_list(None)
-        []
-
-        """
-        if isinstance(obj, list):
-            return obj
-        elif isinstance(obj, str):
-            text = obj.strip()
-            if ',' in text and ' ' not in text:
-                return text.split(',')
+        for item in to_list(data):
+            if issubclass(cls.item_type, Container):
+                container = cls.item_type()  # pylint: disable=E1120
+                container.apply(item)
+                value.append(container)
             else:
-                return text.split()
-        elif obj is not None:
-            return [obj]
-        else:
-            return []
+                value.append(cls.item_type.to_value(item))
 
-    @common.classproperty
-    def item_type(cls):  # pylint: disable=E0213
-        """Get the converter class for all items."""
-        return common.ATTRS[cls].get(cls.ALL)
+        return value
 
     @classmethod
     def to_data(cls, value):
@@ -184,3 +121,66 @@ class List(Container, list):
                 data.append(cls.item_type.to_data(item))
 
         return data
+
+    def apply(self, data):
+        value = self.to_value(data)
+        self[:] = value[:]
+
+
+def to_dict(obj):
+    """Convert a dictionary-like object to a dictionary.
+
+    >>> to_dict({'key': 42})
+    {'key': 42}
+
+    >>> to_dict("key=42")
+    {'key': '42'}
+
+    >>> to_dict("key")
+    {'key': None}
+
+    >>> to_dict(None)
+    {}
+
+    """
+    if isinstance(obj, dict):
+        return obj
+    elif isinstance(obj, str):
+        text = obj.strip()
+        parts = text.split('=')
+        if len(parts) == 2:
+            return {parts[0]: parts[1]}
+        else:
+            return {text: None}
+    else:
+        return {}
+
+
+def to_list(obj):
+    """Convert a list-like object to a list.
+
+    >>> to_list([1, 2, 3])
+    [1, 2, 3]
+
+    >>> to_list("a,b,c")
+    ['a', 'b', 'c']
+
+    >>> to_list("item")
+    ['item']
+
+    >>> to_list(None)
+    []
+
+    """
+    if isinstance(obj, list):
+        return obj
+    elif isinstance(obj, str):
+        text = obj.strip()
+        if ',' in text and ' ' not in text:
+            return text.split(',')
+        else:
+            return text.split()
+    elif obj is not None:
+        return [obj]
+    else:
+        return []
