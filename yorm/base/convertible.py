@@ -3,24 +3,22 @@
 import abc
 
 from .. import common
-from .mappable import Mappable
+from . import MESSAGE
+
 
 log = common.logger(__name__)
 
 
-class Convertible(Mappable, metaclass=abc.ABCMeta):
+class Convertible(metaclass=abc.ABCMeta):
 
     """Base class for attribute converters."""
 
-    TYPE = None  # type for inferred converters (set in subclasses)
-    DEFAULT = None  # default value for conversion (set in subclasses)
+    @abc.abstractclassmethod
+    def to_value(cls, obj):
+        """Convert the loaded data back into the attribute's type."""
+        raise NotImplementedError(MESSAGE)
 
     @abc.abstractclassmethod
-    def to_value(cls, obj):  # pylint: disable=E0213
-        """Convert the loaded value back to its original attribute type."""
-        raise NotImplementedError("method must be implemented in subclasses")
-
-    @abc.abstractclassmethod
-    def to_data(cls, obj):  # pylint: disable=E0213
-        """Convert the attribute's value for optimal dumping to YAML."""
-        raise NotImplementedError("method must be implemented in subclasses")
+    def to_data(cls, obj):
+        """Convert the attribute's value to data optimized for dumping."""
+        raise NotImplementedError(MESSAGE)

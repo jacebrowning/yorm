@@ -1,4 +1,4 @@
-"""Base class for mapped objects."""
+"""Base classes for mapping."""
 
 import abc
 import functools
