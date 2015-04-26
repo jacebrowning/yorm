@@ -60,7 +60,7 @@ and define an attribute mapping:
 
 ```python
 import yorm
-from yorm.standard import String, Integer, Float
+from yorm.converters import String, Integer, Float
 
 @yorm.attr(name=String, year=Integer, gpa=Float)
 @yorm.sync("students/{self.school}/{self.number}.yml")
