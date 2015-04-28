@@ -340,10 +340,10 @@ class TestAliases:
         top = Top()
         top.nested_dict.number = 1
         ref1 = top.nested_dict
-        ref2 = top.nested_dict.nested_list2
+        ref2 = top.nested_dict.nested_list_2
         yorm.update(top)
-        assert id(ref1) == top.nested_dict
-        assert id(ref2) == top.nested_dict.nested_list2
+        assert id(ref1) == id(top.nested_dict)
+        assert id(ref2) == id(top.nested_dict.nested_list_2)
 
 
 if __name__ == '__main__':

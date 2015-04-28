@@ -75,7 +75,52 @@ class Dictionary(Container, dict):
         return data
 
     def apply(self, data):
-        value = self.to_value(data)
+        # TODO: replace to_value and to_data
+        cls = self.__class__
+
+        # TODO: is `default` still needed?
+        value = cls.default()
+
+        # Convert object attributes to a dictionary
+        attrs = common.ATTRS[cls].copy()
+        if isinstance(data, cls):
+            dictionary = {}
+            for k, v in data.items():
+                if k in attrs:
+                    dictionary[k] = v
+            for k, v in data.__dict__.items():
+                if k in attrs:
+                    dictionary[k] = v
+        else:
+            dictionary = to_dict(data)
+
+        # Map object attributes to converters
+        for name, data in dictionary.items():
+            try:
+                converter = attrs.pop(name)
+            except KeyError:
+                converter = standard.match(name, data, nested=True)
+                common.ATTRS[cls][name] = converter
+
+            # Convert the loaded data
+            if issubclass(converter, Container):
+                container = getattr(self, name, None)
+                if not isinstance(container, converter):
+                    container = converter()
+                    setattr(self, name, container)
+                container.apply(data)
+                value[name] = container
+            else:
+                value[name] = converter.to_value(data)
+
+        # Create default values for unmapped converters
+        for name, converter in attrs.items():
+            if issubclass(converter, Container):
+                value[name] = converter()
+            else:
+                value[name] = converter.to_value(None)
+            log.warn("added missing nested key '%s'...", name)
+
         self.clear()
         self.update(value)
 
@@ -128,7 +173,30 @@ class List(Container, list):
         return data
 
     def apply(self, data):
-        value = self.to_value(data)
+        # TODO: replace to_value and to_data
+        cls = self.__class__
+
+        # TODO: is `default` still needed?
+        value = cls.default()
+
+        converter = cls.item_type
+
+        for item in to_list(data):
+            if issubclass(converter, Container):
+
+                try:
+                    container = self[len(value)]
+                except IndexError:
+                    container = converter()  # pylint: disable=E1120
+                else:
+                    if not isinstance(container, converter):
+                        container = converter()  # pylint: disable=E1120
+
+                container.apply(item)
+                value.append(container)
+            else:
+                value.append(converter.to_value(item))
+
         self[:] = value[:]
 
 
