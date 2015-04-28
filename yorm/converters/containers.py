@@ -106,7 +106,7 @@ class Dictionary(Container, dict):
             if issubclass(converter, Container):
                 container = getattr(self, name, None)
                 if not isinstance(container, converter):
-                    container = converter()
+                    container = converter.default()
                     setattr(self, name, container)
                 container.apply(data)
                 value[name] = container
@@ -152,7 +152,7 @@ class List(Container, list):
 
         for item in to_list(data):
             if issubclass(cls.item_type, Container):
-                container = cls.item_type()  # pylint: disable=E1120
+                container = cls.item_type.default()  # pylint: disable=E1120
                 container.apply(item)
                 value.append(container)
             else:
@@ -187,10 +187,10 @@ class List(Container, list):
                 try:
                     container = self[len(value)]
                 except IndexError:
-                    container = converter()  # pylint: disable=E1120
+                    container = converter.default()  # pylint: disable=E1120
                 else:
                     if not isinstance(container, converter):
-                        container = converter()  # pylint: disable=E1120
+                        container = converter.default()  # pylint: disable=E1120
 
                 container.apply(item)
                 value.append(container)
