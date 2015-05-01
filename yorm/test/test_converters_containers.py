@@ -51,9 +51,7 @@ class TestDictionary:
     def test_not_implemented(self):
         """Verify `Dictionary` cannot be used directly."""
         with pytest.raises(NotImplementedError):
-            Dictionary.to_value(None)
-        with pytest.raises(NotImplementedError):
-            Dictionary.to_data(None)
+            Dictionary()
 
     def test_dict_as_object(self):
         """Verify a `Dictionary` can be used as an attribute."""
@@ -108,13 +106,9 @@ class TestList:
     def test_not_implemented(self):
         """Verify `List` cannot be used directly."""
         with pytest.raises(NotImplementedError):
-            List.to_value(None)
+            List()
         with pytest.raises(NotImplementedError):
-            List.to_data(None)
-        with pytest.raises(NotImplementedError):
-            UnknownList.to_value(None)
-        with pytest.raises(NotImplementedError):
-            UnknownList.to_data(None)
+            UnknownList()
 
 
 class TestExtensions:

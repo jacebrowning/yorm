@@ -13,12 +13,18 @@ class Convertible(metaclass=abc.ABCMeta):
 
     """Base class for attribute converters."""
 
-    @abc.abstractclassmethod
-    def to_value(cls, obj):
-        """Convert the loaded data back into the attribute's type."""
+    def __new__(cls, *args, **kwargs):
+        if cls is Convertible:
+            msg = "Convertible class must be subclassed to use"
+            raise NotImplementedError(msg)
+        return super().__new__(cls, *args, **kwargs)
+
+    @abc.abstractmethod
+    def update_value(self, data):  # pylint: disable=E0213
+        """Update the object's value from the loaded data."""
         raise NotImplementedError(MESSAGE)
 
-    @abc.abstractclassmethod
-    def to_data(cls, obj):
-        """Convert the attribute's value to data optimized for dumping."""
+    @abc.abstractmethod
+    def format_data(self):  # pylint: disable=E0213
+        """Convert the object's value to data optimized for dumping."""
         raise NotImplementedError(MESSAGE)

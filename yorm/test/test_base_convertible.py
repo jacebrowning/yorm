@@ -15,9 +15,7 @@ class TestConvertible:
     def test_not_implemented(self):
         """Verify `Convertible` cannot be used directly."""
         with pytest.raises(NotImplementedError):
-            Convertible.to_value(None)
-        with pytest.raises(NotImplementedError):
-            Convertible.to_data(None)
+            Convertible()  # pylint: disable=E0110
 
 
 if __name__ == '__main__':

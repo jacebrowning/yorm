@@ -1,4 +1,4 @@
-"""Converter classes for abstract container types."""
+"""Converter classes for builtin container types."""
 
 from .. import common
 from ..base.container import Container
@@ -11,13 +11,15 @@ class Dictionary(Container, dict):
 
     """Base class for a dictionary of attribute converters."""
 
-    @classmethod
-    def default(cls):
-        """Create an uninitialized object."""
+    def __new__(cls, *args, **kwargs):
         if cls is Dictionary:
             msg = "Dictionary class must be subclassed to use"
             raise NotImplementedError(msg)
+        return super().__new__(cls, *args, **kwargs)
 
+    @classmethod
+    def default(cls):
+        """Create an uninitialized object."""
         return cls.__new__(cls)
 
     @classmethod
@@ -48,7 +50,7 @@ class Dictionary(Container, dict):
             # Convert the loaded data
             if issubclass(converter, Container):
                 container = converter()
-                container.apply(data)
+                container.update_value(data)
                 value[name] = container
             else:
                 value[name] = converter.to_value(data)
@@ -74,7 +76,7 @@ class Dictionary(Container, dict):
 
         return data
 
-    def apply(self, data):
+    def update_value(self, data):
         # TODO: replace to_value and to_data
         cls = self.__class__
 
@@ -108,7 +110,7 @@ class Dictionary(Container, dict):
                 if not isinstance(container, converter):
                     container = converter.default()
                     setattr(self, name, container)
-                container.apply(data)
+                container.update_value(data)
                 value[name] = container
             else:
                 value[name] = converter.to_value(data)
@@ -131,6 +133,13 @@ class List(Container, list):
 
     ALL = 'all'
 
+    def __new__(cls, *args, **kwargs):
+        if cls is List:
+            raise NotImplementedError("List class must be subclassed to use")
+        if not cls.item_type:
+            raise NotImplementedError("List subclass must specify item type")
+        return super().__new__(cls, *args, **kwargs)
+
     @common.classproperty
     def item_type(cls):  # pylint: disable=E0213
         """Get the converter class for all items."""
@@ -139,11 +148,6 @@ class List(Container, list):
     @classmethod
     def default(cls):
         """Create an uninitialized object."""
-        if cls is List:
-            raise NotImplementedError("List class must be subclassed to use")
-        if not cls.item_type:
-            raise NotImplementedError("List subclass must specify item type")
-
         return cls.__new__(cls)
 
     @classmethod
@@ -153,7 +157,7 @@ class List(Container, list):
         for item in to_list(data):
             if issubclass(cls.item_type, Container):
                 container = cls.item_type.default()  # pylint: disable=E1120
-                container.apply(item)
+                container.update_value(item)
                 value.append(container)
             else:
                 value.append(cls.item_type.to_value(item))
@@ -172,7 +176,7 @@ class List(Container, list):
 
         return data
 
-    def apply(self, data):
+    def update_value(self, data):
         # TODO: replace to_value and to_data
         cls = self.__class__
 
@@ -192,7 +196,7 @@ class List(Container, list):
                     if not isinstance(container, converter):
                         container = converter.default()  # pylint: disable=E1120
 
-                container.apply(item)
+                container.update_value(item)
                 value.append(container)
             else:
                 value.append(converter.to_value(item))

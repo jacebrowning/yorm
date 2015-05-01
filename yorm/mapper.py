@@ -135,7 +135,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 if not isinstance(container, converter):
                     container = converter()
                     setattr(obj, name, container)
-                container.apply(data)
+                container.update_value(data)
                 self._remap(container)
                 log.trace("value fetched: '%s' = %r", name, container)
             else:
@@ -209,7 +209,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 value = None
 
             if isinstance(value, Container):
-                data2 = value.format()
+                data2 = value.format_data()
             else:
                 data2 = converter.to_data(value)
 

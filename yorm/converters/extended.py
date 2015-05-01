@@ -1,4 +1,4 @@
-"""Converter classes for extension types."""
+"""Converter classes for extensions to builtin types."""
 
 import re
 

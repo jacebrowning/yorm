@@ -21,10 +21,10 @@ class Container(Convertible, Mappable):
         raise NotImplementedError(MESSAGE)
 
     @abc.abstractmethod
-    def apply(self, data):  # pylint: disable=E0213
+    def update_value(self, data):  # pylint: disable=E0213
         """Update the container's values with the loaded data."""
         raise NotImplementedError(MESSAGE)
 
-    def format(self):  # pylint: disable=E0213
+    def format_data(self):  # pylint: disable=E0213
         """Convert the container's values to data optimized for dumping."""
         return self.to_data(self)

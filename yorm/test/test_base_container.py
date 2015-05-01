@@ -19,7 +19,7 @@ class TestContainer:
         with pytest.raises(NotImplementedError):
             Container.default()
         with pytest.raises(NotImplementedError):
-            Container.apply(None, None)
+            Container.update_value(None, None)
 
 
 if __name__ == '__main__':
