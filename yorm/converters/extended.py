@@ -158,7 +158,7 @@ class AttributeDictionary(Dictionary):
         self.__dict__ = self
 
     @classmethod
-    def default(cls):
+    def create_default(cls):
         """Create an uninitialized object with keys as attributes."""
         if cls is AttributeDictionary:
             msg = "AttributeDictionary class must be subclassed to use"
@@ -174,7 +174,7 @@ class SortedList(List):
     """List converter that is sorted on disk."""
 
     @classmethod
-    def default(cls):
+    def create_default(cls):
         """Create an uninitialized object."""
         if cls is SortedList:
             msg = "SortedList class must be subclassed to use"

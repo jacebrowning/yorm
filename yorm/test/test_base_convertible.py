@@ -12,10 +12,15 @@ class TestConvertible:
 
     """Unit tests for the `Convertible` class."""
 
-    def test_not_implemented(self):
-        """Verify `Convertible` cannot be used directly."""
-        with pytest.raises(NotImplementedError):
+    def test_convertible_class_cannot_be_instantiated(self):
+        with pytest.raises(TypeError):
             Convertible()  # pylint: disable=E0110
+
+    def test_convertible_class_methods_cannot_be_called(self):
+        with pytest.raises(NotImplementedError):
+            Convertible.create_default()
+        with pytest.raises(NotImplementedError):
+            Convertible.update_value(None, None)
 
 
 if __name__ == '__main__':

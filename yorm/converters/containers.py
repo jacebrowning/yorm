@@ -1,13 +1,13 @@
 """Converter classes for builtin container types."""
 
 from .. import common
-from ..base.container import Container
+from ..base.convertible import Convertible
 from . import standard
 
 log = common.logger(__name__)
 
 
-class Dictionary(Container, dict):
+class Dictionary(Convertible, dict):
 
     """Base class for a dictionary of attribute converters."""
 
@@ -18,52 +18,12 @@ class Dictionary(Container, dict):
         return super().__new__(cls, *args, **kwargs)
 
     @classmethod
-    def default(cls):
+    def create_default(cls):
         """Create an uninitialized object."""
+        if cls is Dictionary:
+            msg = "Dictionary class must be subclassed to use"
+            raise NotImplementedError(msg)
         return cls.__new__(cls)
-
-    @classmethod
-    def to_value(cls, data):
-        value = cls.default()
-
-        # Convert object attributes to a dictionary
-        attrs = common.ATTRS[cls].copy()
-        if isinstance(data, cls):
-            dictionary = {}
-            for k, v in data.items():
-                if k in attrs:
-                    dictionary[k] = v
-            for k, v in data.__dict__.items():
-                if k in attrs:
-                    dictionary[k] = v
-        else:
-            dictionary = to_dict(data)
-
-        # Map object attributes to converters
-        for name, data in dictionary.items():
-            try:
-                converter = attrs.pop(name)
-            except KeyError:
-                converter = standard.match(name, data, nested=True)
-                common.ATTRS[cls][name] = converter
-
-            # Convert the loaded data
-            if issubclass(converter, Container):
-                container = converter()
-                container.update_value(data)
-                value[name] = container
-            else:
-                value[name] = converter.to_value(data)
-
-        # Create default values for unmapped converters
-        for name, converter in attrs.items():
-            if issubclass(converter, Container):
-                value[name] = converter()
-            else:
-                value[name] = converter.to_value(None)
-            log.warn("added missing nested key '%s'...", name)
-
-        return value
 
     @classmethod
     def to_data(cls, value):
@@ -80,9 +40,6 @@ class Dictionary(Container, dict):
         # TODO: replace to_value and to_data
         cls = self.__class__
 
-        # TODO: is `default` still needed?
-        value = cls.default()
-
         # Convert object attributes to a dictionary
         attrs = common.ATTRS[cls].copy()
         if isinstance(data, cls):
@@ -105,29 +62,30 @@ class Dictionary(Container, dict):
                 common.ATTRS[cls][name] = converter
 
             # Convert the loaded data
-            if issubclass(converter, Container):
-                container = getattr(self, name, None)
-                if not isinstance(container, converter):
-                    container = converter.default()
-                    setattr(self, name, container)
-                container.update_value(data)
-                value[name] = container
+            try:
+
+                attr = self[name]
+            except KeyError:
+                attr = converter.create_default()
+
+
+            if isinstance(attr, converter) and issubclass(converter, Convertible):
+                attr.update_value(data)
             else:
-                value[name] = converter.to_value(data)
+                attr = converter.to_value(data)
+                self[name] = attr
+
+
+
 
         # Create default values for unmapped converters
         for name, converter in attrs.items():
-            if issubclass(converter, Container):
-                value[name] = converter()
-            else:
-                value[name] = converter.to_value(None)
+            self[name] = converter.create_default()
             log.warn("added missing nested key '%s'...", name)
 
-        self.clear()
-        self.update(value)
 
 
-class List(Container, list):
+class List(Convertible, list):
 
     """Base class for a homogeneous list of attribute converters."""
 
@@ -146,23 +104,9 @@ class List(Container, list):
         return common.ATTRS[cls].get(cls.ALL)
 
     @classmethod
-    def default(cls):
+    def create_default(cls):
         """Create an uninitialized object."""
         return cls.__new__(cls)
-
-    @classmethod
-    def to_value(cls, data):
-        value = cls.default()
-
-        for item in to_list(data):
-            if issubclass(cls.item_type, Container):
-                container = cls.item_type.default()  # pylint: disable=E1120
-                container.update_value(item)
-                value.append(container)
-            else:
-                value.append(cls.item_type.to_value(item))
-
-        return value
 
     @classmethod
     def to_data(cls, value):
@@ -181,25 +125,25 @@ class List(Container, list):
         cls = self.__class__
 
         # TODO: is `default` still needed?
-        value = cls.default()
+        value = cls.create_default()
 
         converter = cls.item_type
 
         for item in to_list(data):
-            if issubclass(converter, Container):
 
-                try:
-                    container = self[len(value)]
-                except IndexError:
-                    container = converter.default()  # pylint: disable=E1120
-                else:
-                    if not isinstance(container, converter):
-                        container = converter.default()  # pylint: disable=E1120
+            try:
+                attr = self[len(value)]
+            except IndexError:
+                attr = converter.create_default()
 
-                container.update_value(item)
-                value.append(container)
+
+            if isinstance(attr, converter) and issubclass(converter, Convertible):
+                attr.update_value(item)
             else:
-                value.append(converter.to_value(item))
+                attr = converter.to_value(item)
+
+
+            value.append(attr)
 
         self[:] = value[:]
 
