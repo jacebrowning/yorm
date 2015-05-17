@@ -2,8 +2,8 @@
 
 from unittest.mock import Mock
 
+from yorm.base.converter import Converter
 from yorm.base.mappable import Mappable
-from yorm.base.convertible import Convertible
 from yorm.utilities import sync, attr
 from yorm.converters import Dictionary, List
 from yorm.converters import String, Integer, Float, Boolean
@@ -13,19 +13,9 @@ from yorm.converters import AttributeDictionary, SortedList
 # sample converters ###########################################################
 
 
-class Level(Convertible):
+class Level(String):
 
     """Sample custom attribute."""
-
-    @classmethod
-    def to_value(cls, obj):
-        if obj:
-            if isinstance(obj, str):
-                return obj
-            else:
-                return str(obj)
-        else:
-            return ""
 
     @classmethod
     def to_data(cls, obj):
@@ -42,16 +32,20 @@ class Level(Convertible):
 # mock containers #############################################################
 
 
-class MockConverter(Convertible):
+class MockConverter(Converter):
 
     """Sample converter class."""
 
     @classmethod
-    def to_value(cls, obj):
+    def create_default(cls):
         return None
 
     @classmethod
-    def to_data(cls, obj):
+    def to_value(cls, _):
+        return None
+
+    @classmethod
+    def to_data(cls, _):
         return None
 
 

@@ -10,10 +10,7 @@ import pytest
 from . import refresh_file_modification_times
 from .samples import *  # pylint: disable=W0401,W0614
 
-integration = pytest.mark.integration
 
-
-@integration
 class TestInit:
 
     """Integration tests for initializing mapped classes."""
@@ -46,7 +43,6 @@ class TestInit:
         assert False is sample2.false
 
 
-@integration
 class TestDelete:
 
     """Integration tests for deleting files."""

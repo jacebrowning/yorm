@@ -3,7 +3,7 @@
 import sys
 
 __project__ = 'YORM'
-__version__ = '0.4dev12'
+__version__ = '0.4.dev17'
 
 VERSION = __project__ + '-' + __version__
 
@@ -18,6 +18,6 @@ try:
     from .utilities import sync, sync_object, sync_instances, attr
     from .utilities import update, update_object, update_file
     from .base.mappable import Mappable
-    from .base.convertible import Convertible
+    from .base.convertible import Converter, Convertible
 except ImportError:  # pragma: no cover (manual test)
     pass

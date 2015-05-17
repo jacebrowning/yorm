@@ -1,28 +1,46 @@
-"""Converter classes for abstract container types."""
+"""Converter classes for builtin container types."""
 
 from .. import common
-from ..base.container import Container
+from ..base.mappable import Mappable
+from ..base.convertible import Convertible
 from . import standard
 
 log = common.logger(__name__)
+
+
+class Container(Mappable, Convertible):  # pylint: disable=W0223
+
+    """Base class for containers of attribute converters."""
+
+    @classmethod
+    def create_default(cls):
+        return cls.__new__(cls)
 
 
 class Dictionary(Container, dict):
 
     """Base class for a dictionary of attribute converters."""
 
-    @classmethod
-    def default(cls):
-        """Create an uninitialized object."""
+    def __new__(cls, *args, **kwargs):
         if cls is Dictionary:
             msg = "Dictionary class must be subclassed to use"
             raise NotImplementedError(msg)
-
-        return dict()
+        return super().__new__(cls, *args, **kwargs)
 
     @classmethod
-    def to_value(cls, data):
-        value = cls.default()
+    def to_data(cls, value):
+        value = cls.to_value(value)
+
+        data = {}
+
+        for name, converter in common.ATTRS[cls].items():
+            data[name] = converter.to_data(value.get(name, None))
+
+        return data
+
+    def update_value(self, data):
+        cls = self.__class__
+        value = cls.create_default()
 
         # Convert object attributes to a dictionary
         attrs = common.ATTRS[cls].copy()
@@ -38,44 +56,33 @@ class Dictionary(Container, dict):
             dictionary = to_dict(data)
 
         # Map object attributes to converters
-        for name, data in dictionary.items():
+        for name, data2 in dictionary.items():
+
             try:
                 converter = attrs.pop(name)
             except KeyError:
-                converter = standard.match(name, data, nested=True)
+                converter = standard.match(name, data2, nested=True)
                 common.ATTRS[cls][name] = converter
 
-            # Convert the loaded data
-            if issubclass(converter, Container):
-                container = converter()
-                container.apply(data)
-                value[name] = container
+            try:
+                attr = self[name]
+            except KeyError:
+                attr = converter.create_default()
+
+            if all((isinstance(attr, converter),
+                    issubclass(converter, Convertible))):
+                attr.update_value(data2)
             else:
-                value[name] = converter.to_value(data)
+                attr = converter.to_value(data2)
+
+            value[name] = attr
 
         # Create default values for unmapped converters
         for name, converter in attrs.items():
-            if issubclass(converter, Container):
-                value[name] = converter()
-            else:
-                value[name] = converter.to_value(None)
+            value[name] = converter.create_default()
             log.warn("added missing nested key '%s'...", name)
 
-        return value
-
-    @classmethod
-    def to_data(cls, value):
-        value = cls.to_value(value)
-
-        data = {}
-
-        for name, converter in common.ATTRS[cls].items():
-            data[name] = converter.to_data(value.get(name, None))
-
-        return data
-
-    def apply(self, data):
-        value = self.to_value(data)
+        # Apply the new value
         self.clear()
         self.update(value)
 
@@ -86,34 +93,17 @@ class List(Container, list):
 
     ALL = 'all'
 
-    @common.classproperty
-    def item_type(cls):  # pylint: disable=E0213
-        """Get the converter class for all items."""
-        return common.ATTRS[cls].get(cls.ALL)
-
-    @classmethod
-    def default(cls):
-        """Create an uninitialized object."""
+    def __new__(cls, *args, **kwargs):
         if cls is List:
             raise NotImplementedError("List class must be subclassed to use")
         if not cls.item_type:
             raise NotImplementedError("List subclass must specify item type")
+        return super().__new__(cls, *args, **kwargs)
 
-        return cls.__new__(cls)
-
-    @classmethod
-    def to_value(cls, data):
-        value = cls.default()
-
-        for item in to_list(data):
-            if issubclass(cls.item_type, Container):
-                container = cls.item_type()  # pylint: disable=E1120
-                container.apply(item)
-                value.append(container)
-            else:
-                value.append(cls.item_type.to_value(item))
-
-        return value
+    @common.classproperty
+    def item_type(cls):  # pylint: disable=E0213
+        """Get the converter class for all items."""
+        return common.ATTRS[cls].get(cls.ALL)
 
     @classmethod
     def to_data(cls, value):
@@ -127,8 +117,30 @@ class List(Container, list):
 
         return data
 
-    def apply(self, data):
-        value = self.to_value(data)
+    def update_value(self, data):
+        cls = self.__class__
+        value = cls.create_default()
+
+        # Get the converter for all items
+        converter = cls.item_type
+
+        # Convert the loaded data
+        for item in to_list(data):
+
+            try:
+                attr = self[len(value)]
+            except IndexError:
+                attr = converter.create_default()
+
+            if all((isinstance(attr, converter),
+                    issubclass(converter, Convertible))):
+                attr.update_value(item)
+            else:
+                attr = converter.to_value(item)
+
+            value.append(attr)
+
+        # Apply the new value
         self[:] = value[:]
 
 

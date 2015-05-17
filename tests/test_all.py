@@ -12,10 +12,7 @@ from yorm.converters import Markdown
 from . import strip, refresh_file_modification_times
 from .samples import *  # pylint: disable=W0401,W0614
 
-integration = pytest.mark.integration
 
-
-@integration
 class TestStandard:
 
     """Integration tests for standard attribute types."""
@@ -162,7 +159,6 @@ class TestStandard:
         """) == sample.yorm_mapper.text
 
 
-@integration
 class TestContainers:
 
     """Integration tests for attribute containers."""
@@ -256,7 +252,6 @@ class TestContainers:
         """) == sample.yorm_mapper.text
 
 
-@integration
 class TestExtended:
 
     """Integration tests for extended attribute types."""
@@ -298,7 +293,6 @@ class TestExtended:
         assert "This is a sentence." == sample.text
 
 
-@integration
 class TestCustom:
 
     """Integration tests for custom attribute types."""

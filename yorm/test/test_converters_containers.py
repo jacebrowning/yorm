@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# pylint:disable=R0201,C0111
+# pylint:disable=R0201,C0111,R0901
 
 """Unit tests for the `container` module."""
 
@@ -9,11 +9,40 @@ import pytest
 
 import yorm
 from yorm import common
+from yorm.utilities import attr
 from yorm.converters import Dictionary, List
 from yorm.converters import String, Integer
 
 from . import strip
-from .samples import *  # pylint: disable=W0401,W0614
+
+
+@attr(abc=Integer)
+class SampleDictionary(Dictionary):
+
+    """Sample dictionary container."""
+
+
+@attr(var1=Integer, var2=String)
+class SampleDictionaryWithInitialization(Dictionary):
+
+    """Sample dictionary container with initialization."""
+
+    def __init__(self, var1, var2, var3):
+        super().__init__()
+        self.var1 = var1
+        self.var2 = var2
+        self.var3 = var3
+
+
+@attr(all=String)
+class StringList(List):
+
+    """Sample list container."""
+
+
+class UnknownList(List):
+
+    """Sample list container."""
 
 
 class TestDictionary:
@@ -51,9 +80,7 @@ class TestDictionary:
     def test_not_implemented(self):
         """Verify `Dictionary` cannot be used directly."""
         with pytest.raises(NotImplementedError):
-            Dictionary.to_value(None)
-        with pytest.raises(NotImplementedError):
-            Dictionary.to_data(None)
+            Dictionary()
 
     def test_dict_as_object(self):
         """Verify a `Dictionary` can be used as an attribute."""
@@ -108,13 +135,44 @@ class TestList:
     def test_not_implemented(self):
         """Verify `List` cannot be used directly."""
         with pytest.raises(NotImplementedError):
-            List.to_value(None)
+            List()
         with pytest.raises(NotImplementedError):
-            List.to_data(None)
-        with pytest.raises(NotImplementedError):
-            UnknownList.to_value(None)
-        with pytest.raises(NotImplementedError):
-            UnknownList.to_data(None)
+            UnknownList()
+
+
+class TestExtensions:
+
+    """Unit tests for extensions to the container classes."""
+
+    class FindMixin:
+
+        def find(self, value):
+            for value2 in self:
+                if value.lower() == value2.lower():
+                    return value2
+            return None
+
+    @yorm.attr(a=yorm.converters.String)
+    class MyDictionary(Dictionary, FindMixin):
+        pass
+
+    @yorm.attr(all=yorm.converters.String)
+    class MyList(List, FindMixin):
+        pass
+
+    def test_converted_dict_keeps_type(self):
+        my_dict = self.MyDictionary()
+        my_dict['a'] = 1
+        my_dict2 = self.MyDictionary.to_value(my_dict)
+        assert 'a' == my_dict2.find('A')
+        assert None is my_dict2.find('B')
+
+    def test_converted_list_keeps_type(self):
+        my_list = self.MyList()
+        my_list.append('a')
+        my_list2 = self.MyList.to_value(my_list)
+        assert 'a' == my_list2.find('A')
+        assert None is my_list2.find('B')
 
 
 @patch('yorm.settings.fake', True)

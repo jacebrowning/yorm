@@ -9,7 +9,7 @@ import yaml
 from . import common
 from . import settings
 from .base.mappable import MAPPER, Mappable
-from .base.container import Container
+from .base.convertible import Convertible
 
 log = common.logger(__name__)
 
@@ -63,7 +63,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
         self.exists = self.path and os.path.isfile(self.path)
         self._activity = False
         self._timestamp = 0
-        self._fake = None
+        self._fake = ""
 
     def __str__(self):
         return str(self.path)
@@ -117,7 +117,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
         data = self._load(text, self.path)
         log.trace("loaded: {}".format(data))
 
-        # Update attributes
+        # Update all attributes
         for name, data in data.items():
 
             # Find a matching converter
@@ -130,18 +130,15 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 attrs[name] = converter
 
             # Convert the loaded attribute
-            if issubclass(converter, Container):
-                container = getattr(obj, name, None)
-                if not isinstance(container, converter):
-                    container = converter()
-                    setattr(obj, name, container)
-                container.apply(data)
-                self._remap(container)
-                log.trace("value fetched: '%s' = %r", name, container)
+            attr = getattr(obj, name, None)
+            if all((isinstance(attr, converter),
+                    issubclass(converter, Convertible))):
+                attr.update_value(data)
             else:
-                value = converter.to_value(data)
-                setattr(obj, name, value)
-                log.trace("value fetched: '%s' = %r", name, value)
+                attr = converter.to_value(data)
+                setattr(obj, name, attr)
+            self._remap(attr)
+            log.trace("value fetched: '%s' = %r", name, attr)
 
         # Set meta attributes
         self.modified = False
@@ -208,10 +205,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 log.warn("added missing attribute '%s'", name)
                 value = None
 
-            if isinstance(value, Container):
-                data2 = value.format()
-            else:
-                data2 = converter.to_data(value)
+            data2 = converter.to_data(value)
 
             log.trace("data to store: '%s' = %r", name, data2)
             data[name] = data2

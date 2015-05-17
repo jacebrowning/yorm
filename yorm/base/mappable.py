@@ -95,6 +95,11 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
             mapper.store()
 
     @fetch_before
+    def __iter__(self):
+        """Trigger object update when iterating."""
+        return super().__iter__()
+
+    @fetch_before
     def __getitem__(self, key):
         """Trigger object update when reading an index."""
         return super().__getitem__(key)

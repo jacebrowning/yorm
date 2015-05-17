@@ -1,17 +1,21 @@
-"""Convertible classes for builtin types."""
+"""Convertible classes for builtin immutable types."""
 
 from .. import common
-from ..base.convertible import Convertible
+from ..base.convertible import Converter
 
 log = common.logger(__name__)
 
 
-class Object(Convertible):  # pylint: disable=W0223
+class Object(Converter):  # pylint: disable=W0223
 
     """Base class for immutable types."""
 
     TYPE = None  # type for inferred converters (set in subclasses)
     DEFAULT = None  # default value for conversion (set in subclasses)
+
+    @classmethod
+    def create_default(cls):
+        return cls.DEFAULT
 
     @classmethod
     def to_value(cls, obj):

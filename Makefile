@@ -12,17 +12,24 @@ endif
 
 # Test settings
 UNIT_TEST_COVERAGE := 98
-INTEGRATION_TEST_COVERAGE := 100
+INTEGRATION_TEST_COVERAGE := 87
+COMBINED_TEST_COVERAGE := 100
 
 # System paths
 PLATFORM := $(shell python -c 'import sys; print(sys.platform)')
 ifneq ($(findstring win32, $(PLATFORM)), )
+	WINDOWS := 1
 	SYS_PYTHON_DIR := C:\\Python$(PYTHON_MAJOR)$(PYTHON_MINOR)
 	SYS_PYTHON := $(SYS_PYTHON_DIR)\\python.exe
 	SYS_VIRTUALENV := $(SYS_PYTHON_DIR)\\Scripts\\virtualenv.exe
 	# https://bugs.launchpad.net/virtualenv/+bug/449537
 	export TCL_LIBRARY=$(SYS_PYTHON_DIR)\\tcl\\tcl8.5
 else
+	ifneq ($(findstring darwin, $(PLATFORM)), )
+		MAC := 1
+	else
+		LINUX := 1
+	endif
 	SYS_PYTHON := python$(PYTHON_MAJOR)
 	ifdef PYTHON_MINOR
 		SYS_PYTHON := $(SYS_PYTHON).$(PYTHON_MINOR)
@@ -58,6 +65,7 @@ PYREVERSE := $(BIN)/pyreverse
 NOSE := $(BIN)/nosetests
 PYTEST := $(BIN)/py.test
 COVERAGE := $(BIN)/coverage
+SNIFFER := $(BIN)/sniffer
 
 # Flags for PHONY targets
 DEPENDS_CI := $(ENV)/.depends-ci
@@ -101,7 +109,16 @@ $(DEPENDS_CI): Makefile
 .PHONY: depends-dev
 depends-dev: env Makefile $(DEPENDS_DEV)
 $(DEPENDS_DEV): Makefile
-	$(PIP) install --upgrade pip pep8radius pygments docutils pdoc wheel
+	$(PIP) install --upgrade pip pep8radius pygments docutils pdoc wheel sniffer pync
+ifdef WINDOWS
+	$(PIP) install --upgrade pywin32
+endif
+ifdef MAC
+	$(PIP) install --upgrade MacFSEvents
+endif
+ifdef LINUX
+	$(PIP) install --upgrade pyinotify
+endif
 	touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
 
 # Documentation ################################################################
@@ -168,19 +185,31 @@ PYTEST_COV_OPTS := --cov=$(PACKAGE) --cov-report=term-missing --cov-report=html
 PYTEST_CAPTURELOG_OPTS := --log-format="%(name)-26s %(funcName)-20s %(lineno)3d %(levelname)s: %(message)s"
 PYTEST_OPTS := $(PYTEST_CORE_OPTS) $(PYTEST_COV_OPTS) $(PYTEST_CAPTURELOG_OPTS)
 
-.PHONY: test
+.PHONY: test-unit
+test-unit: test
 test: depends-ci .clean-test
 	$(PYTEST) $(PYTEST_OPTS) $(PACKAGE)
 	$(COVERAGE) report --fail-under=$(UNIT_TEST_COVERAGE) > /dev/null
 
-.PHONY: tests
-tests: depends-ci .clean-test
-	TEST_INTEGRATION=1 $(PYTEST) $(PYTEST_OPTS) $(PACKAGE) --exitfirst
+.PHONY: test-int
+test-int: depends-ci .clean-test
+	$(PYTEST) $(PYTEST_OPTS) tests --exitfirst
 	$(COVERAGE) report --fail-under=$(INTEGRATION_TEST_COVERAGE) > /dev/null
+
+.PHONY: test-all
+test-all: tests
+tests: depends-ci .clean-test
+	$(PYTEST) $(PYTEST_OPTS) $(PACKAGE) tests --exitfirst
+	$(COVERAGE) report --fail-under=$(COMBINED_TEST_COVERAGE) > /dev/null
 
 .PHONY: read-coverage
 read-coverage:
 	$(OPEN) htmlcov/index.html
+
+.PHONY: watch
+watch: depends-dev
+	touch htmlcov/index.html && $(MAKE) read-coverage
+	$(SNIFFER)
 
 # Cleanup ######################################################################
 

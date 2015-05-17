@@ -6,7 +6,8 @@ Changelog
 
 - Moved all converters into the `yorm.converters` package.
 - Renamed `container` to `containers`.
-- Renamed `Converter` to `Convertible`.
+- Renamed `Converter` to `Convertible` for mutable types
+- Added a new `Converter` class for immutable types
 - Removed the context manager in mapped objects.
 - Fixed automatic mapping of nested attributes.
 

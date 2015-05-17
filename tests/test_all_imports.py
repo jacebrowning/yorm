@@ -22,7 +22,7 @@ def test_from_top():
 
     # Classes
     from yorm import Mappable  # base class for mapped objects
-    from yorm import Convertible  # base class for converters
+    from yorm import Converter, Convertible  # base class for converters
 
     # Decorators
     from yorm import sync  # enables mapping on a class's instance objects
