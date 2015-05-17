@@ -6,7 +6,6 @@ from ..base.convertible import Converter
 log = common.logger(__name__)
 
 
-# TODO: get rid of this class and move the class attributes to Converter?
 class Object(Converter):  # pylint: disable=W0223
 
     """Base class for immutable types."""
