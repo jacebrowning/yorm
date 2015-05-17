@@ -15,11 +15,6 @@ class Convertible(Mappable, Converter):
 
     """Base class for mutable attributes."""
 
-    @abc.abstractclassmethod
-    def create_default(cls):
-        """Create a default value for an attribute."""
-        raise NotImplementedError(MESSAGE)
-
     @classmethod
     def to_value(cls, data):
         value = cls.create_default()

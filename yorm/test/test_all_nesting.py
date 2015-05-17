@@ -342,7 +342,6 @@ class TestAliases:
         top.nested_dict.number = 1
         logging.info("storing refs...")
         ref1 = top.nested_dict
-        top.nested_dict['nested_list_2']
         ref2 = top.nested_dict.nested_list_2
         yorm.update(top)
         assert id(ref1) == id(top.nested_dict)

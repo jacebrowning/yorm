@@ -14,6 +14,11 @@ class Converter(metaclass=abc.ABCMeta):
     """Base class for immutable attribute converters."""
 
     @abc.abstractclassmethod
+    def create_default(cls):
+        """Create a default value for an attribute."""
+        raise NotImplementedError(MESSAGE)
+
+    @abc.abstractclassmethod
     def to_value(cls, data):
         """Convert loaded data to an attribute's value."""
         raise NotImplementedError(MESSAGE)

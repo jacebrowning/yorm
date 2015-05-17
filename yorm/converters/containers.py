@@ -37,8 +37,8 @@ class Dictionary(Convertible, dict):
         return data
 
     def update_value(self, data):
-        # TODO: replace to_value and to_data
         cls = self.__class__
+        value = cls.create_default()
 
         # Convert object attributes to a dictionary
         attrs = common.ATTRS[cls].copy()
@@ -54,35 +54,35 @@ class Dictionary(Convertible, dict):
             dictionary = to_dict(data)
 
         # Map object attributes to converters
-        for name, data in dictionary.items():
+        for name, data2 in dictionary.items():
+
             try:
                 converter = attrs.pop(name)
             except KeyError:
-                converter = standard.match(name, data, nested=True)
+                converter = standard.match(name, data2, nested=True)
                 common.ATTRS[cls][name] = converter
 
-            # Convert the loaded data
             try:
-
                 attr = self[name]
             except KeyError:
                 attr = converter.create_default()
 
-
-            if isinstance(attr, converter) and issubclass(converter, Convertible):
-                attr.update_value(data)
+            if all((isinstance(attr, converter),
+                    issubclass(converter, Convertible))):
+                attr.update_value(data2)
             else:
-                attr = converter.to_value(data)
-                self[name] = attr
+                attr = converter.to_value(data2)
 
-
-
+            value[name] = attr
 
         # Create default values for unmapped converters
         for name, converter in attrs.items():
-            self[name] = converter.create_default()
+            value[name] = converter.create_default()
             log.warn("added missing nested key '%s'...", name)
 
+        # Apply the new value
+        self.clear()
+        self.update(value)
 
 
 class List(Convertible, list):
@@ -121,14 +121,13 @@ class List(Convertible, list):
         return data
 
     def update_value(self, data):
-        # TODO: replace to_value and to_data
         cls = self.__class__
-
-        # TODO: is `default` still needed?
         value = cls.create_default()
 
+        # Get the converter for all items
         converter = cls.item_type
 
+        # Convert the loaded data
         for item in to_list(data):
 
             try:
@@ -136,15 +135,15 @@ class List(Convertible, list):
             except IndexError:
                 attr = converter.create_default()
 
-
-            if isinstance(attr, converter) and issubclass(converter, Convertible):
+            if all((isinstance(attr, converter),
+                    issubclass(converter, Convertible))):
                 attr.update_value(item)
             else:
                 attr = converter.to_value(item)
 
-
             value.append(attr)
 
+        # Apply the new value
         self[:] = value[:]
 
 

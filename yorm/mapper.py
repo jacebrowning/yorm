@@ -131,7 +131,8 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
             # Convert the loaded attribute
             attr = getattr(obj, name, None)
-            if isinstance(attr, converter) and issubclass(converter, Convertible):
+            if all((isinstance(attr, converter),
+                    issubclass(converter, Convertible))):
                 attr.update_value(data)
             else:
                 attr = converter.to_value(data)
