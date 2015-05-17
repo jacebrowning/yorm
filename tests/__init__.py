@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """Integration tests for the `yorm` package."""
 
 import time

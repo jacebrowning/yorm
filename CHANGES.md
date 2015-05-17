@@ -1,8 +1,8 @@
 Changelog
 =========
 
-0.4 (dev)
----------
+0.4 (2015-05-16)
+----------------
 
 - Moved all converters into the `yorm.converters` package.
 - Renamed `container` to `containers`.
