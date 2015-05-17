@@ -8,8 +8,58 @@ from unittest.mock import patch, Mock
 
 from yorm import common
 from yorm import utilities
+from yorm.base.converter import Converter
+from yorm.base.mappable import Mappable
 
-from .samples import *  # pylint: disable=W0401,W0614
+
+class MockConverter(Converter):
+
+    """Sample converter class."""
+
+    @classmethod
+    def create_default(cls):
+        return None
+
+    @classmethod
+    def to_value(cls, _):
+        return None
+
+    @classmethod
+    def to_data(cls, _):
+        return None
+
+
+class MockConverter0(MockConverter):
+
+    """Sample converter class."""
+
+
+class MockConverter1(MockConverter):
+
+    """Sample converter class."""
+
+
+class MockConverter2(MockConverter):
+
+    """Sample converter class."""
+
+
+class MockConverter3(MockConverter):
+
+    """Sample converter class."""
+
+
+class MockConverter4(MockConverter):
+
+    """Sample converter class."""
+
+
+class MockMappable(Mappable):
+
+    """Sample mappable class."""
+
+    yorm_mapper = Mock()
+    yorm_mapper.attrs = {}
 
 
 @patch('yorm.common.write_text', Mock())

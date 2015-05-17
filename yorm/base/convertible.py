@@ -4,14 +4,13 @@ import abc
 
 from .. import common
 from . import MESSAGE
-from .mappable import Mappable
 from .converter import Converter
 
 
 log = common.logger(__name__)
 
 
-class Convertible(Mappable, Converter):
+class Convertible(Converter):  # pragma: no cover (abstract)
 
     """Base class for mutable attributes."""
 
@@ -22,7 +21,7 @@ class Convertible(Mappable, Converter):
         return value
 
     @abc.abstractmethod
-    def update_value(self, data):  # pylint: disable=E0213
+    def update_value(self, data):  # pylint: disable=E0213,
         """Update the attribute's value from loaded data."""
         raise NotImplementedError(MESSAGE)
 

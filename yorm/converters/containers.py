@@ -1,13 +1,23 @@
 """Converter classes for builtin container types."""
 
 from .. import common
+from ..base.mappable import Mappable
 from ..base.convertible import Convertible
 from . import standard
 
 log = common.logger(__name__)
 
 
-class Dictionary(Convertible, dict):
+class Container(Mappable, Convertible):  # pylint: disable=W0223
+
+    """Base class for containers of attribute converters."""
+
+    @classmethod
+    def create_default(cls):
+        return cls.__new__(cls)
+
+
+class Dictionary(Container, dict):
 
     """Base class for a dictionary of attribute converters."""
 
@@ -16,14 +26,6 @@ class Dictionary(Convertible, dict):
             msg = "Dictionary class must be subclassed to use"
             raise NotImplementedError(msg)
         return super().__new__(cls, *args, **kwargs)
-
-    @classmethod
-    def create_default(cls):
-        """Create an uninitialized object."""
-        if cls is Dictionary:
-            msg = "Dictionary class must be subclassed to use"
-            raise NotImplementedError(msg)
-        return cls.__new__(cls)
 
     @classmethod
     def to_data(cls, value):
@@ -85,7 +87,7 @@ class Dictionary(Convertible, dict):
         self.update(value)
 
 
-class List(Convertible, list):
+class List(Container, list):
 
     """Base class for a homogeneous list of attribute converters."""
 
@@ -102,11 +104,6 @@ class List(Convertible, list):
     def item_type(cls):  # pylint: disable=E0213
         """Get the converter class for all items."""
         return common.ATTRS[cls].get(cls.ALL)
-
-    @classmethod
-    def create_default(cls):
-        """Create an uninitialized object."""
-        return cls.__new__(cls)
 
     @classmethod
     def to_data(cls, value):
