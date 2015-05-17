@@ -1,14 +1,21 @@
-"""Converter classes for builtin types."""
+"""Convertible classes for builtin immutable types."""
 
-from . import common
-from .base import Converter
+from .. import common
+from ..base.convertible import Converter
 
 log = common.logger(__name__)
 
 
 class Object(Converter):  # pylint: disable=W0223
 
-    """Base class for standard types (mapped directly to YAML)."""
+    """Base class for immutable types."""
+
+    TYPE = None  # type for inferred converters (set in subclasses)
+    DEFAULT = None  # default value for conversion (set in subclasses)
+
+    @classmethod
+    def create_default(cls):
+        return cls.DEFAULT
 
     @classmethod
     def to_value(cls, obj):
@@ -21,7 +28,7 @@ class Object(Converter):  # pylint: disable=W0223
 
 class String(Object):
 
-    """Converter for the `str` type."""
+    """Convertible for the `str` type."""
 
     TYPE = str
     DEFAULT = ""
@@ -41,7 +48,7 @@ class String(Object):
 
 class Integer(Object):
 
-    """Converter for the `int` type."""
+    """Convertible for the `int` type."""
 
     TYPE = int
     DEFAULT = 0
@@ -61,7 +68,7 @@ class Integer(Object):
 
 class Float(Object):
 
-    """Converter for the `float` type."""
+    """Convertible for the `float` type."""
 
     TYPE = float
     DEFAULT = 0.0
@@ -78,7 +85,7 @@ class Float(Object):
 
 class Boolean(Object):
 
-    """Converter for the `bool` type."""
+    """Convertible for the `bool` type."""
 
     TYPE = bool
     DEFAULT = False
@@ -105,7 +112,7 @@ def match(name, data, nested=False):
     log.trace("converter options: {}".format(converters))
 
     for converter in converters:
-        if converter.TYPE and type(data) == converter.TYPE:
+        if converter.TYPE and type(data) == converter.TYPE:  # pylint: disable=W1504
             log.debug("matched converter: %s", converter)
             log.info("new%s attribute: %s", nested, name)
             return converter

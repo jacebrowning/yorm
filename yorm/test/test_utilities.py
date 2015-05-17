@@ -8,11 +8,8 @@ from unittest.mock import patch, Mock
 
 from yorm import common
 from yorm import utilities
-from yorm.base import Mappable
-from yorm.standard import Converter
-
-
-# sample classes ##############################################################
+from yorm.base.converter import Converter
+from yorm.base.mappable import Mappable
 
 
 class MockConverter(Converter):
@@ -20,11 +17,15 @@ class MockConverter(Converter):
     """Sample converter class."""
 
     @classmethod
-    def to_value(cls, obj):
+    def create_default(cls):
         return None
 
     @classmethod
-    def to_data(cls, obj):
+    def to_value(cls, _):
+        return None
+
+    @classmethod
+    def to_data(cls, _):
         return None
 
 
@@ -57,15 +58,13 @@ class MockMappable(Mappable):
 
     """Sample mappable class."""
 
-    yorm_attrs = []
     yorm_mapper = Mock()
-
-
-# tests #######################################################################
+    yorm_mapper.attrs = {}
 
 
 @patch('yorm.common.write_text', Mock())
 @patch('yorm.common.stamp', Mock())
+@patch('yorm.common.read_text', Mock(return_value=""))
 class TestSyncObject:
 
     """Unit tests for the `sync_object` function."""
@@ -77,15 +76,15 @@ class TestSyncObject:
     def test_no_attrs(self):
         """Verify mapping can be enabled with no attributes."""
         sample = utilities.sync(self.Sample(), "sample.yml")
-        assert "sample.yml" == sample.yorm_path
-        assert {} == sample.yorm_attrs
+        assert "sample.yml" == sample.yorm_mapper.path
+        assert {} == sample.yorm_mapper.attrs
 
     def test_with_attrs(self):
         """Verify mapping can be enabled with with attributes."""
         attrs = {'var1': MockConverter}
         sample = utilities.sync(self.Sample(), "sample.yml", attrs)
-        assert "sample.yml" == sample.yorm_path
-        assert {'var1': MockConverter} == sample.yorm_attrs
+        assert "sample.yml" == sample.yorm_mapper.path
+        assert {'var1': MockConverter} == sample.yorm_mapper.attrs
 
     def test_multiple(self):
         """Verify mapping cannot be enabled twice."""
@@ -94,34 +93,17 @@ class TestSyncObject:
             utilities.sync(sample, "sample.yml")
 
     @patch('os.path.isfile', Mock(return_value=True))
-    @patch('yorm.common.read_text', Mock(return_value="abc: 123"))
     def test_init_existing(self):
         """Verify an existing file is read."""
-        sample = utilities.sync(self.Sample(), "sample.yml")
+        with patch('yorm.common.read_text', Mock(return_value="abc: 123")):
+            sample = utilities.sync(self.Sample(), "sample.yml")
         assert 123 == sample.abc
-
-    def test_store(self):
-        """Verify store is called when setting an attribute."""
-        attrs = {'var1': MockConverter}
-        sample = utilities.sync(self.Sample(), "sample.yml", attrs)
-        with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
-            setattr(sample, 'var1', None)
-        assert not mock_yorm_mapper.fetch.called
-        mock_yorm_mapper.store.assert_called_once_with(sample, attrs)
-
-    def test_fetch(self):
-        """Verify fetch is called when getting an attribute."""
-        attrs = {'var1': MockConverter}
-        sample = utilities.sync(self.Sample(), "sample.yml", attrs)
-        with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
-            getattr(sample, 'var1', None)
-        mock_yorm_mapper.fetch.assert_called_once_with(sample, attrs)
-        assert not mock_yorm_mapper.store.called
 
 
 @patch('yorm.common.create_dirname', Mock())
 @patch('yorm.common.write_text', Mock())
 @patch('yorm.common.stamp', Mock())
+@patch('yorm.common.read_text', Mock(return_value=""))
 class TestSyncInstances:
 
     """Unit tests for the `sync_instances` decorator."""
@@ -182,74 +164,62 @@ class TestSyncInstances:
 
         """Sample decorated class using a single path."""
 
+    @utilities.sync("sample.yml", attrs={'var1': MockConverter}, auto=False)
+    class SampleDecoratedWithAttributesAutoOff:
+
+        """Sample decorated class using a single path."""
+
     def test_no_attrs(self):
         """Verify mapping can be enabled with no attributes."""
         sample = self.SampleDecorated()
-        assert "sample.yml" == sample.yorm_path
-        assert {} == sample.yorm_attrs
+        assert "sample.yml" == sample.yorm_mapper.path
+        assert {} == sample.yorm_mapper.attrs
 
     def test_with_attrs(self):
         """Verify mapping can be enabled with with attributes."""
         sample = self.SampleDecoratedWithAttributes()
-        assert "sample.yml" == sample.yorm_path
-        assert ['var1'] == list(sample.yorm_attrs.keys())
+        assert "sample.yml" == sample.yorm_mapper.path
+        assert ['var1'] == list(sample.yorm_mapper.attrs.keys())
 
     @patch('os.path.isfile', Mock(return_value=True))
-    @patch('yorm.common.read_text', Mock(return_value="abc: 123"))
     def test_init_existing(self):
         """Verify an existing file is read."""
-        sample = self.SampleDecorated()
+        with patch('yorm.common.read_text', Mock(return_value="abc: 123")):
+            sample = self.SampleDecorated()
         assert 123 == sample.abc
 
     @patch('uuid.uuid4', Mock(return_value=Mock(hex='abc123')))
     def test_filename_uuid(self):
         """Verify UUIDs can be used for filename."""
         sample = self.SampleDecoratedIdentifiers()
-        assert "abc123.yml" == sample.yorm_path
-        assert {} == sample.yorm_attrs
+        assert "abc123.yml" == sample.yorm_mapper.path
+        assert {} == sample.yorm_mapper.attrs
 
     def test_filename_attributes(self):
         """Verify attributes can be used to determine filename."""
         sample1 = self.SampleDecoratedAttributes('one')
         sample2 = self.SampleDecoratedAttributes('two')
-        assert "path/to/one.yml" == sample1.yorm_path
-        assert "path/to/two.yml" == sample2.yorm_path
+        assert "path/to/one.yml" == sample1.yorm_mapper.path
+        assert "path/to/two.yml" == sample2.yorm_mapper.path
 
     def test_filename_attributes_automatic(self):
         """Verify attributes can be used to determine filename (auto)."""
         sample1 = self.SampleDecoratedAttributesAutomatic('one')
         sample2 = self.SampleDecoratedAttributesAutomatic('two')
-        assert "path/to/one.yml" == sample1.yorm_path
-        assert "path/to/two.yml" == sample2.yorm_path
+        assert "path/to/one.yml" == sample1.yorm_mapper.path
+        assert "path/to/two.yml" == sample2.yorm_mapper.path
 
     def test_filename_attributes_combination(self):
         """Verify attributes can be used to determine filename (combo)."""
         sample1 = self.SampleDecoratedAttributesCombination('A', 'B', 'C')
         sample2 = self.SampleDecoratedAttributesCombination(1, 2, 3)
-        assert "A/B/C.yml" == sample1.yorm_path
-        assert "1/2/3.yml" == sample2.yorm_path
-
-    def test_store(self):
-        """Verify store is called when setting an attribute."""
-        sample = self.SampleDecoratedWithAttributes()
-        with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
-            setattr(sample, 'var1', None)
-        assert not mock_yorm_mapper.fetch.called
-        mock_yorm_mapper.store.assert_called_once_with(sample,
-                                                       sample.yorm_attrs)
-
-    def test_fetch(self):
-        """Verify fetch is called when getting an attribute."""
-        sample = self.SampleDecoratedWithAttributes()
-        with patch.object(sample, 'yorm_mapper') as mock_yorm_mapper:
-            getattr(sample, 'var1', None)
-        mock_yorm_mapper.fetch.assert_called_once_with(sample,
-                                                       sample.yorm_attrs)
-        assert not mock_yorm_mapper.store.called
+        assert "A/B/C.yml" == sample1.yorm_mapper.path
+        assert "1/2/3.yml" == sample2.yorm_mapper.path
 
 
 @patch('yorm.common.write_text', Mock())
 @patch('yorm.common.stamp', Mock())
+@patch('yorm.common.read_text', Mock(return_value=""))
 class TestAttr:
 
     """Unit tests for the `attr` decorator."""
@@ -287,7 +257,7 @@ class TestAttr:
         sample = self.SampleDecoratedSingle()
         expected = {'var1': MockConverter1,
                     'var2': MockConverter2}
-        assert expected == sample.yorm_attrs
+        assert expected == sample.yorm_mapper.attrs
 
     def test_multiple(self):
         """Verify `attr` can be applied many times."""
@@ -295,7 +265,7 @@ class TestAttr:
         expected = {'var1': MockConverter1,
                     'var2': MockConverter2,
                     'var3': MockConverter3}
-        assert expected == sample.yorm_attrs
+        assert expected == sample.yorm_mapper.attrs
 
     def test_combo(self):
         """Verify `attr` can be applied an existing mapping."""
@@ -304,14 +274,14 @@ class TestAttr:
                     'var1': MockConverter1,
                     'var2': MockConverter2,
                     'var3': MockConverter3}
-        assert expected == sample.yorm_attrs
+        assert expected == sample.yorm_mapper.attrs
 
     def test_backwards(self):
         """Verify `attr` can be applied before `sync`."""
         sample = self.SampleDecoratedBackwards()
         expected = {'var0': MockConverter0,
                     'var1': MockConverter1}
-        assert expected == sample.yorm_attrs
+        assert expected == sample.yorm_mapper.attrs
 
 
 class TestUpdate:

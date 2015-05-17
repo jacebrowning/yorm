@@ -1,16 +1,19 @@
 #!/usr/bin/env python
-# pylint:disable=R0201
+# pylint:disable=R0201,C0111,R0901
 
 """Unit tests for the `container` module."""
 
+from unittest.mock import patch
+
 import pytest
 
+import yorm
+from yorm import common
 from yorm.utilities import attr
-from yorm.container import Dictionary, List
-from yorm.standard import String, Integer
+from yorm.converters import Dictionary, List
+from yorm.converters import String, Integer
 
-
-# sample classes ##############################################################
+from . import strip
 
 
 @attr(abc=Integer)
@@ -36,16 +39,10 @@ class StringList(List):
 
     """Sample list container."""
 
-    # TODO: this shouldn't be required for the tests to pass
-    yorm_attrs = {'all': String}
-
 
 class UnknownList(List):
 
     """Sample list container."""
-
-
-# tests #######################################################################
 
 
 class TestDictionary:
@@ -68,7 +65,7 @@ class TestDictionary:
 
     def setup_method(self, _):
         """Reset the class' mapped attributes before each test."""
-        SampleDictionary.yorm_attrs = {'abc': Integer}
+        common.ATTRS[SampleDictionary] = {'abc': Integer}
 
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
@@ -83,9 +80,7 @@ class TestDictionary:
     def test_not_implemented(self):
         """Verify `Dictionary` cannot be used directly."""
         with pytest.raises(NotImplementedError):
-            Dictionary.to_value(None)
-        with pytest.raises(NotImplementedError):
-            Dictionary.to_data(None)
+            Dictionary()
 
     def test_dict_as_object(self):
         """Verify a `Dictionary` can be used as an attribute."""
@@ -93,7 +88,7 @@ class TestDictionary:
         value = {'var1': 1, 'var2': '2'}
         value2 = dictionary.to_value(dictionary)
         assert value == value2
-        # keys are not accesible as attributes
+        # keys are not accessible as attributes
         assert not hasattr(value2, 'var1')
         assert not hasattr(value2, 'var2')
         assert not hasattr(value2, 'var3')
@@ -140,13 +135,69 @@ class TestList:
     def test_not_implemented(self):
         """Verify `List` cannot be used directly."""
         with pytest.raises(NotImplementedError):
-            List.to_value(None)
+            List()
         with pytest.raises(NotImplementedError):
-            List.to_data(None)
-        with pytest.raises(NotImplementedError):
-            UnknownList.to_value(None)
-        with pytest.raises(NotImplementedError):
-            UnknownList.to_data(None)
+            UnknownList()
+
+
+class TestExtensions:
+
+    """Unit tests for extensions to the container classes."""
+
+    class FindMixin:
+
+        def find(self, value):
+            for value2 in self:
+                if value.lower() == value2.lower():
+                    return value2
+            return None
+
+    @yorm.attr(a=yorm.converters.String)
+    class MyDictionary(Dictionary, FindMixin):
+        pass
+
+    @yorm.attr(all=yorm.converters.String)
+    class MyList(List, FindMixin):
+        pass
+
+    def test_converted_dict_keeps_type(self):
+        my_dict = self.MyDictionary()
+        my_dict['a'] = 1
+        my_dict2 = self.MyDictionary.to_value(my_dict)
+        assert 'a' == my_dict2.find('A')
+        assert None is my_dict2.find('B')
+
+    def test_converted_list_keeps_type(self):
+        my_list = self.MyList()
+        my_list.append('a')
+        my_list2 = self.MyList.to_value(my_list)
+        assert 'a' == my_list2.find('A')
+        assert None is my_list2.find('B')
+
+
+@patch('yorm.settings.fake', True)
+class TestReservedNames:
+
+    class MyObject:
+
+        def __init__(self, items=None):
+            self.items = items or []
+
+    def test_list_named_items(self):
+        obj = self.MyObject()
+        yorm.sync_object(obj, "fake/path", {'items': StringList})
+
+        obj.items.append('foo')
+        assert strip("""
+        items:
+        - foo
+        """) == obj.yorm_mapper.text
+
+        obj.yorm_mapper.text = strip("""
+        items:
+        - bar
+        """)
+        assert ['bar'] == obj.items
 
 
 if __name__ == '__main__':

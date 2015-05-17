@@ -3,7 +3,7 @@
 import uuid
 
 from . import common
-from .base import Mappable
+from .base.mappable import MAPPER, Mappable
 from .mapper import Mapper
 
 log = common.logger(__name__)
@@ -37,27 +37,25 @@ def sync_object(instance, path, attrs=None, auto=True):
     :param auto: automatically store attribute to file
 
     """
-    attrs = attrs or {}
+    log.info("mapping object...")
     _check_base(instance, mappable=False)
+
+    attrs = attrs or common.ATTRS[instance.__class__]
 
     class Mapped(Mappable, instance.__class__):
 
         """Original class with `Mappable` as the base."""
 
+    mapper = Mapper(instance, path, attrs, auto=auto)
+
+    if not mapper.exists:
+        mapper.create()
+        mapper.store(force=True)
+    mapper.fetch(force=True)
+
+    setattr(instance, MAPPER, mapper)
     instance.__class__ = Mapped
-
-    instance.yorm_attrs = attrs or getattr(instance, 'yorm_attrs', attrs)
-    instance.yorm_path = path
-    instance.yorm_mapper = Mapper(instance.yorm_path)
-
-    if not instance.yorm_mapper.exists:
-        instance.yorm_mapper.create(instance)
-        if auto:
-            instance.yorm_mapper.store(instance, instance.yorm_attrs)
-    else:
-        instance.yorm_mapper.fetch(instance, instance.yorm_attrs)
-
-    instance.yorm_mapper.auto = auto
+    log.info("mapped %r to '%s'", instance, path)
 
     return instance
 
@@ -76,36 +74,35 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
 
     def decorator(cls):
         """Class decorator."""
-        if hasattr(cls, 'yorm_attrs'):
-            cls.yorm_attrs.update(attrs)
-        else:
-            cls.yorm_attrs = attrs
 
         class Mapped(Mappable, cls):
 
             """Original class with `Mappable` as the base."""
 
             def __init__(self, *_args, **_kwargs):
+                setattr(self, MAPPER, None)
                 super().__init__(*_args, **_kwargs)
 
-                format_spec2 = {}
+                log.info("mapping instance of %r to '%s'...", cls, path_format)
+                format_values = {}
                 for key, value in format_spec.items():
-                    format_spec2[key] = getattr(self, value)
+                    format_values[key] = getattr(self, value)
                 if '{' + UUID + '}' in path_format:
-                    format_spec2[UUID] = uuid.uuid4().hex
-                format_spec2['self'] = self
+                    format_values[UUID] = uuid.uuid4().hex
+                format_values['self'] = self
 
-                self.yorm_path = path_format.format(**format_spec2)
-                self.yorm_mapper = Mapper(self.yorm_path)
+                path = path_format.format(**format_values)
+                attrs.update(common.ATTRS[self.__class__])
+                attrs.update(common.ATTRS[cls])
+                mapper = Mapper(self, path, attrs, auto=auto)
 
-                if not self.yorm_mapper.exists:
-                    self.yorm_mapper.create(self)
-                    if auto:
-                        self.yorm_mapper.store(self, self.yorm_attrs)
-                else:
-                    self.yorm_mapper.fetch(self, self.yorm_attrs)
+                if not mapper.exists:
+                    mapper.create()
+                    mapper.store(force=True)
+                mapper.fetch(force=True)
 
-                self.yorm_mapper.auto = auto
+                setattr(self, MAPPER, mapper)
+                log.info("mapped %r to '%s'", self, path)
 
         return Mapped
 
@@ -120,10 +117,9 @@ def attr(**kwargs):
     """
     def decorator(cls):
         """Class decorator."""
-        if not hasattr(cls, 'yorm_attrs'):
-            cls.yorm_attrs = {}
         for name, converter in kwargs.items():
-            cls.yorm_attrs[name] = converter
+            common.ATTRS[cls][name] = converter
+
         return cls
 
     return decorator
@@ -141,9 +137,11 @@ def update(instance, fetch=True, force=True, store=True):
     _check_base(instance, mappable=True)
 
     if fetch:
-        update_object(instance, force=force)
+        update_object(instance, force=False)
     if store:
         update_file(instance)
+    if fetch:
+        update_object(instance, force=force)
 
 
 def update_object(instance, force=True):
@@ -153,20 +151,25 @@ def update_object(instance, force=True):
     :param force: update the object even if the file appears unchanged
 
     """
+    log.info("manually updating %r from file...", instance)
     _check_base(instance, mappable=True)
 
-    instance.yorm_mapper.fetch(instance, instance.yorm_attrs, force=force)
+    mapper = getattr(instance, MAPPER)
+    mapper.fetch(force=force)
 
 
-def update_file(instance):
+def update_file(instance, force=True):
     """Synchronize changes into a mapped object's file.
 
     :param instance: object with patched YAML mapping behavior
+    :param force: update the file even if automatic sync is off
 
     """
+    log.info("manually saving %r to file...", instance)
     _check_base(instance, mappable=True)
 
-    instance.yorm_mapper.store(instance, instance.yorm_attrs)
+    mapper = getattr(instance, MAPPER)
+    mapper.store(force=force)
 
 
 def _check_base(obj, mappable=True):

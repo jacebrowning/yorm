@@ -1,32 +1,35 @@
-# Python settings
-ifndef TRAVIS
-	PYTHON_MAJOR := 3
-	PYTHON_MINOR := 4
-endif
-
-# Test runner settings
-ifndef TEST_RUNNER
-	# options are: nose, pytest
-	TEST_RUNNER := pytest
-endif
-UNIT_TEST_COVERAGE := 98
-INTEGRATION_TEST_COVERAGE := 100
-
 # Project settings
 PROJECT := YORM
 PACKAGE := yorm
 SOURCES := Makefile setup.py $(shell find $(PACKAGE) -name '*.py')
 EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 
+# Python settings
+ifndef TRAVIS
+	PYTHON_MAJOR := 3
+	PYTHON_MINOR := 4
+endif
+
+# Test settings
+UNIT_TEST_COVERAGE := 98
+INTEGRATION_TEST_COVERAGE := 87
+COMBINED_TEST_COVERAGE := 100
+
 # System paths
 PLATFORM := $(shell python -c 'import sys; print(sys.platform)')
 ifneq ($(findstring win32, $(PLATFORM)), )
+	WINDOWS := 1
 	SYS_PYTHON_DIR := C:\\Python$(PYTHON_MAJOR)$(PYTHON_MINOR)
 	SYS_PYTHON := $(SYS_PYTHON_DIR)\\python.exe
 	SYS_VIRTUALENV := $(SYS_PYTHON_DIR)\\Scripts\\virtualenv.exe
 	# https://bugs.launchpad.net/virtualenv/+bug/449537
 	export TCL_LIBRARY=$(SYS_PYTHON_DIR)\\tcl\\tcl8.5
 else
+	ifneq ($(findstring darwin, $(PLATFORM)), )
+		MAC := 1
+	else
+		LINUX := 1
+	endif
 	SYS_PYTHON := python$(PYTHON_MAJOR)
 	ifdef PYTHON_MINOR
 		SYS_PYTHON := $(SYS_PYTHON).$(PYTHON_MINOR)
@@ -62,13 +65,14 @@ PYREVERSE := $(BIN)/pyreverse
 NOSE := $(BIN)/nosetests
 PYTEST := $(BIN)/py.test
 COVERAGE := $(BIN)/coverage
+SNIFFER := $(BIN)/sniffer
 
 # Flags for PHONY targets
 DEPENDS_CI := $(ENV)/.depends-ci
 DEPENDS_DEV := $(ENV)/.depends-dev
 ALL := $(ENV)/.all
 
-# Main Targets ###############################################################
+# Main Targets #################################################################
 
 .PHONY: all
 all: depends doc $(ALL)
@@ -79,18 +83,7 @@ $(ALL): $(SOURCES)
 .PHONY: ci
 ci: check test tests
 
-.PHONY: demo
-demo: env
-	$(PIP) install --upgrade ipython[notebook]
-	cd examples/students; $(OPEN) .
-	$(BIN)/ipython notebook examples/demo.ipynb
-
-.PHONY: reset
-reset:
-	rm -rf examples/*/*.yml
-	git checkout examples/*.ipynb
-
-# Development Installation ###################################################
+# Development Installation #####################################################
 
 .PHONY: env
 env: .virtualenv $(EGG_INFO)
@@ -102,6 +95,7 @@ $(EGG_INFO): Makefile setup.py requirements.txt
 .virtualenv: $(PIP)
 $(PIP):
 	$(SYS_VIRTUALENV) --python $(SYS_PYTHON) $(ENV)
+	$(PIP) install --upgrade pip
 
 .PHONY: depends
 depends: depends-ci depends-dev
@@ -109,16 +103,25 @@ depends: depends-ci depends-dev
 .PHONY: depends-ci
 depends-ci: env Makefile $(DEPENDS_CI)
 $(DEPENDS_CI): Makefile
-	$(PIP) install --upgrade pep8 pep257 pylint $(TEST_RUNNER) pytest-capturelog coverage
+	$(PIP) install --upgrade pip pep8 pep257 pylint coverage pytest pytest-cov pytest-capturelog
 	touch $(DEPENDS_CI)  # flag to indicate dependencies are installed
 
 .PHONY: depends-dev
 depends-dev: env Makefile $(DEPENDS_DEV)
 $(DEPENDS_DEV): Makefile
-	$(PIP) install --upgrade pep8radius pygments docutils pdoc wheel
+	$(PIP) install --upgrade pip pep8radius pygments docutils pdoc wheel sniffer pync
+ifdef WINDOWS
+	$(PIP) install --upgrade pywin32
+endif
+ifdef MAC
+	$(PIP) install --upgrade MacFSEvents
+endif
+ifdef LINUX
+	$(PIP) install --upgrade pyinotify
+endif
 	touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
 
-# Documentation ##############################################################
+# Documentation ################################################################
 
 .PHONY: doc
 doc: readme apidocs uml
@@ -150,69 +153,65 @@ read: doc
 	$(OPEN) README-pypi.html
 	$(OPEN) README-github.html
 
-# Static Analysis ############################################################
+# Static Analysis ##############################################################
 
 .PHONY: check
 check: pep8 pep257 pylint
 
 .PHONY: pep8
 pep8: depends-ci
-	# E501: line too long (checked by PyLint)
+# E501: line too long (checked by PyLint)
 	$(PEP8) $(PACKAGE) --ignore=E501
 
 .PHONY: pep257
 pep257: depends-ci
-	# D102: docstring missing (checked by PyLint)
-	# D202: No blank lines allowed *after* function docstring
+# D102: Docstring missing (checked by PyLint)
+# D202: No blank lines allowed *after* function docstring
 	$(PEP257) $(PACKAGE) --ignore=D102,D202
 
 .PHONY: pylint
 pylint: depends-ci
-	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc
+# R0912: Too many branches (checked by IDE)
+	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc --disable=R0912
 
 .PHONY: fix
 fix: depends-dev
 	$(PEP8RADIUS) --docformatter --in-place
 
-# Testing ####################################################################
+# Testing ######################################################################
 
-.PHONY: test
-test: test-$(TEST_RUNNER)
+PYTEST_CORE_OPTS := --doctest-modules
+PYTEST_COV_OPTS := --cov=$(PACKAGE) --cov-report=term-missing --cov-report=html
+PYTEST_CAPTURELOG_OPTS := --log-format="%(name)-26s %(funcName)-20s %(lineno)3d %(levelname)s: %(message)s"
+PYTEST_OPTS := $(PYTEST_CORE_OPTS) $(PYTEST_COV_OPTS) $(PYTEST_CAPTURELOG_OPTS)
 
-.PHONY: tests
-tests: tests-$(TEST_RUNNER)
+.PHONY: test-unit
+test-unit: test
+test: depends-ci .clean-test
+	$(PYTEST) $(PYTEST_OPTS) $(PACKAGE)
+	$(COVERAGE) report --fail-under=$(UNIT_TEST_COVERAGE) > /dev/null
+
+.PHONY: test-int
+test-int: depends-ci .clean-test
+	$(PYTEST) $(PYTEST_OPTS) tests --exitfirst
+	$(COVERAGE) report --fail-under=$(INTEGRATION_TEST_COVERAGE) > /dev/null
+
+.PHONY: test-all
+test-all: tests
+tests: depends-ci .clean-test
+	$(PYTEST) $(PYTEST_OPTS) $(PACKAGE) tests --exitfirst
+	$(COVERAGE) report --fail-under=$(COMBINED_TEST_COVERAGE) > /dev/null
 
 .PHONY: read-coverage
 read-coverage:
-	$(OPEN) .coverage-html/index.html
+	$(OPEN) htmlcov/index.html
 
-# nosetest commands
+.PHONY: watch
+watch: depends-dev
+	touch htmlcov/index.html && $(MAKE) read-coverage
+	$(SNIFFER)
 
-.PHONY: test-nose
-test-nose: depends-ci .clean-test
-	$(NOSE) --config=.noserc
-	$(COVERAGE) html --directory .coverage-html
-
-.PHONY: tests-nose
-tests-nose: depends-ci .clean-test
-	TEST_INTEGRATION=1 $(NOSE) --config=.noserc --cover-package=$(PACKAGE) -xv
-	$(COVERAGE) html --directory .coverage-html
-
-# pytest commands
-
-.PHONY: test-pytest
-test-pytest: depends-ci .clean-test
-	$(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
-	$(COVERAGE) html --directory .coverage-html
-	$(COVERAGE) report --show-missing --fail-under=$(UNIT_TEST_COVERAGE)
-
-.PHONY: tests-pytest
-tests-pytest: depends-ci .clean-test
-	TEST_INTEGRATION=1 $(COVERAGE) run --source $(PACKAGE) --module py.test $(PACKAGE) --doctest-modules
-	$(COVERAGE) html --directory .coverage-html
-	$(COVERAGE) report --show-missing --fail-under=$(INTEGRATION_TEST_COVERAGE)
-
-# Cleanup ####################################################################
+# Cleanup ######################################################################
 
 .PHONY: clean
 clean: .clean-dist .clean-test .clean-doc .clean-build
@@ -237,7 +236,7 @@ clean-all: clean clean-env .clean-workspace
 
 .PHONY: .clean-test
 .clean-test:
-	rm -rf .coverage .coverage-html
+	rm -rf .coverage htmlcov
 
 .PHONY: .clean-dist
 .clean-dist:
@@ -247,7 +246,7 @@ clean-all: clean clean-env .clean-workspace
 .clean-workspace:
 	rm -rf *.sublime-workspace
 
-# Release ####################################################################
+# Release ######################################################################
 
 .PHONY: register
 register: doc
@@ -275,7 +274,7 @@ upload: .git-no-changes doc
 		exit -1;                                  \
 	fi;
 
-# System Installation ########################################################
+# System Installation ##########################################################
 
 .PHONY: develop
 develop:

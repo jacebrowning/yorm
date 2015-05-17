@@ -1,4 +1,4 @@
-"""Unit tests for the `yorm` package."""
+"""Integration tests for the `yorm` package."""
 
 import time
 import logging

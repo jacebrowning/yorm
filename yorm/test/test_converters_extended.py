@@ -1,16 +1,13 @@
 #!/usr/bin/env python
-# pylint:disable=R0201
+# pylint:disable=R0201,R0901
 
 """Unit tests for the `extended` module."""
 
 import pytest
 
 from yorm.utilities import attr
-from yorm.extended import Markdown, AttributeDictionary, SortedList
-from yorm.standard import Integer, String, Float
-
-
-# sample classes ##############################################################
+from yorm.converters.standard import Integer, String, Float
+from yorm.converters.extended import Markdown, AttributeDictionary, SortedList
 
 
 @attr(var1=Integer, var2=String)
@@ -34,9 +31,6 @@ class SampleSortedList(SortedList):
 class UnknownSortedList(SortedList):
 
     """Sample list container."""
-
-
-# tests #######################################################################
 
 
 class TestMarkdown:
