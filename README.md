@@ -30,7 +30,7 @@ Installation
 YORM can be installed with pip:
 
 ```
-$ pip install YORM
+$ pip3 install YORM
 ```
 
 or directly from the source code:
@@ -38,7 +38,7 @@ or directly from the source code:
 ```
 $ git clone https://github.com/jacebrowning/yorm.git
 $ cd yorm
-$ python setup.py install
+$ python3 setup.py install
 ```
 
 Basic Usage
