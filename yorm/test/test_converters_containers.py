@@ -51,6 +51,11 @@ class TestDictionary:
 
     obj = {'abc': 123}
 
+    class SampleClass:
+
+        def __init__(self):
+            self.abc = 42
+
     data_value = [
         (obj, obj),
         (None, {'abc': 0}),
@@ -61,6 +66,7 @@ class TestDictionary:
 
     value_data = [
         (obj, obj),
+        (SampleClass(), {'abc': 42}),
     ]
 
     def setup_method(self, _):
