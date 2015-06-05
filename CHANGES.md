@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.4.1 (dev)
+-----------
+
+- Fixed loss of non-`dict` objects when conversion to `dict`.
+
 0.4 (2015-05-16)
 ----------------
 
