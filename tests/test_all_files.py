@@ -25,7 +25,6 @@ class TestInit:
         refresh_file_modification_times()
 
         logging.info("changing values in object 1...")
-        sample.object = {'key2': 'value'}
         sample.array = [0, 1, 2]
         sample.string = "Hello, world!"
         sample.number_int = 42
@@ -34,7 +33,6 @@ class TestInit:
         sample.false = False
 
         logging.info("reading changed values in object 2...")
-        assert 'value' == sample2.object.get('key2')
         assert [0, 1, 2] == sample2.array
         assert "Hello, world!" == sample2.string
         assert 42 == sample2.number_int

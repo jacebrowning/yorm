@@ -25,7 +25,7 @@ class TestConvertible:
         def to_data(cls, value):
             return str(value.value)
 
-        def update_value(self, data):
+        def update_value(self, data, match=None):
             self.value += int(data)
 
     def test_convertible_class_cannot_be_instantiated(self):

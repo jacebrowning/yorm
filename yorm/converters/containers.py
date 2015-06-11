@@ -29,16 +29,17 @@ class Dictionary(Container, dict):
 
     @classmethod
     def to_data(cls, value):
-        value = cls.to_value(value)
+        value2 = cls.create_default()
+        value2.update_value(value, match=None)
 
         data = {}
 
         for name, converter in common.ATTRS[cls].items():
-            data[name] = converter.to_data(value.get(name, None))
+            data[name] = converter.to_data(value2.get(name, None))
 
         return data
 
-    def update_value(self, data):
+    def update_value(self, data, match=standard.match):
         cls = self.__class__
         value = cls.create_default()
 
@@ -61,8 +62,11 @@ class Dictionary(Container, dict):
             try:
                 converter = attrs.pop(name)
             except KeyError:
-                converter = standard.match(name, data2, nested=True)
-                common.ATTRS[cls][name] = converter
+                if match:
+                    converter = match(name, data2, nested=True)
+                    common.ATTRS[cls][name] = converter
+                else:
+                    continue
 
             try:
                 attr = self[name]
@@ -117,7 +121,7 @@ class List(Container, list):
 
         return data
 
-    def update_value(self, data):
+    def update_value(self, data, match=None):
         cls = self.__class__
         value = cls.create_default()
 
