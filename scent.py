@@ -1,8 +1,14 @@
 import os
+import time
 import subprocess
 
 from sniffer.api import select_runnable, file_validator, runnable
-from pync import Notifier
+try:
+    from pync import Notifier
+except ImportError:
+    notify = None
+else:
+    notify = Notifier.notify
 
 
 watch_paths = ['yorm/', 'tests/']
@@ -18,20 +24,26 @@ def py_files(filename):
 @runnable
 def python_tests(*args):
 
+    group = int(time.time())  # unique per run
+
     for count, (command, title) in enumerate((
         (('make', 'test-unit'), "Unit Tests"),
         (('make', 'test-int'), "Integration Tests"),
         (('make', 'test-all'), "Combined Tests"),
+        (('make', 'check'), "Static Analysis"),
+        (('make', 'doc'), None),
     ), start=1):
 
         failure = subprocess.call(command)
 
         if failure:
-            mark = "❌" * count
-            Notifier.notify(mark + " [FAIL] " + mark, title=title)
+            if notify and title:
+                mark = "❌" * count
+                notify(mark + " [FAIL] " + mark, title=title, group=group)
             return False
         else:
-            mark = "✅" * count
-            Notifier.notify(mark + " [PASS] " + mark, title=title)
+            if notify and title:
+                mark = "✅" * count
+                notify(mark + " [PASS] " + mark, title=title, group=group)
 
     return True
