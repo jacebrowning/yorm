@@ -67,6 +67,7 @@ class TestDictionary:
     value_data = [
         (obj, obj),
         (SampleClass(), {'abc': 42}),
+        ([], {'abc': 0}),
     ]
 
     def setup_method(self, _):

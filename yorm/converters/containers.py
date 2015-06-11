@@ -169,10 +169,11 @@ def to_dict(obj):
             return {parts[0]: parts[1]}
         else:
             return {text: None}
-    elif obj is None:
-        return {}
     else:
-        return obj.__dict__
+        try:
+            return obj.__dict__
+        except AttributeError:
+            return {}
 
 
 def to_list(obj):
