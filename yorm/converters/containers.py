@@ -111,12 +111,13 @@ class List(Container, list):
 
     @classmethod
     def to_data(cls, value):
-        value = cls.to_value(value)
+        value2 = cls.create_default()
+        value2.update_value(value, match=None)
 
         data = []
 
-        if value:
-            for item in value:
+        if value2:
+            for item in value2:
                 data.append(cls.item_type.to_data(item))
 
         return data
