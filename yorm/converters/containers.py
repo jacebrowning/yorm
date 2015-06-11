@@ -75,7 +75,7 @@ class Dictionary(Container, dict):
 
             if all((isinstance(attr, converter),
                     issubclass(converter, Convertible))):
-                attr.update_value(data2)
+                attr.update_value(data2, match=match)
             else:
                 attr = converter.to_value(data2)
 
@@ -121,7 +121,7 @@ class List(Container, list):
 
         return data
 
-    def update_value(self, data, match=None):
+    def update_value(self, data, match=standard.match):
         cls = self.__class__
         value = cls.create_default()
 
@@ -138,7 +138,7 @@ class List(Container, list):
 
             if all((isinstance(attr, converter),
                     issubclass(converter, Convertible))):
-                attr.update_value(item)
+                attr.update_value(item, match=match)
             else:
                 attr = converter.to_value(item)
 
