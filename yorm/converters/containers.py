@@ -29,16 +29,17 @@ class Dictionary(Container, dict):
 
     @classmethod
     def to_data(cls, value):
-        value = cls.to_value(value)
+        value2 = cls.create_default()
+        value2.update_value(value, match=None)
 
         data = {}
 
         for name, converter in common.ATTRS[cls].items():
-            data[name] = converter.to_data(value.get(name, None))
+            data[name] = converter.to_data(value2.get(name, None))
 
         return data
 
-    def update_value(self, data):
+    def update_value(self, data, match=standard.match):
         cls = self.__class__
         value = cls.create_default()
 
@@ -61,8 +62,11 @@ class Dictionary(Container, dict):
             try:
                 converter = attrs.pop(name)
             except KeyError:
-                converter = standard.match(name, data2, nested=True)
-                common.ATTRS[cls][name] = converter
+                if match:
+                    converter = match(name, data2, nested=True)
+                    common.ATTRS[cls][name] = converter
+                else:
+                    continue
 
             try:
                 attr = self[name]
@@ -71,7 +75,7 @@ class Dictionary(Container, dict):
 
             if all((isinstance(attr, converter),
                     issubclass(converter, Convertible))):
-                attr.update_value(data2)
+                attr.update_value(data2, match=match)
             else:
                 attr = converter.to_value(data2)
 
@@ -109,17 +113,18 @@ class List(Container, list):
 
     @classmethod
     def to_data(cls, value):
-        value = cls.to_value(value)
+        value2 = cls.create_default()
+        value2.update_value(value, match=None)
 
         data = []
 
-        if value:
-            for item in value:
+        if value2:
+            for item in value2:
                 data.append(cls.item_type.to_data(item))
 
         return data
 
-    def update_value(self, data):
+    def update_value(self, data, match=standard.match):
         cls = self.__class__
         value = cls.create_default()
 
@@ -136,7 +141,7 @@ class List(Container, list):
 
             if all((isinstance(attr, converter),
                     issubclass(converter, Convertible))):
-                attr.update_value(item)
+                attr.update_value(item, match=match)
             else:
                 attr = converter.to_value(item)
 
@@ -172,7 +177,10 @@ def to_dict(obj):
         else:
             return {text: None}
     else:
-        return {}
+        try:
+            return obj.__dict__
+        except AttributeError:
+            return {}
 
 
 def to_list(obj):

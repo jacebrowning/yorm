@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# pylint:disable=W0201,W0613,R0201,W0212,C0111
+# pylint:disable=W0201,W0613,W0212,R,C
 
 """Unit tests for the `base.mappable` module."""
 
@@ -44,7 +44,7 @@ class MockMapper(Mapper):
         self._mock_modified = changes
 
 
-# sample classes ###############################################################
+# sample classes #########################################################
 
 @yorm.attr(all=Integer)
 class IntegerList(List):
@@ -86,7 +86,7 @@ class SampleMappable(Mappable):
         return "<sample {}>".format(id(self))
 
 
-# tests ########################################################################
+# tests ##################################################################
 
 
 class TestGetMapper:

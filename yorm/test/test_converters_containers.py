@@ -3,7 +3,7 @@
 
 """Unit tests for the `container` module."""
 
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 import pytest
 
@@ -51,6 +51,16 @@ class TestDictionary:
 
     obj = {'abc': 123}
 
+    class SampleClass:
+
+        def __init__(self):
+            self.abc = 42
+
+    class SampleClass2:
+
+        def __init__(self):
+            self.unmapped = Mock()
+
     data_value = [
         (obj, obj),
         (None, {'abc': 0}),
@@ -61,6 +71,9 @@ class TestDictionary:
 
     value_data = [
         (obj, obj),
+        (SampleClass(), {'abc': 42}),
+        (SampleClass2(), {'abc': 0}),
+        ([], {'abc': 0}),
     ]
 
     def setup_method(self, _):

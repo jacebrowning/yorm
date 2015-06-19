@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# pylint: disable=R0201
+# pylint: disable=R,C
 
 """Unit tests for the `mapper` module."""
 
@@ -7,7 +7,7 @@ import os
 import pytest
 from unittest.mock import patch, Mock
 
-from yorm import mapper
+from yorm.mapper import Helper, Mapper
 from yorm.converters import Integer
 
 
@@ -18,32 +18,32 @@ class TestHelperFake:
 
     def test_create(self):
         """Verify fake files can be created."""
-        mapped = mapper.Helper("fake/path/to/file")
-        mapped.create(Mock())
+        mapper = Helper("fake/path/to/file")
+        mapper.create(Mock())
 
-        assert not os.path.exists(mapped.path)
+        assert not os.path.exists(mapper.path)
 
     def test_delete(self):
         """Verify fake files can be deleted."""
-        mapped = mapper.Helper("fake/path/to/file")
-        mapped.create(None)
-        mapped.delete()
+        mapper = Helper("fake/path/to/file")
+        mapper.create(None)
+        mapper.delete()
 
-        assert not os.path.exists(mapped.path)
+        assert not os.path.exists(mapper.path)
 
     def test_modified(self):
         """Verify fake files can be modified."""
-        mapped = mapper.Helper("fake/path/to/file")
-        assert mapped.modified
+        mapper = Helper("fake/path/to/file")
+        assert mapper.modified
 
-        mapped.create(None)
-        assert mapped.modified
+        mapper.create(None)
+        assert mapper.modified
 
-        mapped.modified = False
-        assert not mapped.modified
+        mapper.modified = False
+        assert not mapper.modified
 
-        mapped.modified = True
-        assert mapped.modified
+        mapper.modified = True
+        assert mapper.modified
 
 
 class TestHelperReal:
@@ -53,81 +53,97 @@ class TestHelperReal:
     def test_create(self, tmpdir):
         """Verify files can be created."""
         tmpdir.chdir()
-        mapped = mapper.Helper("real/path/to/file")
-        mapped.create(None)
+        mapper = Helper("real/path/to/file")
+        mapper.create(None)
 
-        assert os.path.isfile(mapped.path)
+        assert os.path.isfile(mapper.path)
 
     def test_create_twice(self, tmpdir):
         """Verify the second creation is ignored."""
         tmpdir.chdir()
-        mapped = mapper.Helper("real/path/to/file")
-        mapped.create(None)
-        mapped.create(None)
+        mapper = Helper("real/path/to/file")
+        mapper.create(None)
+        mapper.create(None)
 
-        assert os.path.isfile(mapped.path)
+        assert os.path.isfile(mapper.path)
 
     def test_delete(self, tmpdir):
         """Verify files can be deleted."""
         tmpdir.chdir()
-        mapped = mapper.Helper("real/path/to/file")
-        mapped.create(None)
-        mapped.delete()
+        mapper = Helper("real/path/to/file")
+        mapper.create(None)
+        mapper.delete()
 
-        assert not os.path.exists(mapped.path)
+        assert not os.path.exists(mapper.path)
 
     def test_delete_twice(self, tmpdir):
         """Verify the second deletion is ignored."""
         tmpdir.chdir()
-        mapped = mapper.Helper("real/path/to/file")
-        mapped.delete()
+        mapper = Helper("real/path/to/file")
+        mapper.delete()
 
-        assert not os.path.exists(mapped.path)
+        assert not os.path.exists(mapper.path)
 
     def test_modified(self, tmpdir):
         """Verify files track modifications."""
         tmpdir.chdir()
-        mapped = mapper.Helper("real/path/to/file")
-        assert mapped.modified
+        mapper = Helper("real/path/to/file")
+        assert mapper.modified
 
-        mapped.create(None)
-        assert mapped.modified
+        mapper.create(None)
+        assert mapper.modified
 
-        mapped.modified = False
-        assert not mapped.modified
+        mapper.modified = False
+        assert not mapper.modified
 
-        mapped.modified = True
-        assert mapped.modified
+        mapper.modified = True
+        assert mapper.modified
 
     def test_modified_deleted(self):
         """Verify a deleted file is always modified."""
-        mapped = mapper.Helper("fake/path/to/file")
+        mapper = Helper("fake/path/to/file")
 
-        assert mapped.modified
+        assert mapper.modified
 
 
 class TestMapper:
 
     """Unit tests for the `Mapper` class."""
 
+    class MyObject:
+        foo = 1
+
     def test_auto_off(self, tmpdir):
         """Verify storage is delayed with auto off."""
         tmpdir.chdir()
+        obj = self.MyObject()
         attrs = {'number': Integer}
-        mapped = mapper.Mapper(None, "real/path/to/file", attrs, auto=False)
-        assert False is mapped.auto
+        mapper = Mapper(obj, "real/path/to/file", attrs, auto=False)
+        assert False is mapper.auto
 
-        mapped.create()
-        assert "" == mapped.text
-        assert False is mapped.auto
+        mapper.create()
+        assert "" == mapper.text
+        assert False is mapper.auto
 
-        mapped.store()
-        assert "" == mapped.text
-        assert False is mapped.auto
+        mapper.store()
+        assert "" == mapper.text
+        assert False is mapper.auto
 
-        mapped.store(force=True)
-        assert "number: 0\n" == mapped.text
-        assert False is mapped.auto
+        mapper.store(force=True)
+        assert "number: 0\n" == mapper.text
+        assert False is mapper.auto
+
+    def test_missing_attributes_added(self):
+        obj = self.MyObject()
+        path = "mock/path"
+        attrs = {'bar': Integer, 'qux': Integer}
+        mapper = Mapper(obj, path, attrs)
+        mapper.create()
+        mapper.fetch()
+
+        assert 1 == obj.foo
+        assert 0 == obj.bar
+        assert 0 == obj.qux
 
 
 if __name__ == '__main__':

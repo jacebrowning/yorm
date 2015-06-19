@@ -118,13 +118,16 @@ class BaseHelper(metaclass=abc.ABCMeta):
         log.trace("loaded: {}".format(data))
 
         # Update all attributes
+        attrs2 = attrs.copy()
         for name, data in data.items():
+            attrs2.pop(name, None)
 
             # Find a matching converter
             try:
                 converter = attrs[name]
             except KeyError:
-                # TODO: determine if runtime import is the best way to avoid cyclic import
+                # TODO: determine if runtime import is the best way to avoid
+                # cyclic import
                 from .converters import match
                 converter = match(name, data)
                 attrs[name] = converter
@@ -138,7 +141,15 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 attr = converter.to_value(data)
                 setattr(obj, name, attr)
             self._remap(attr)
-            log.trace("value fetched: '%s' = %r", name, attr)
+            log.trace("value fetched: %s = %r", name, attr)
+
+        # Add missing attributes
+        for name, converter in attrs2.items():
+            if not hasattr(obj, name):
+                value = converter.to_value(None)
+                msg = "fetched default value for missing attribute: %s = %r"
+                log.warn(msg, name, value)
+                setattr(obj, name, value)
 
         # Set meta attributes
         self.modified = False
@@ -202,12 +213,13 @@ class BaseHelper(metaclass=abc.ABCMeta):
             try:
                 value = getattr(obj, name)
             except AttributeError:
-                log.warn("added missing attribute '%s'", name)
                 value = None
+                msg = "storing default data for missing attribute '%s'..."
+                log.warn(msg, name)
 
             data2 = converter.to_data(value)
 
-            log.trace("data to store: '%s' = %r", name, data2)
+            log.trace("data to store: %s = %r", name, data2)
             data[name] = data2
 
         # Dump data to file
