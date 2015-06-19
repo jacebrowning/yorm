@@ -5,6 +5,7 @@ Changelog
 -----------
 
 - Fixed attribute loss in non-`dict` when conversion to `dict`.
+- Now automatically adding missing attributes to mapped objects.
 
 0.4 (2015-05-16)
 ----------------
