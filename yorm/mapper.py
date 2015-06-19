@@ -145,10 +145,11 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
         # Add missing attributes
         for name, converter in attrs2.items():
-            value = converter.to_value(None)
-            msg = "fetched default value for missing attribute: %s = %r"
-            log.warn(msg, name, value)
-            setattr(obj, name, value)
+            if not hasattr(obj, name):
+                value = converter.to_value(None)
+                msg = "fetched default value for missing attribute: %s = %r"
+                log.warn(msg, name, value)
+                setattr(obj, name, value)
 
         # Set meta attributes
         self.modified = False
