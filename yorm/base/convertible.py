@@ -21,7 +21,7 @@ class Convertible(Converter):  # pragma: no cover (abstract)
         return value
 
     @abc.abstractmethod
-    def update_value(self, data):  # pylint: disable=E0213,
+    def update_value(self, data, match=None):  # pylint: disable=E0213,
         """Update the attribute's value from loaded data."""
         raise NotImplementedError(MESSAGE)
 

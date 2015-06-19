@@ -208,7 +208,6 @@ read-coverage:
 
 .PHONY: watch
 watch: depends-dev
-	touch htmlcov/index.html && $(MAKE) read-coverage
 	$(SNIFFER)
 
 # Cleanup ######################################################################

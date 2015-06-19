@@ -5,7 +5,7 @@
 
 import pytest
 
-from yorm import sync
+import yorm
 from yorm.converters import Object, String, Integer, Float, Boolean
 from yorm.converters import Markdown
 
@@ -17,8 +17,8 @@ class TestStandard:
 
     """Integration tests for standard attribute types."""
 
-    class EmptyDictionary(Dictionary):
-
+    @yorm.attr(status=yorm.converters.Boolean)
+    class StatusDictionary(Dictionary):
         pass
 
     def test_decorator(self, tmpdir):
@@ -55,8 +55,7 @@ class TestStandard:
         'false': true
         number_int: 42
         number_real: 4.2
-        object:
-          key2: value
+        object: {}
         string: Hello, world!
         'true': false
         """) == sample.yorm_mapper.text
@@ -74,8 +73,7 @@ class TestStandard:
         """)
 
         # check object values
-        assert {'key2': "",
-                'status': False} == sample.object
+        assert {'status': False} == sample.object
         assert [4, 5, 6] == sample.array
         assert "abc" == sample.string
         assert 42 == sample.number_int
@@ -87,18 +85,18 @@ class TestStandard:
         """Verify standard attribute types dump/load correctly (function)."""
         tmpdir.chdir()
         _sample = SampleStandard()
-        attrs = {'object': self.EmptyDictionary,
+        attrs = {'object': self.StatusDictionary,
                  'array': IntegerList,
                  'string': String,
                  'number_int': Integer,
                  'number_real': Float,
                  'true': Boolean,
                  'false': Boolean}
-        sample = sync(_sample, "path/to/directory/sample.yml", attrs)
+        sample = yorm.sync(_sample, "path/to/directory/sample.yml", attrs)
         assert "path/to/directory/sample.yml" == sample.yorm_mapper.path
 
         # check defaults
-        assert {} == sample.object
+        assert {'status': False} == sample.object
         assert [] == sample.array
         assert "" == sample.string
         assert 0 == sample.number_int
@@ -126,7 +124,7 @@ class TestStandard:
         number_int: 42
         number_real: 4.2
         object:
-          key: value
+          status: false
         string: Hello, world!
         'true': false
         """) == sample.yorm_mapper.text
@@ -169,7 +167,7 @@ class TestContainers:
         _sample = SampleNested()
         attrs = {'count': Integer,
                  'results': StatusDictionaryList}
-        sample = sync(_sample, "sample.yml", attrs)
+        sample = yorm.sync(_sample, "sample.yml", attrs)
 
         # check defaults
         assert 0 == sample.count
@@ -261,7 +259,7 @@ class TestExtended:
         tmpdir.chdir()
         _sample = SampleExtended()
         attrs = {'text': Markdown}
-        sample = sync(_sample, "path/to/directory/sample.yml", attrs)
+        sample = yorm.sync(_sample, "path/to/directory/sample.yml", attrs)
 
         # check defaults
         assert "" == sample.text
