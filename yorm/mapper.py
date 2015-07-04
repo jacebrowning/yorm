@@ -109,8 +109,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
         if not self.modified and not force:
             return
         self._activity = True
-        _force = "force-" if force else ""
-        log.info("%sfetching %r from %s...", _force, obj, prefix(self))
+        log.info("fetching %r from %s...", obj, prefix(self))
 
         # Parse data from file
         text = self._read()
@@ -204,8 +203,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
             log.debug("automatic storage is off ")
             return
         self._activity = True
-        _force = "force-" if force else ""
-        log.info("%sstoring %r to %s...", _force, obj, prefix(self))
+        log.info("storing %r to %s...", obj, prefix(self))
 
         # Format the data items
         data = {}
