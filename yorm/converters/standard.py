@@ -1,6 +1,7 @@
 """Convertible classes for builtin immutable types."""
 
 from .. import common
+from .. import exceptions
 from ..base.convertible import Converter
 
 log = common.logger(__name__)
@@ -122,4 +123,5 @@ def match(name, data, nested=False):
         log.warn("new%s attribute with unknown type: %s", nested, name)
         return Object
 
-    raise common.ConversionError("no converter available for: {}".format(data))
+    msg = "no converter available for: {}".format(data)
+    raise exceptions.ConversionError(msg)

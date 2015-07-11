@@ -19,11 +19,11 @@ show_coverage = True
 @file_validator
 def py_files(filename):
     return all((filename.endswith('.py'),
-               not os.path.basename(filename).startswith('.')))
+                not os.path.basename(filename).startswith('.')))
 
 
 @runnable
-def python_tests(*args):
+def python_tests(*_):
 
     group = int(time.time())  # unique per run
 

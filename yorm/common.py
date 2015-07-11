@@ -1,4 +1,4 @@
-"""Common exceptions, classes, and functions."""
+"""Shared internal classes and functions."""
 
 import os
 import shutil
@@ -7,16 +7,18 @@ import logging
 
 import yaml
 
+from . import exceptions
+
 verbosity = 0  # global verbosity setting for controlling string formatting
 PRINT_VERBOSITY = 0  # minimum verbosity to using `print`
 STR_VERBOSITY = 3  # minimum verbosity to use verbose `__str__`
 MAX_VERBOSITY = 4  # maximum verbosity level implemented
 
 
-def _trace(self, message, *args, **kws):  # pragma: no cover (manual test)
+def _trace(self, message, *args, **kwargs):  # pragma: no cover (manual test)
     """Handler for a new TRACE logging level."""
     if self.isEnabledFor(logging.DEBUG - 1):
-        self._log(logging.DEBUG - 1, message, args, **kws)  # pylint: disable=W0212
+        self._log(logging.DEBUG - 1, message, args, **kwargs)  # pylint: disable=W0212
 
 
 logging.addLevelName(logging.DEBUG - 1, "TRACE")
@@ -29,36 +31,6 @@ log = logger(__name__)
 ATTRS = collections.defaultdict(dict)
 
 
-# exception classes ##########################################################
-
-
-class YORMException(Exception):
-
-    """Base class for all YORM exceptions."""
-
-
-class FileError(YORMException, FileNotFoundError):
-
-    """Raised when text cannot be read from a file."""
-
-
-class ContentError(YORMException, yaml.error.YAMLError, ValueError):
-
-    """Raised when YAML cannot be parsed from text."""
-
-
-class ConversionError(YORMException, ValueError):
-
-    """Raised when a value cannot be converted to the specified type."""
-
-
-class UseageError(YORMException):
-
-    """Raised when an API is called incorrectly."""
-
-# decorators #################################################################
-
-
 class classproperty(object):
 
     """Read-only class property decorator."""
@@ -68,9 +40,6 @@ class classproperty(object):
 
     def __get__(self, instance, owner):
         return self.getter(owner)
-
-
-# disk helper functions ######################################################
 
 
 def create_dirname(path):
@@ -110,11 +79,11 @@ def load_yaml(text, path):
         data = yaml.load(text) or {}
     except yaml.error.YAMLError as exc:
         msg = "invalid contents: {}:\n{}".format(path, exc)
-        raise ContentError(msg) from None
+        raise exceptions.ContentError(msg) from None
     # Ensure data is a dictionary
     if not isinstance(data, dict):
         msg = "invalid contents: {}".format(path)
-        raise ContentError(msg)
+        raise exceptions.ContentError(msg)
     # Return the parsed data
     return data
 

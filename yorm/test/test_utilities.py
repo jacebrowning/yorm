@@ -6,7 +6,7 @@
 import pytest
 from unittest.mock import patch, Mock
 
-from yorm import common
+from yorm import exceptions
 from yorm import utilities
 from yorm.base.converter import Converter
 from yorm.base.mappable import Mappable
@@ -89,7 +89,7 @@ class TestSyncObject:
     def test_multiple(self):
         """Verify mapping cannot be enabled twice."""
         sample = utilities.sync(self.Sample(), "sample.yml")
-        with pytest.raises(common.UseageError):
+        with pytest.raises(exceptions.UseageError):
             utilities.sync(sample, "sample.yml")
 
     @patch('os.path.isfile', Mock(return_value=True))
@@ -322,7 +322,7 @@ class TestUpdate:
         """Verify an exception is raised with the wrong base."""
         instance = Mock()
 
-        with pytest.raises(common.UseageError):
+        with pytest.raises(exceptions.UseageError):
             utilities.update(instance)
 
 
@@ -344,7 +344,7 @@ class TestUpdateObject:
         """Verify an exception is raised with the wrong base."""
         instance = Mock()
 
-        with pytest.raises(common.UseageError):
+        with pytest.raises(exceptions.UseageError):
             utilities.update_object(instance)
 
 
@@ -366,7 +366,7 @@ class TestUpdateFile:
         """Verify an exception is raised with the wrong base."""
         instance = Mock()
 
-        with pytest.raises(common.UseageError):
+        with pytest.raises(exceptions.UseageError):
             utilities.update_file(instance)
 
 

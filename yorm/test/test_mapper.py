@@ -7,6 +7,7 @@ import os
 import pytest
 from unittest.mock import patch, Mock
 
+from yorm import exceptions
 from yorm.mapper import Helper, Mapper
 from yorm.converters import Integer
 
@@ -75,6 +76,8 @@ class TestHelperReal:
         mapper.delete()
 
         assert not os.path.exists(mapper.path)
+        with pytest.raises(exceptions.FileError):
+            mapper.fetch()  # pylint: disable=E1120
 
     def test_delete_twice(self, tmpdir):
         """Verify the second deletion is ignored."""
@@ -119,6 +122,7 @@ class TestMapper:
         obj = self.MyObject()
         attrs = {'number': Integer}
         mapper = Mapper(obj, "real/path/to/file", attrs, auto=False)
+        assert "" == mapper.text
         assert False is mapper.auto
 
         mapper.create()

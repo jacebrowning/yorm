@@ -134,18 +134,16 @@ class TestStandard:
         tmpdir.chdir()
         sample = SampleDecoratedAutoOff()
 
-        # check for default values
-        assert strip("""
-        string: ''
-        """) == sample.yorm_mapper.text
+        # ensure the file does not exist
+        assert False is sample.yorm_mapper.exists
+        assert "" == sample.yorm_mapper.text
 
         # store value
         sample.string = "hello"
 
-        # check for unchanged file values
-        assert strip("""
-        string: ''
-        """) == sample.yorm_mapper.text
+        # ensure the file still does not exist
+        assert False is sample.yorm_mapper.exists
+        assert "" == sample.yorm_mapper.text
 
         # enable auto and store value
         sample.yorm_mapper.auto = True

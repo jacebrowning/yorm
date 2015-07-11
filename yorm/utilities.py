@@ -3,6 +3,7 @@
 import uuid
 
 from . import common
+from . import exceptions
 from .base.mappable import MAPPER, Mappable
 from .mapper import Mapper
 
@@ -34,7 +35,7 @@ def sync_object(instance, path, attrs=None, auto=True):
     :param instance: object to patch with YAML mapping behavior
     :param path: file path for dump/load
     :param attrs: dictionary of attribute names mapped to converter classes
-    :param auto: automatically store attribute to file
+    :param auto: automatically store attributes to file
 
     """
     log.info("mapping %r to %s...", instance, path)
@@ -48,10 +49,11 @@ def sync_object(instance, path, attrs=None, auto=True):
 
     mapper = Mapper(instance, path, attrs, auto=auto)
 
-    if not mapper.exists:
-        mapper.create()
-        mapper.store(force=True)
-    mapper.fetch(force=True)
+    if mapper.auto:
+        if not mapper.exists:
+            mapper.create()
+            mapper.store(force=True)
+        mapper.fetch(force=True)
 
     setattr(instance, MAPPER, mapper)
     instance.__class__ = Mapped
@@ -170,6 +172,6 @@ def update_file(instance, force=True):
 def _check_base(obj, mappable=True):
     """Confirm an object's base class is `Mappable` as required."""
     if mappable and not isinstance(obj, Mappable):
-        raise common.UseageError("{} is not mapped".format(repr(obj)))
+        raise exceptions.UseageError("{} is not mapped".format(repr(obj)))
     if not mappable and isinstance(obj, Mappable):
-        raise common.UseageError("{} is already mapped".format(repr(obj)))
+        raise exceptions.UseageError("{} is already mapped".format(repr(obj)))
