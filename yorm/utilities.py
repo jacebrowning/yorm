@@ -37,7 +37,7 @@ def sync_object(instance, path, attrs=None, auto=True):
     :param auto: automatically store attribute to file
 
     """
-    log.info("mapping object...")
+    log.info("mapping %r to %s...", instance, path)
     _check_base(instance, mappable=False)
 
     attrs = attrs or common.ATTRS[instance.__class__]
@@ -73,38 +73,33 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
     attrs = attrs or {}
 
     def decorator(cls):
-        """Class decorator."""
+        """Class decorator to map instances to files.."""
 
-        class Mapped(Mappable, cls):
+        old_init = cls.__init__
 
-            """Original class with `Mappable` as the base."""
+        def new_init(self, *args, **kwargs):
+            """Modified class __init__ that maps the resulting instance."""
+            old_init(self, *args, **kwargs)
 
-            def __init__(self, *_args, **_kwargs):
-                setattr(self, MAPPER, None)
-                super().__init__(*_args, **_kwargs)
+            log.info("mapping instance of %r to '%s'...", cls, path_format)
 
-                log.info("mapping instance of %r to '%s'...", cls, path_format)
-                format_values = {}
-                for key, value in format_spec.items():
-                    format_values[key] = getattr(self, value)
-                if '{' + UUID + '}' in path_format:
-                    format_values[UUID] = uuid.uuid4().hex
-                format_values['self'] = self
+            format_values = {}
+            for key, value in format_spec.items():
+                format_values[key] = getattr(self, value)
+            if '{' + UUID + '}' in path_format:
+                format_values[UUID] = uuid.uuid4().hex
+            format_values['self'] = self
 
-                path = path_format.format(**format_values)
-                attrs.update(common.ATTRS[self.__class__])
-                attrs.update(common.ATTRS[cls])
-                mapper = Mapper(self, path, attrs, auto=auto)
+            path = path_format.format(**format_values)
+            attrs.update(common.ATTRS[self.__class__])
+            attrs.update(common.ATTRS[cls])
 
-                if not mapper.exists:
-                    mapper.create()
-                    mapper.store(force=True)
-                mapper.fetch(force=True)
+            sync_object(self, path, attrs, auto=auto)
 
-                setattr(self, MAPPER, mapper)
-                log.info("mapped %r to '%s'", self, path)
+        new_init.__doc__ = old_init.__doc__
+        cls.__init__ = new_init
 
-        return Mapped
+        return cls
 
     return decorator
 
