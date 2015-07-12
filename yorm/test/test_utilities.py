@@ -99,6 +99,18 @@ class TestSyncObject:
             sample = utilities.sync(self.Sample(), "sample.yml")
         assert 123 == sample.abc
 
+    @patch('os.path.isfile', Mock(return_value=False))
+    def test_exception_when_file_expected_but_missing(self):
+        utilities.sync(self.Sample(), "sample.yml", existing=False)
+        with pytest.raises(exceptions.FileMissingError):
+            utilities.sync(self.Sample(), "sample.yml", existing=True)
+
+    @patch('os.path.isfile', Mock(return_value=True))
+    def test_exception_when_file_not_expected_but_found(self):
+        utilities.sync(self.Sample(), "sample.yml", existing=True)
+        with pytest.raises(exceptions.FileAlreadyExistsError):
+            utilities.sync(self.Sample(), "sample.yml", existing=False)
+
 
 @patch('yorm.common.create_dirname', Mock())
 @patch('yorm.common.write_text', Mock())

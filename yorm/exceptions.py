@@ -1,28 +1,40 @@
 """Custom exceptions."""
 
+from abc import ABCMeta
+
 import yaml
 
 
-class YORMException(Exception):
+class Error(Exception, metaclass=ABCMeta):
 
     """Base class for all YORM exceptions."""
 
 
-class FileError(YORMException, FileNotFoundError):
+class FileMissingError(Error, FileNotFoundError):
 
-    """Raised when text cannot be read from a file."""
-
-
-class ContentError(YORMException, yaml.error.YAMLError, ValueError):
-
-    """Raised when YAML cannot be parsed from text."""
+    """A file was expected to exist."""
 
 
-class ConversionError(YORMException, ValueError):
+class FileAlreadyExistsError(Error, FileExistsError):
 
-    """Raised when a value cannot be converted to the specified type."""
+    """A file was not expected to exist."""
 
 
-class UseageError(YORMException):
+class FileDeletedError(Error, FileNotFoundError):
 
-    """Raised when an API is called incorrectly."""
+    """Text could not be read from a deleted file."""
+
+
+class ContentError(Error, yaml.error.YAMLError, ValueError):
+
+    """Text could not be parsed as valid YAML."""
+
+
+class ConversionError(Error, ValueError):
+
+    """Value could not be converted to the specified type."""
+
+
+class UseageError(Error):
+
+    """The API was called incorrectly."""

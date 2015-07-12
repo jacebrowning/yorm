@@ -29,12 +29,13 @@ def sync(*args, **kwargs):
         return sync_object(*args, **kwargs)
 
 
-def sync_object(instance, path, attrs=None, auto=True):
+def sync_object(instance, path, attrs=None, existing=None, auto=True):
     """Enable YAML mapping on an object.
 
     :param instance: object to patch with YAML mapping behavior
     :param path: file path for dump/load
     :param attrs: dictionary of attribute names mapped to converter classes
+    :param existing: indicate if file is expected to exist or not
     :param auto: automatically store attributes to file
 
     """
@@ -49,6 +50,13 @@ def sync_object(instance, path, attrs=None, auto=True):
 
     mapper = Mapper(instance, path, attrs, auto=auto)
 
+    if existing is True:
+        if not mapper.exists:
+            raise exceptions.FileMissingError
+    elif existing is False:
+        if mapper.exists:
+            raise exceptions.FileAlreadyExistsError
+
     if mapper.auto:
         if not mapper.exists:
             mapper.create()
@@ -62,12 +70,13 @@ def sync_object(instance, path, attrs=None, auto=True):
     return instance
 
 
-def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
+def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
     """Class decorator to enable YAML mapping after instantiation.
 
     :param path_format: formatting string to create file paths for dump/load
     :param format_spec: dictionary to use for string formatting
     :param attrs: dictionary of attribute names mapped to converter classes
+    :param existing: indicate if file is expected to exist or not
     :param auto: automatically store attribute to file
 
     """
@@ -79,9 +88,9 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
 
         old_init = cls.__init__
 
-        def new_init(self, *args, **kwargs):
+        def new_init(self, *_args, **_kwargs):
             """Modified class __init__ that maps the resulting instance."""
-            old_init(self, *args, **kwargs)
+            old_init(self, *_args, **_kwargs)
 
             log.info("mapping instance of %r to '%s'...", cls, path_format)
 
@@ -96,7 +105,7 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
             attrs.update(common.ATTRS[self.__class__])
             attrs.update(common.ATTRS[cls])
 
-            sync_object(self, path, attrs, auto=auto)
+            sync_object(self, path, attrs, **kwargs)
 
         new_init.__doc__ = old_init.__doc__
         cls.__init__ = new_init

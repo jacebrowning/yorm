@@ -76,7 +76,7 @@ class TestHelperReal:
         mapper.delete()
 
         assert not os.path.exists(mapper.path)
-        with pytest.raises(exceptions.FileError):
+        with pytest.raises(exceptions.FileDeletedError):
             mapper.fetch()  # pylint: disable=E1120
 
     def test_delete_twice(self, tmpdir):
