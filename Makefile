@@ -10,7 +10,7 @@ PYTHON_MINOR ?= 4
 
 # Test settings
 UNIT_TEST_COVERAGE := 98
-INTEGRATION_TEST_COVERAGE := 87
+INTEGRATION_TEST_COVERAGE := 86
 COMBINED_TEST_COVERAGE := 100
 
 # System paths
@@ -174,7 +174,7 @@ pep257: depends-ci
 
 .PHONY: pylint
 pylint: depends-ci
-	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc --disable=R0912
+	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc --disable=R0912,C0111
 
 .PHONY: fix
 fix: depends-dev

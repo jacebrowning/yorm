@@ -7,6 +7,7 @@ import functools
 import yaml
 
 from . import common
+from . import exceptions
 from . import settings
 from .base.mappable import MAPPER, Mappable
 from .base.convertible import Convertible
@@ -14,18 +15,32 @@ from .base.convertible import Convertible
 log = common.logger(__name__)
 
 
-def file_required(method):
-    """Decorator for methods that require the file to exist."""
-    @functools.wraps(method)
-    def file_required(self, *args, **kwargs):  # pylint: disable=W0621
-        """Decorated method."""
-        if not self.path:
-            return None
-        if not self.exists:
-            msg = "cannot access deleted: {}".format(self.path)
-            raise common.FileError(msg)
-        return method(self, *args, **kwargs)
-    return file_required
+def file_required(create=False):
+    """Decorator for methods that require the file to exist.
+
+    :param create: boolean or the method to decorate
+
+    """
+    def decorator(method):
+
+        @functools.wraps(method)
+        def wrapped(self, *args, **kwargs):  # pylint: disable=W0621
+            if not self.path:
+                return None
+            if not self.exists and self.auto:
+                if create is True and not self.deleted:
+                    self.create()
+                else:
+                    msg = "cannot access deleted: {}".format(self.path)
+                    raise exceptions.FileDeletedError(msg)
+            return method(self, *args, **kwargs)
+
+        return wrapped
+
+    if callable(create):
+        return decorator(create)
+    else:
+        return decorator
 
 
 def prefix(obj):
@@ -61,6 +76,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
         self.path = path
         self.auto = auto
         self.exists = self.path and os.path.isfile(self.path)
+        self.deleted = False
         self._activity = False
         self._timestamp = 0
         self._fake = ""
@@ -100,6 +116,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
             common.create_dirname(self.path)
             common.touch(self.path)
         self.exists = True
+        self.deleted = False
 
     @file_required
     def fetch(self, obj, attrs, force=False):
@@ -179,6 +196,8 @@ class BaseHelper(metaclass=abc.ABCMeta):
         """
         if settings.fake:
             return self._fake
+        elif not self.exists:
+            return ""
         else:
             return common.read_text(self.path)
 
@@ -194,7 +213,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-    @file_required
+    @file_required(create=True)
     def store(self, obj, attrs, force=False):
         """Format and save the object's mapped attributes to its file."""
         if self._activity:
@@ -284,9 +303,10 @@ class BaseHelper(metaclass=abc.ABCMeta):
             log.info("deleting %s...", prefix(self))
             if not settings.fake:
                 common.delete(self.path)
-            self.exists = False
         else:
             log.warning("already deleted: %s", self)
+        self.exists = False
+        self.deleted = True
 
 
 class Helper(BaseHelper):
