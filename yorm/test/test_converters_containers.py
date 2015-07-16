@@ -78,7 +78,7 @@ class TestDictionary:
 
     def setup_method(self, _):
         """Reset the class' mapped attributes before each test."""
-        common.ATTRS[SampleDictionary] = {'abc': Integer}
+        common.attrs[SampleDictionary] = {'abc': Integer}
 
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):

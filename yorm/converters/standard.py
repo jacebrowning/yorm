@@ -2,7 +2,7 @@
 
 from .. import common
 from .. import exceptions
-from ..base.converter import Converter
+from ..base import Converter
 
 log = common.logger(__name__)
 

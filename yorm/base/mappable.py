@@ -6,6 +6,7 @@ import functools
 from .. import common
 from ..mapper import MAPPER, get_mapper
 
+
 log = common.logger(__name__)
 
 

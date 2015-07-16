@@ -4,7 +4,7 @@ import uuid
 
 from . import common
 from . import exceptions
-from .base.mappable import Mappable
+from .base import Mappable
 from .mapper import get_mapper, set_mapper
 
 log = common.logger(__name__)
@@ -42,7 +42,7 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
     log.info("mapping %r to %s...", instance, path)
     _check_base(instance, mappable=False)
 
-    attrs = attrs or common.ATTRS[instance.__class__]
+    attrs = attrs or common.attrs[instance.__class__]
 
     class Mapped(Mappable, instance.__class__):
 
@@ -101,8 +101,8 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
             format_values['self'] = self
 
             path = path_format.format(**format_values)
-            attrs.update(common.ATTRS[self.__class__])
-            attrs.update(common.ATTRS[cls])
+            attrs.update(common.attrs[self.__class__])
+            attrs.update(common.attrs[cls])
 
             sync_object(self, path, attrs, **kwargs)
 
@@ -123,7 +123,7 @@ def attr(**kwargs):
     def decorator(cls):
         """Class decorator."""
         for name, converter in kwargs.items():
-            common.ATTRS[cls][name] = converter
+            common.attrs[cls][name] = converter
 
         return cls
 

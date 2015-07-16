@@ -1,8 +1,7 @@
 """Converter classes for builtin container types."""
 
 from .. import common
-from ..base.convertible import Convertible
-from ..base.container import Container
+from ..base import Convertible, Container
 from . import standard
 
 log = common.logger(__name__)
@@ -25,7 +24,7 @@ class Dictionary(Convertible, Container, dict):
 
         data = {}
 
-        for name, converter in common.ATTRS[cls].items():
+        for name, converter in common.attrs[cls].items():
             data[name] = converter.to_data(value2.get(name, None))
 
         return data
@@ -35,7 +34,7 @@ class Dictionary(Convertible, Container, dict):
         value = cls.create_default()
 
         # Convert object attributes to a dictionary
-        attrs = common.ATTRS[cls].copy()
+        attrs = common.attrs[cls].copy()
         if isinstance(data, cls):
             dictionary = {}
             for k, v in data.items():
@@ -55,7 +54,7 @@ class Dictionary(Convertible, Container, dict):
             except KeyError:
                 if match:
                     converter = match(name, data2, nested=True)
-                    common.ATTRS[cls][name] = converter
+                    common.attrs[cls][name] = converter
                 else:
                     continue
 
@@ -100,7 +99,7 @@ class List(Convertible, Container, list):
     @common.classproperty
     def item_type(cls):  # pylint: disable=E0213
         """Get the converter class for all items."""
-        return common.ATTRS[cls].get(cls.ALL)
+        return common.attrs[cls].get(cls.ALL)
 
     @classmethod
     def to_data(cls, value):

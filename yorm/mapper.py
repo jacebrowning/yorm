@@ -9,7 +9,7 @@ import yaml
 from . import common
 from . import exceptions
 from . import settings
-from .base.container import Container
+from .base import Container
 
 MAPPER = 'yorm_mapper'
 
@@ -327,7 +327,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
     def _remap(self, obj):
         """Restore mapping on nested attributes."""
         if isinstance(obj, Container):
-            set_mapper(obj, None, common.ATTRS[obj.__class__], root=self)
+            set_mapper(obj, None, common.attrs[obj.__class__], root=self)
             if isinstance(obj, dict):
                 for obj2 in obj.values():
                     self._remap(obj2)

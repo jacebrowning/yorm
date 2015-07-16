@@ -1,3 +1,6 @@
 """Base classes for mapping and conversion."""
 
-MESSAGE = "method must be implemented in subclasses"
+from .container import Container
+from .converter import Converter
+from .mappable import Mappable
+from .convertible import Convertible
