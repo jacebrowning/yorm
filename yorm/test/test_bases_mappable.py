@@ -8,8 +8,8 @@ import logging
 from unittest.mock import Mock
 
 import yorm
-from yorm.base.mappable import get_mapper, Mappable
-from yorm.mapper import Mapper
+from yorm.bases import Mappable
+from yorm.mapper import get_mapper, Mapper
 from yorm.converters import String, Integer, Boolean, List, Dictionary
 
 from . import strip

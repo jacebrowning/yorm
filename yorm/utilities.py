@@ -2,9 +2,8 @@
 
 import uuid
 
-from . import common
-from . import exceptions
-from .base import Mappable
+from . import common, exceptions
+from .bases import Mappable
 from .mapper import get_mapper, set_mapper
 
 log = common.logger(__name__)

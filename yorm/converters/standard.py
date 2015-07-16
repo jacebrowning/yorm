@@ -1,8 +1,7 @@
 """Convertible classes for builtin immutable types."""
 
-from .. import common
-from .. import exceptions
-from ..base import Converter
+from .. import common, exceptions
+from ..bases import Converter
 
 log = common.logger(__name__)
 

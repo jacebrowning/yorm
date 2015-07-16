@@ -2,8 +2,7 @@
 
 from unittest.mock import Mock
 
-from yorm.base.converter import Converter
-from yorm.base.mappable import Mappable
+from yorm.bases import Converter, Mappable
 from yorm.utilities import sync, attr
 from yorm.converters import Dictionary, List
 from yorm.converters import String, Integer, Float, Boolean

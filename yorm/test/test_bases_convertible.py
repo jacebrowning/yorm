@@ -5,7 +5,7 @@
 
 import pytest
 
-from yorm.base.convertible import Convertible
+from yorm.bases import Convertible
 
 
 class TestConvertible:

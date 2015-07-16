@@ -6,10 +6,8 @@ import functools
 
 import yaml
 
-from . import common
-from . import exceptions
-from . import settings
-from .base import Container
+from . import common, exceptions, settings
+from .bases import Container
 
 MAPPER = 'yorm_mapper'
 

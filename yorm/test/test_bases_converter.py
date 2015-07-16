@@ -5,7 +5,7 @@
 
 import pytest
 
-from yorm.base.converter import Converter
+from yorm.bases import Converter
 
 
 class TestConverter:

@@ -1,7 +1,7 @@
 """Converter classes for builtin container types."""
 
 from .. import common
-from ..base import Convertible, Container
+from ..bases import Convertible, Container
 from . import standard
 
 log = common.logger(__name__)
