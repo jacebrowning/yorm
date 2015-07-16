@@ -1,23 +1,14 @@
 """Converter classes for builtin container types."""
 
 from .. import common
-from ..base.mappable import Mappable
 from ..base.convertible import Convertible
+from ..base.container import Container
 from . import standard
 
 log = common.logger(__name__)
 
 
-class Container(Mappable, Convertible):  # pylint: disable=W0223
-
-    """Base class for containers of attribute converters."""
-
-    @classmethod
-    def create_default(cls):
-        return cls.__new__(cls)
-
-
-class Dictionary(Container, dict):
+class Dictionary(Convertible, Container, dict):
 
     """Base class for a dictionary of attribute converters."""
 
@@ -93,7 +84,7 @@ class Dictionary(Container, dict):
         self.update(value)
 
 
-class List(Container, list):
+class List(Convertible, Container, list):
 
     """Base class for a homogeneous list of attribute converters."""
 

@@ -4,8 +4,8 @@ import uuid
 
 from . import common
 from . import exceptions
-from .base.mappable import MAPPER, Mappable
-from .mapper import Mapper
+from .base.mappable import Mappable
+from .mapper import get_mapper, set_mapper
 
 log = common.logger(__name__)
 
@@ -48,7 +48,7 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
 
         """Original class with `Mappable` as the base."""
 
-    mapper = Mapper(instance, path, attrs, auto=auto)
+    mapper = set_mapper(instance, path, attrs, auto=auto)
 
     if existing is True:
         if not mapper.exists:
@@ -61,9 +61,8 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
         if not mapper.exists:
             mapper.create()
             mapper.store(force=True)
-        mapper.fetch(force=True)
+        mapper.fetch()
 
-    setattr(instance, MAPPER, mapper)
     instance.__class__ = Mapped
     log.info("mapped %r to '%s'", instance, path)
 
@@ -160,8 +159,9 @@ def update_object(instance, force=True):
     log.info("manually updating %r from file...", instance)
     _check_base(instance, mappable=True)
 
-    mapper = getattr(instance, MAPPER)
-    mapper.fetch(force=force)
+    mapper = get_mapper(instance)
+    if mapper.modified or force:
+        mapper.fetch()
 
 
 def update_file(instance, force=True):
@@ -174,7 +174,7 @@ def update_file(instance, force=True):
     log.info("manually saving %r to file...", instance)
     _check_base(instance, mappable=True)
 
-    mapper = getattr(instance, MAPPER)
+    mapper = get_mapper(instance)
     mapper.store(force=force)
 
 

@@ -93,10 +93,6 @@ class TestGetMapper:
 
     """Unit tests for the `get_mapper` function."""
 
-    def test_mappable_required(self):
-        with pytest.raises(TypeError):
-            print(get_mapper(None))
-
     def test_yorm_mapper_required(self):
         sample = SampleMappable()
         del sample.yorm_mapper

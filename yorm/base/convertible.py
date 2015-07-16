@@ -1,18 +1,23 @@
-"""Base classes for conversion."""
+"""Base classes for convertible attributes."""
 
-import abc
+from abc import ABCMeta, abstractmethod
 
 from .. import common
 from . import MESSAGE
+from .mappable import Mappable
 from .converter import Converter
 
 
 log = common.logger(__name__)
 
 
-class Convertible(Converter):  # pragma: no cover (abstract)
+class Convertible(Mappable, Converter, metaclass=ABCMeta):  # pragma: no cover (abstract)
 
     """Base class for mutable attributes."""
+
+    @classmethod
+    def create_default(cls):
+        return cls.__new__(cls)
 
     @classmethod
     def to_value(cls, data):
@@ -20,7 +25,7 @@ class Convertible(Converter):  # pragma: no cover (abstract)
         value.update_value(data)
         return value
 
-    @abc.abstractmethod
+    @abstractmethod
     def update_value(self, data, match=None):  # pylint: disable=E0213,
         """Update the attribute's value from loaded data."""
         raise NotImplementedError(MESSAGE)

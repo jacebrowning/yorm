@@ -1,4 +1,4 @@
-"""Base classes for conversion."""
+"""Base classes for converters."""
 
 import abc
 

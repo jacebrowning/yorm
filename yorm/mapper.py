@@ -9,10 +9,32 @@ import yaml
 from . import common
 from . import exceptions
 from . import settings
-from .base.mappable import MAPPER, Mappable
-from .base.convertible import Convertible
+from .base.container import Container
+
+MAPPER = 'yorm_mapper'
 
 log = common.logger(__name__)
+
+
+def get_mapper(obj):
+    """Get `Mapper` instance attached to an object."""
+    try:
+        mapper = getattr(obj, MAPPER)
+    except AttributeError:
+        if isinstance(obj, (dict, list)):
+            return None
+        else:
+            msg = "mapped {!r} missing {!r} attribute".format(obj, MAPPER)
+            raise AttributeError(msg) from None
+    else:
+        return mapper
+
+
+def set_mapper(obj, path, attrs, auto=True, root=None):
+    """Create and attach a `Mapper` instance to an object."""
+    mapper = Mapper(obj, path, attrs, auto=auto, root=root)
+    setattr(obj, MAPPER, mapper)
+    return mapper
 
 
 def file_required(create=False):
@@ -41,6 +63,22 @@ def file_required(create=False):
         return decorator(create)
     else:
         return decorator
+
+
+def prevent_recursion(method):
+    """Decorator to prevent indirect recursive calls."""
+
+    @functools.wraps(method)
+    def wrapped(self, *args, **kwargs):
+        # pylint: disable=W0212
+        if self._activity:
+            return
+        self._activity = True
+        result = method(self, *args, **kwargs)
+        self._activity = False
+        return result
+
+    return wrapped
 
 
 def prefix(obj):
@@ -106,171 +144,6 @@ class BaseHelper(metaclass=abc.ABCMeta):
         log.trace("text wrote: %r", text)
         self.modified = True
 
-    def create(self, obj):
-        """Create a new file for the object."""
-        log.info("creating %s for %r...", prefix(self), obj)
-        if self.exists:
-            log.warning("already created: %s", self)
-            return
-        if not settings.fake:
-            common.create_dirname(self.path)
-            common.touch(self.path)
-        self.exists = True
-        self.deleted = False
-
-    @file_required
-    def fetch(self, obj, attrs, force=False):
-        """Update the object's mapped attributes from its file."""
-        if self._activity:
-            return
-        if not self.modified and not force:
-            return
-        self._activity = True
-        log.info("fetching %r from %s...", obj, prefix(self))
-
-        # Parse data from file
-        text = self._read()
-        data = self._load(text, self.path)
-        log.trace("loaded: {}".format(data))
-
-        # Update all attributes
-        attrs2 = attrs.copy()
-        for name, data in data.items():
-            attrs2.pop(name, None)
-
-            # Find a matching converter
-            try:
-                converter = attrs[name]
-            except KeyError:
-                # TODO: determine if runtime import is the best way to avoid
-                # cyclic import
-                from .converters import match
-                converter = match(name, data)
-                attrs[name] = converter
-
-            # Convert the loaded attribute
-            attr = getattr(obj, name, None)
-            if all((isinstance(attr, converter),
-                    issubclass(converter, Convertible))):
-                attr.update_value(data)
-            else:
-                attr = converter.to_value(data)
-                setattr(obj, name, attr)
-            self._remap(attr)
-            log.trace("value fetched: %s = %r", name, attr)
-
-        # Add missing attributes
-        for name, converter in attrs2.items():
-            if not hasattr(obj, name):
-                value = converter.to_value(None)
-                msg = "fetched default value for missing attribute: %s = %r"
-                log.warn(msg, name, value)
-                setattr(obj, name, value)
-
-        # Set meta attributes
-        self.modified = False
-        self._activity = False
-
-    def _remap(self, obj):
-        """Restore mapping on nested attributes."""
-        if isinstance(obj, Mappable):
-            mapper = Mapper(obj, None, common.ATTRS[obj.__class__], root=self)
-            setattr(obj, MAPPER, mapper)
-
-            if isinstance(obj, dict):
-                for obj2 in obj.values():
-                    self._remap(obj2)
-            else:
-                assert isinstance(obj, list)
-                for obj2 in obj:
-                    self._remap(obj2)
-
-    @file_required
-    def _read(self):
-        """Read text from the object's file.
-
-        :param path: path to a text file
-
-        :return: contexts of text file
-
-        """
-        if settings.fake:
-            return self._fake
-        elif not self.exists:
-            return ""
-        else:
-            return common.read_text(self.path)
-
-    @abc.abstractstaticmethod
-    def _load(text, path):  # pragma: no cover (abstract method)
-        """Parsed data from text.
-
-        :param text: text read from a file
-        :param path: path to the file (for displaying errors)
-
-        :return: dictionary of parsed data
-
-        """
-        raise NotImplementedError
-
-    @file_required(create=True)
-    def store(self, obj, attrs, force=False):
-        """Format and save the object's mapped attributes to its file."""
-        if self._activity:
-            return
-        if not self.auto and not force:
-            log.debug("automatic storage is off ")
-            return
-        self._activity = True
-        log.info("storing %r to %s...", obj, prefix(self))
-
-        # Format the data items
-        data = {}
-        for name, converter in attrs.items():
-            try:
-                value = getattr(obj, name)
-            except AttributeError:
-                value = None
-                msg = "storing default data for missing attribute '%s'..."
-                log.warn(msg, name)
-
-            data2 = converter.to_data(value)
-
-            log.trace("data to store: %s = %r", name, data2)
-            data[name] = data2
-
-        # Dump data to file
-        text = self._dump(data)
-        self._write(text)
-
-        # Set meta attributes
-        self.modified = True
-        self._activity = False
-
-    @abc.abstractstaticmethod
-    def _dump(data):  # pragma: no cover (abstract method)
-        """Dump data to text.
-
-        :param data: dictionary of data
-
-        :return: text to write to a file
-
-        """
-        raise NotImplementedError
-
-    @file_required
-    def _write(self, text):
-        """Write text to the object's file.
-
-        :param text: text to write to a file
-        :param path: path to the file
-
-        """
-        if settings.fake:
-            self._fake = text
-        else:
-            common.write_text(text, self.path)
-
     @property
     def modified(self):
         """Determine if the file has been modified."""
@@ -297,6 +170,97 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 self._timestamp = common.stamp(self.path)
             log.debug("marked %s as unmodified", prefix(self))
 
+    def create(self, obj):
+        """Create a new file for the object."""
+        log.info("creating %s for %r...", prefix(self), obj)
+        if self.exists:
+            log.warning("already created: %s", self)
+            return
+        if not settings.fake:
+            common.create_dirname(self.path)
+            common.touch(self.path)
+        self.exists = True
+        self.deleted = False
+
+    @file_required
+    @prevent_recursion
+    def fetch(self, obj, attrs):
+        """Update the object's mapped attributes from its file."""
+        log.info("fetching %r from %s...", obj, prefix(self))
+
+        # Parse data from file
+        text = self._read()
+        data = self._load(text, self.path)
+        log.trace("loaded: {}".format(data))
+
+        # Update all attributes
+        attrs2 = attrs.copy()
+        for name, data in data.items():
+            attrs2.pop(name, None)
+
+            # Find a matching converter
+            try:
+                converter = attrs[name]
+            except KeyError:
+                # TODO: determine if runtime import is the best way to avoid
+                # cyclic import
+                from .converters import match
+                converter = match(name, data)
+                attrs[name] = converter
+
+            # Convert the loaded attribute
+            attr = getattr(obj, name, None)
+            if all((isinstance(attr, converter),
+                    issubclass(converter, Container))):
+                attr.update_value(data)
+            else:
+                attr = converter.to_value(data)
+                setattr(obj, name, attr)
+            self._remap(attr)
+            log.trace("value fetched: %s = %r", name, attr)
+
+        # Add missing attributes
+        for name, converter in attrs2.items():
+            if not hasattr(obj, name):
+                value = converter.to_value(None)
+                msg = "fetched default value for missing attribute: %s = %r"
+                log.warn(msg, name, value)
+                setattr(obj, name, value)
+
+        # Set meta attributes
+        self.modified = False
+
+    @file_required(create=True)
+    @prevent_recursion
+    def store(self, obj, attrs, force=False):
+        """Format and save the object's mapped attributes to its file."""
+        if not self.auto and not force:
+            log.debug("automatic storage is off ")
+            return
+        log.info("storing %r to %s...", obj, prefix(self))
+
+        # Format the data items
+        data = {}
+        for name, converter in attrs.items():
+            try:
+                value = getattr(obj, name)
+            except AttributeError:
+                value = None
+                msg = "storing default data for missing attribute '%s'..."
+                log.warn(msg, name)
+
+            data2 = converter.to_data(value)
+
+            log.trace("data to store: %s = %r", name, data2)
+            data[name] = data2
+
+        # Dump data to file
+        text = self._dump(data)
+        self._write(text)
+
+        # Set meta attributes
+        self.modified = True
+
     def delete(self):
         """Delete the object's file from the file system."""
         if self.exists:
@@ -307,6 +271,70 @@ class BaseHelper(metaclass=abc.ABCMeta):
             log.warning("already deleted: %s", self)
         self.exists = False
         self.deleted = True
+
+    @file_required
+    def _read(self):
+        """Read text from the object's file.
+
+        :param path: path to a text file
+
+        :return: contexts of text file
+
+        """
+        if settings.fake:
+            return self._fake
+        elif not self.exists:
+            return ""
+        else:
+            return common.read_text(self.path)
+
+    @file_required
+    def _write(self, text):
+        """Write text to the object's file.
+
+        :param text: text to write to a file
+        :param path: path to the file
+
+        """
+        if settings.fake:
+            self._fake = text
+        else:
+            common.write_text(text, self.path)
+
+    @abc.abstractstaticmethod
+    def _load(text, path):  # pragma: no cover (abstract method)
+        """Parsed data from text.
+
+        :param text: text read from a file
+        :param path: path to the file (for displaying errors)
+
+        :return: dictionary of parsed data
+
+        """
+        raise NotImplementedError
+
+    @abc.abstractstaticmethod
+    def _dump(data):  # pragma: no cover (abstract method)
+        """Dump data to text.
+
+        :param data: dictionary of data
+
+        :return: text to write to a file
+
+        """
+        raise NotImplementedError
+
+    def _remap(self, obj):
+        """Restore mapping on nested attributes."""
+        if isinstance(obj, Container):
+            set_mapper(obj, None, common.ATTRS[obj.__class__], root=self)
+            if isinstance(obj, dict):
+                for obj2 in obj.values():
+                    self._remap(obj2)
+            else:
+                assert isinstance(obj, list)
+                for obj2 in obj:
+                    self._remap(obj2)
 
 
 class Helper(BaseHelper):
@@ -350,12 +378,12 @@ class Mapper(Helper):
     def create(self):  # pylint: disable=W0221
         super().create(self.obj)
 
-    def fetch(self, force=False):  # pylint: disable=W0221
+    def fetch(self):  # pylint: disable=W0221
         if self.root and self.root.auto and not self._activity:
             self._activity = True
-            self.root.fetch(force=force)
+            self.root.fetch()
             self._activity = False
-        super().fetch(self.obj, self.attrs, force=force)
+        super().fetch(self.obj, self.attrs)
 
     def store(self, force=False):  # pylint: disable=W0221
         if self.root and self.root.auto and not self._activity:
