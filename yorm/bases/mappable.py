@@ -30,7 +30,7 @@ def store_after(method):
         """Decorated method."""
         result = method(self, *args, **kwargs)
         mapper = get_mapper(self)
-        if mapper:
+        if mapper and mapper.auto:
             log.debug("store after call: %s", method.__name__)
             mapper.store()
         return result
@@ -74,7 +74,7 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
             return
 
         mapper = get_mapper(self)
-        if mapper and name in mapper.attrs:
+        if mapper and mapper.auto and name in mapper.attrs:
             mapper.store()
 
     @fetch_before

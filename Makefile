@@ -174,7 +174,7 @@ pep257: depends-ci
 
 .PHONY: pylint
 pylint: depends-ci
-	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc --disable=R0912,C0111,R0401
+	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc --disable=R0912,C0111,R0913,R0401
 
 .PHONY: fix
 fix: depends-dev

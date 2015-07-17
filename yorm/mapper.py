@@ -230,11 +230,8 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
     @file_required(create=True)
     @prevent_recursion
-    def store(self, obj, attrs, force=False):
+    def store(self, obj, attrs):
         """Format and save the object's mapped attributes to its file."""
-        if not self.auto and not force:
-            log.debug("automatic storage is off ")
-            return
         log.info("storing %r to %s...", obj, prefix(self))
 
         # Format the data items
@@ -367,7 +364,7 @@ class Mapper(Helper):
 
     """Maps an object's attribute to YAML files."""
 
-    def __init__(self, obj, path, attrs, auto=True, root=None):  # pylint: disable=R0913
+    def __init__(self, obj, path, attrs, auto=True, root=None):
         super().__init__(path, auto=auto)
         self.obj = obj
         self.attrs = attrs
@@ -383,9 +380,9 @@ class Mapper(Helper):
             self._activity = False
         super().fetch(self.obj, self.attrs)
 
-    def store(self, force=False):  # pylint: disable=W0221
+    def store(self):  # pylint: disable=W0221
         if self.root and self.root.auto and not self._activity:
             self._activity = True
-            self.root.store(force=force)
+            self.root.store()
             self._activity = False
-        super().store(self.obj, self.attrs, force=force)
+        super().store(self.obj, self.attrs)

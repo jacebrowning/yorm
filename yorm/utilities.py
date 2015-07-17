@@ -59,7 +59,7 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
     if mapper.auto:
         if not mapper.exists:
             mapper.create()
-            mapper.store(force=True)
+            mapper.store()
         mapper.fetch()
 
     instance.__class__ = Mapped
@@ -174,7 +174,9 @@ def update_file(instance, force=True):
     _check_base(instance, mappable=True)
 
     mapper = get_mapper(instance)
-    mapper.store(force=force)
+    print(mapper.auto)
+    if mapper.auto or force:
+        mapper.store()
 
 
 def _check_base(obj, mappable=True):

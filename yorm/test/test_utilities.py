@@ -380,6 +380,16 @@ class TestUpdateFile:
         with pytest.raises(exceptions.UseageError):
             utilities.update_file(instance)
 
+    def test_store_not_called_with_auto_off(self):
+        instance = MockMappable()
+        instance.yorm_mapper.reset_mock()
+        instance.yorm_mapper.auto = False
+
+        utilities.update_file(instance, force=False)
+
+        assert False is instance.yorm_mapper.fetch.called
+        assert False is instance.yorm_mapper.store.called
+
 
 if __name__ == '__main__':
     pytest.main()

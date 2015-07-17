@@ -145,8 +145,7 @@ class TestMapper:
     class MyObject:
         foo = 1
 
-    def test_auto_off(self, tmpdir):
-        """Verify storage is delayed with auto off."""
+    def test_store_ignores_auto_off(self, tmpdir):
         tmpdir.chdir()
         obj = self.MyObject()
         attrs = {'number': Integer}
@@ -161,11 +160,6 @@ class TestMapper:
         assert False is mapper.auto
 
         mapper.store()
-
-        assert "" == mapper.text
-        assert False is mapper.auto
-
-        mapper.store(force=True)
 
         assert "number: 0\n" == mapper.text
         assert False is mapper.auto
