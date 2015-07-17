@@ -8,8 +8,7 @@ from unittest.mock import patch, Mock
 
 from yorm import exceptions
 from yorm import utilities
-from yorm.base.converter import Converter
-from yorm.base.mappable import Mappable
+from yorm.bases import Converter, Mappable
 
 
 class MockConverter(Converter):

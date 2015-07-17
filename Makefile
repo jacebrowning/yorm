@@ -174,7 +174,7 @@ pep257: depends-ci
 
 .PHONY: pylint
 pylint: depends-ci
-	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc --disable=R0912,C0111
+	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc --disable=R0912,C0111,R0401
 
 .PHONY: fix
 fix: depends-dev
@@ -237,7 +237,7 @@ watch: depends-dev .clean-test
 
 .PHONY: clean
 clean: .clean-dist .clean-test .clean-doc .clean-build
-	rm -rf $(ALL)
+	rm -rf $(ALL_FLAG)
 
 .PHONY: clean-env
 clean-env: clean

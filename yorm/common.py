@@ -9,10 +9,26 @@ import yaml
 
 from . import exceptions
 
-verbosity = 0  # global verbosity setting for controlling string formatting
+
+# CONSTANTS ####################################################################
+
+
 PRINT_VERBOSITY = 0  # minimum verbosity to using `print`
 STR_VERBOSITY = 3  # minimum verbosity to use verbose `__str__`
 MAX_VERBOSITY = 4  # maximum verbosity level implemented
+
+OVERRIDE_MESSAGE = "method must be implemented in subclasses"
+
+
+# GLOBALS ######################################################################
+
+
+verbosity = 0  # global verbosity setting for controlling string formatting
+
+attrs = collections.defaultdict(dict)
+
+
+# LOGGING ######################################################################
 
 
 def _trace(self, message, *args, **kwargs):  # pragma: no cover (manual test)
@@ -28,7 +44,7 @@ logger = logging.getLogger
 log = logger(__name__)
 
 
-ATTRS = collections.defaultdict(dict)
+# DECORATORS ###################################################################
 
 
 class classproperty(object):
@@ -40,6 +56,9 @@ class classproperty(object):
 
     def __get__(self, instance, owner):
         return self.getter(owner)
+
+
+# FUNCTIONS ####################################################################
 
 
 def create_dirname(path):

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# pylint:disable=W0201,W0613,R0201,W0212,C0111
+# pylint:disable=W0201,W0613,R,C
 
 """Unit tests for the `base.convertible` module."""
 
 import pytest
 
-from yorm.base.convertible import Convertible
+from yorm.bases import Convertible
 
 
 class TestConvertible:
@@ -15,6 +15,8 @@ class TestConvertible:
     class MyConvertible(Convertible):
 
         def __init__(self, number):
+            from unittest.mock import MagicMock
+            self.yorm_mapper = MagicMock()
             self.value = number
 
         @classmethod
