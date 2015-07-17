@@ -1,5 +1,9 @@
 # Revision History
 
+## 0.5 (unreleased)
+
+- Renamed `yorm.base` to `yorm.bases`.
+
 ## 0.4.1 (2015-06/19)
 
 - Fixed attribute loss in non-`dict` when conversion to `dict`.
