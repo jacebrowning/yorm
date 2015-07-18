@@ -19,6 +19,9 @@ def fetch_before(method):
         if mapper and mapper.modified:
             log.debug("fetch before call: %s", method.__name__)
             mapper.fetch()
+            if mapper.auto_store:
+                mapper.store()
+                mapper.modified = False
         return method(self, *args, **kwargs)
     return fetch_before
 
@@ -61,9 +64,14 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
             missing = False
 
         # Fetch a new value from disk if the attribute is mapped or missing
-        if mapper and (missing or name in mapper.attrs):
+        if mapper and (missing or (name in mapper.attrs and mapper.modified)):
             mapper.fetch()
             value = object.__getattribute__(self, name)
+
+            # Store back to disk if this has been done before
+            if mapper.auto_store:
+                mapper.store()
+                mapper.modified = False
 
         return value
 

@@ -82,6 +82,8 @@ class TestInteger:
         (None, 0),
         ("1", 1),
         ("1.1", 1),
+        (True, 1),
+        (False, 0),
     ]
 
     data_value = [
@@ -93,7 +95,7 @@ class TestInteger:
     @pytest.mark.parametrize("data,value", data_value)
     def test_to_value(self, data, value):
         """Verify input data is converted to values."""
-        assert value == Integer.to_value(data)
+        assert value is Integer.to_value(data)
 
     def test_to_value_error(self):
         """Verify an exception is raised for unconvertible values."""
@@ -103,7 +105,7 @@ class TestInteger:
     @pytest.mark.parametrize("value,data", value_data)
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
-        assert data == Integer.to_data(value)
+        assert data is Integer.to_data(value)
 
 
 class TestFloat:

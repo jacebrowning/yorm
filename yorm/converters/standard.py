@@ -55,7 +55,9 @@ class Integer(Object):
 
     @classmethod
     def to_value(cls, obj):
-        if isinstance(obj, cls.TYPE):
+        if all((isinstance(obj, cls.TYPE),
+                obj is not True,
+                obj is not False)):
             return obj
         elif obj:
             try:

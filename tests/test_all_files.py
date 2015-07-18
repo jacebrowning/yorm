@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# pylint:disable=R0201,C0111
+# pylint:disable=R,C
 
 """Integration tests for file IO."""
 
@@ -7,13 +6,15 @@ import logging
 
 import pytest
 
+from yorm.common import write_text
+
 from . import refresh_file_modification_times
 from .samples import *  # pylint: disable=W0401,W0614
 
 
-class TestInit:
+class TestCreate:
 
-    """Integration tests for initializing mapped classes."""
+    """Integration tests for creating mapped classes."""
 
     def test_fetch_from_existing(self, tmpdir):
         """Verify attributes are updated from an existing file."""
@@ -74,5 +75,33 @@ class TestDelete:
         sample.yorm_mapper.delete()
 
 
-if __name__ == '__main__':
-    pytest.main()
+class TestUpdate:
+
+    """Integration tests for updating files/object."""
+
+    def test_automatic_store_after_first_modification(self, tmpdir):
+        tmpdir.chdir()
+        sample = SampleStandardDecorated('sample')
+        assert "number_int: 0\n" in sample.yorm_mapper.text
+
+        sample.number_int = 42
+        assert "number_int: 42\n" in sample.yorm_mapper.text
+
+        sample.yorm_mapper.text = "number_int: true\n"
+        assert 1 is sample.number_int
+        assert "number_int: 1\n" in sample.yorm_mapper.text
+
+    def test_automatic_store_after_first_modification_on_list(self, tmpdir):
+        tmpdir.chdir()
+        sample = SampleStandardDecorated('sample')
+        assert "array: []\n" in sample.yorm_mapper.text
+
+        sample.array.append(42)
+        assert "array:\n- 42\n" in sample.yorm_mapper.text
+
+        sample.yorm_mapper.text = "array: [true]\n"
+        try:
+            iter(sample)
+        except AttributeError:
+            pass
+        assert "array:\n- 1\n" in sample.yorm_mapper.text

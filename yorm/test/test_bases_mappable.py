@@ -230,6 +230,7 @@ class TestMappableTriggers:
         self.sample = self.Sample()
         self.sample.yorm_mapper.fetch.reset_mock()
         self.sample.yorm_mapper.store.reset_mock()
+        self.sample.yorm_mapper.auto_store = False
 
     def test_getattribute(self):
         with pytest.raises(AttributeError):
@@ -272,6 +273,8 @@ class TestMappableTriggers:
         self.sample.append('bar')
         self.sample.yorm_mapper.fetch.reset_mock()
         self.sample.yorm_mapper.store.reset_mock()
+        self.sample.yorm_mapper.auto_store = False
+        self.sample.yorm_mapper.modified = True
 
         for item in self.sample:
             print(item)

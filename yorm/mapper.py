@@ -111,6 +111,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
     def __init__(self, path, auto=True):
         self.path = path
         self.auto = auto
+        self.auto_store = False
         self.exists = self.path and os.path.isfile(self.path)
         self.deleted = False
         self._activity = False
@@ -162,7 +163,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
             log.debug("marked %s as modified", prefix(self))
             self._timestamp = 0
         else:
-            if settings.fake:
+            if settings.fake or self.path is None:
                 self._timestamp = None
             else:
                 self._timestamp = common.stamp(self.path)
@@ -255,6 +256,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
         # Set meta attributes
         self.modified = True
+        self.auto_store = self.auto
 
     def delete(self):
         """Delete the object's file from the file system."""
