@@ -1,36 +1,12 @@
-#!/usr/bin/env python
-# pylint:disable=R0201,R0901
+# pylint:disable=R,C
 
 """Unit tests for the `extended` module."""
 
 import pytest
 
-from yorm.utilities import attr
-from yorm.converters.standard import Integer, String, Float
 from yorm.converters.extended import Markdown, AttributeDictionary, SortedList
 
-
-@attr(var1=Integer, var2=String)
-class SampleAttributeDictionary(AttributeDictionary):
-
-    """Sample dictionary container with initialization."""
-
-    def __init__(self, var1, var2, var3):
-        super().__init__()
-        self.var1 = var1
-        self.var2 = var2
-        self.var3 = var3
-
-
-@attr(all=Float)
-class SampleSortedList(SortedList):
-
-    """Sample sorted list container."""
-
-
-class UnknownSortedList(SortedList):
-
-    """Sample list container."""
+from .samples import *  # pylint: disable=W0401,W0614
 
 
 class TestMarkdown:
@@ -108,7 +84,3 @@ class TestSortedList:
         data = [0.0, 1.0, 2.0, 3.0, 4.0]
         data2 = obj.to_data(obj)
         assert data == data2
-
-
-if __name__ == '__main__':
-    pytest.main()

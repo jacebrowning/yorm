@@ -6,8 +6,6 @@ import logging
 
 import pytest
 
-from yorm.common import write_text
-
 from . import refresh_file_modification_times
 from .samples import *  # pylint: disable=W0401,W0614
 

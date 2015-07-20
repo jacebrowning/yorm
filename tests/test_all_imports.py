@@ -2,8 +2,6 @@
 
 """Integration tests the package namespace."""
 
-import pytest
-
 
 def test_top():
 

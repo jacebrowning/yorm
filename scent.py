@@ -12,14 +12,13 @@ else:
 
 
 watch_paths = ['yorm/', 'tests/']
-show_coverage = True
 
 
 @select_runnable('python_tests')
 @file_validator
 def py_files(filename):
     return all((filename.endswith('.py'),
-                not os.path.basename(filename).startswith('.')))
+               not os.path.basename(filename).startswith('.')))
 
 
 @runnable
@@ -38,6 +37,8 @@ def python_tests(*_):
         print("$ %s" % ' '.join(command))
         failure = subprocess.call(command)
 
+        show_coverage()
+
         if failure:
             if notify and title:
                 mark = "❌" * count
@@ -48,9 +49,14 @@ def python_tests(*_):
                 mark = "✅" * count
                 notify(mark + " [PASS] " + mark, title=title, group=group)
 
-    global show_coverage
-    if show_coverage:
-        subprocess.call(['make', 'read-coverage'])
-    show_coverage = False
-
     return True
+
+
+_show_coverage = True
+
+
+def show_coverage():
+    global _show_coverage
+    if _show_coverage:
+        subprocess.call(['make', 'read-coverage'])
+    _show_coverage = False
