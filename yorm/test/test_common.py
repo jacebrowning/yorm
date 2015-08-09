@@ -1,10 +1,6 @@
-#!/usr/bin/env python
-# pylint:disable=R0201
-
-"""Integration tests for the `common` module."""
+# pylint: disable=missing-docstring,no-self-use
 
 import os
-import pytest
 
 from yorm import common
 
@@ -64,7 +60,3 @@ def test_directory_deletion(tmpdir):
 
     common.delete(dirpath)  # second call is ignored
     assert not os.path.isdir(dirpath)
-
-
-if __name__ == '__main__':
-    pytest.main()

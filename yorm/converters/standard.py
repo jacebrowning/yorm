@@ -110,11 +110,11 @@ def match(name, data, nested=False):
     msg = "determining converter for new%s: '%s' = %r"
     log.debug(msg, nested, name, repr(data))
 
-    converters = Object.__subclasses__()
+    converters = Object.__subclasses__()  # pylint: disable=no-member
     log.trace("converter options: {}".format(converters))
 
     for converter in converters:
-        if converter.TYPE and type(data) == converter.TYPE:  # pylint: disable=W1504
+        if converter.TYPE and type(data) == converter.TYPE:  # pylint: disable=unidiomatic-typecheck
             log.debug("matched converter: %s", converter)
             log.info("new%s attribute: %s", nested, name)
             return converter

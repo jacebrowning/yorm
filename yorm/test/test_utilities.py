@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# pylint:disable=R0201
-
-"""Unit tests for the `utilities` module."""
+# pylint: disable=missing-docstring,no-self-use,no-member
 
 import pytest
 from unittest.mock import patch, Mock
@@ -9,6 +6,9 @@ from unittest.mock import patch, Mock
 from yorm import exceptions
 from yorm import utilities
 from yorm.bases import Converter, Mappable
+
+
+# classes ######################################################################
 
 
 class MockConverter(Converter):
@@ -59,6 +59,9 @@ class MockMappable(Mappable):
 
     yorm_mapper = Mock()
     yorm_mapper.attrs = {}
+
+
+# tests ########################################################################
 
 
 @patch('yorm.common.write_text', Mock())
@@ -389,7 +392,3 @@ class TestUpdateFile:
 
         assert False is instance.yorm_mapper.fetch.called
         assert False is instance.yorm_mapper.store.called
-
-
-if __name__ == '__main__':
-    pytest.main()

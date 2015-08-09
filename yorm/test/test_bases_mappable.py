@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-# pylint:disable=W0201,W0613,W0212,R,C
+# pylint: disable=missing-docstring,no-self-use,attribute-defined-outside-init,protected-access
 
-"""Unit tests for the `base.mappable` module."""
-
-import pytest
 import logging
 from unittest.mock import Mock
+
+import pytest
 
 import yorm
 from yorm.bases import Mappable
@@ -44,7 +42,7 @@ class MockMapper(Mapper):
         self._mock_modified = changes
 
 
-# sample classes #########################################################
+# classes ######################################################################
 
 @yorm.attr(all=Integer)
 class IntegerList(List):
@@ -86,7 +84,7 @@ class SampleMappable(Mappable):
         return "<sample {}>".format(id(self))
 
 
-# tests ##################################################################
+# tests ########################################################################
 
 
 class TestGetMapper:
@@ -104,7 +102,7 @@ class TestMappable:
 
     """Unit tests for the `Mappable` class."""
 
-    def setup_method(self, method):
+    def setup_method(self, _):
         """Create an mappable instance for tests."""
         self.sample = SampleMappable()
 
@@ -225,7 +223,7 @@ class TestMappableTriggers:
         yorm_mapper.fetch = Mock()
         yorm_mapper.store = Mock()
 
-    def setup_method(self, method):
+    def setup_method(self, _):
         """Create an mappable instance for tests."""
         self.sample = self.Sample()
         self.sample.yorm_mapper.fetch.reset_mock()
@@ -287,7 +285,3 @@ class TestMappableTriggers:
         sample[0] = 0
         print(sample[0])
         assert None is sample.yorm_mapper
-
-
-if __name__ == '__main__':
-    pytest.main()

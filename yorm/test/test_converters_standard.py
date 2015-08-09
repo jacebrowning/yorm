@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-# pylint:disable=R0201
-
-"""Unit tests for the `standard` module."""
-
+# pylint: disable=missing-docstring,no-self-use
 
 import pytest
 
@@ -187,7 +183,3 @@ class TestBoolean:
     def test_to_data(self, value, data):
         """Verify values are converted to output data."""
         assert data == Boolean.to_data(value)
-
-
-if __name__ == '__main__':
-    pytest.main()

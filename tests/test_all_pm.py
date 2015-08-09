@@ -1,11 +1,13 @@
-#!/usr/bin/env python
-# pylint:disable=R,C
-
 """Integration tests using YORM as a persistence model."""
+# pylint: disable=missing-docstring,no-self-use
+
 
 import os
 
 import yorm
+
+
+# classes ######################################################################
 
 
 class Config:
@@ -55,7 +57,10 @@ class ConfigStore:
             return instance
 
 
-class TestPersistanceMapping:
+# tests ########################################################################
+
+
+class TestPersistanceMapping:  # pylint: disable=no-member
 
     root = os.path.join(os.path.dirname(__file__), 'files')
 

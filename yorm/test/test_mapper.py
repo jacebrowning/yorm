@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# pylint: disable=R,C
-
-"""Unit tests for the `mapper` module."""
+# pylint: disable=missing-docstring,no-self-use,no-member
 
 import os
 import pytest
@@ -143,7 +140,7 @@ class TestMapper:
     """Unit tests for the `Mapper` class."""
 
     class MyObject:
-        foo = 1
+        var1 = 1
 
     def test_store_ignores_auto_off(self, tmpdir):
         tmpdir.chdir()
@@ -167,15 +164,11 @@ class TestMapper:
     def test_missing_attributes_added(self):
         obj = self.MyObject()
         path = "mock/path"
-        attrs = {'bar': Integer, 'qux': Integer}
+        attrs = {'var2': Integer, 'var3': Integer}
         mapper = Mapper(obj, path, attrs)
         mapper.create()
         mapper.fetch()
 
-        assert 1 == obj.foo
-        assert 0 == obj.bar
-        assert 0 == obj.qux
-
-
-if __name__ == '__main__':
-    pytest.main()
+        assert 1 == obj.var1
+        assert 0 == obj.var2
+        assert 0 == obj.var3

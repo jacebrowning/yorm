@@ -1,13 +1,58 @@
-# pylint:disable=R,C
-
 """Integration tests for file IO."""
+# pylint: disable=missing-docstring,no-self-use
+
 
 import logging
 
 import pytest
 
+import yorm
+from yorm.converters import Integer, String, Float, Boolean, Dictionary, List
+from yorm.mapper import get_mapper
+
 from . import refresh_file_modification_times
-from .samples import *  # pylint: disable=W0401,W0614
+
+
+# classes ######################################################################
+
+
+class EmptyDictionary(Dictionary):
+
+    """Sample dictionary container."""
+
+
+@yorm.attr(all=Integer)
+class IntegerList(List):
+
+    """Sample list container."""
+
+
+@yorm.attr(object=EmptyDictionary, array=IntegerList, string=String)
+@yorm.attr(number_int=Integer, number_real=Float)
+@yorm.attr(true=Boolean, false=Boolean)
+@yorm.sync("path/to/{self.category}/{self.name}.yml")
+class SampleStandardDecorated:
+
+    """Sample class using standard attribute types."""
+
+    def __init__(self, name, category='default'):
+        self.name = name
+        self.category = category
+        # https://docs.python.org/3.4/library/json.html#json.JSONDecoder
+        self.object = {}
+        self.array = []
+        self.string = ""
+        self.number_int = 0
+        self.number_real = 0.0
+        self.true = True
+        self.false = False
+        self.null = None
+
+    def __repr__(self):
+        return "<decorated {}>".format(id(self))
+
+
+# tests ########################################################################
 
 
 class TestCreate:
@@ -19,7 +64,7 @@ class TestCreate:
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
         sample2 = SampleStandardDecorated('sample')
-        assert sample2.yorm_mapper.path == sample.yorm_mapper.path
+        assert get_mapper(sample2).path == get_mapper(sample).path
 
         refresh_file_modification_times()
 
@@ -48,7 +93,7 @@ class TestDelete:
         """Verify a deleted file cannot be read from."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        sample.yorm_mapper.delete()
+        get_mapper(sample).delete()
 
         with pytest.raises(FileNotFoundError):
             print(sample.string)
@@ -60,7 +105,7 @@ class TestDelete:
         """Verify a deleted file cannot be written to."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        sample.yorm_mapper.delete()
+        get_mapper(sample).delete()
 
         with pytest.raises(FileNotFoundError):
             sample.string = "def456"
@@ -69,8 +114,8 @@ class TestDelete:
         """Verify a deleted file can be deleted again."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        sample.yorm_mapper.delete()
-        sample.yorm_mapper.delete()
+        get_mapper(sample).delete()
+        get_mapper(sample).delete()
 
 
 class TestUpdate:
@@ -80,26 +125,26 @@ class TestUpdate:
     def test_automatic_store_after_first_modification(self, tmpdir):
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        assert "number_int: 0\n" in sample.yorm_mapper.text
+        assert "number_int: 0\n" in get_mapper(sample).text
 
         sample.number_int = 42
-        assert "number_int: 42\n" in sample.yorm_mapper.text
+        assert "number_int: 42\n" in get_mapper(sample).text
 
-        sample.yorm_mapper.text = "number_int: true\n"
+        get_mapper(sample).text = "number_int: true\n"
         assert 1 is sample.number_int
-        assert "number_int: 1\n" in sample.yorm_mapper.text
+        assert "number_int: 1\n" in get_mapper(sample).text
 
     def test_automatic_store_after_first_modification_on_list(self, tmpdir):
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        assert "array: []\n" in sample.yorm_mapper.text
+        assert "array: []\n" in get_mapper(sample).text
 
         sample.array.append(42)
-        assert "array:\n- 42\n" in sample.yorm_mapper.text
+        assert "array:\n- 42\n" in get_mapper(sample).text
 
-        sample.yorm_mapper.text = "array: [true]\n"
+        get_mapper(sample).text = "array: [true]\n"
         try:
             iter(sample)
         except AttributeError:
             pass
-        assert "array:\n- 1\n" in sample.yorm_mapper.text
+        assert "array:\n- 1\n" in get_mapper(sample).text

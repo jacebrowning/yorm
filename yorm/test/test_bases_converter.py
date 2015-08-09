@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# pylint:disable=W0201,W0613,R0201,W0212,C0111
-
-"""Unit tests for the `base.converter` module."""
+# pylint: disable=missing-docstring,no-self-use
 
 import pytest
 
@@ -23,7 +20,3 @@ class TestConverter:
             Converter.to_value(None)
         with pytest.raises(NotImplementedError):
             Converter.to_data(None)
-
-
-if __name__ == '__main__':
-    pytest.main()
