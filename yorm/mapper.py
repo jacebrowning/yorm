@@ -9,7 +9,7 @@ import yaml
 from . import common, exceptions, settings
 from .bases import Container
 
-MAPPER = 'yorm_mapper'
+MAPPER = '__mapper__'
 
 log = common.logger(__name__)
 

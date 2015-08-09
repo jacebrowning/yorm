@@ -1,16 +1,158 @@
-#!/usr/bin/env python
-# pylint:disable=R0201,C0111
-
 """Integration tests for the package."""
+# pylint: disable=missing-docstring,no-self-use,no-member
 
-import pytest
 
 import yorm
 from yorm.converters import Object, String, Integer, Float, Boolean
-from yorm.converters import Markdown
+from yorm.converters import Markdown, Dictionary, List
 
 from . import strip, refresh_file_modification_times
-from .samples import *  # pylint: disable=W0401,W0614
+
+
+# classes ######################################################################
+
+
+class EmptyDictionary(Dictionary):
+
+    """Sample dictionary container."""
+
+
+@yorm.attr(all=Integer)
+class IntegerList(List):
+
+    """Sample list container."""
+
+
+class SampleStandard:
+
+    """Sample class using standard attribute types."""
+
+    def __init__(self):
+        # https://docs.python.org/3.4/library/json.html#json.JSONDecoder
+        self.object = {}
+        self.array = []
+        self.string = ""
+        self.number_int = 0
+        self.number_real = 0.0
+        self.true = True
+        self.false = False
+        self.null = None
+
+    def __repr__(self):
+        return "<standard {}>".format(id(self))
+
+
+@yorm.attr(object=EmptyDictionary, array=IntegerList, string=String)
+@yorm.attr(number_int=Integer, number_real=Float)
+@yorm.attr(true=Boolean, false=Boolean)
+@yorm.sync("path/to/{self.category}/{self.name}.yml")
+class SampleStandardDecorated:
+
+    """Sample class using standard attribute types."""
+
+    def __init__(self, name, category='default'):
+        self.name = name
+        self.category = category
+        # https://docs.python.org/3.4/library/json.html#json.JSONDecoder
+        self.object = {}
+        self.array = []
+        self.string = ""
+        self.number_int = 0
+        self.number_real = 0.0
+        self.true = True
+        self.false = False
+        self.null = None
+
+    def __repr__(self):
+        return "<decorated {}>".format(id(self))
+
+
+@yorm.attr(status=Boolean, label=String)
+class StatusDictionary(Dictionary):
+
+    """Sample dictionary container."""
+
+
+@yorm.attr(all=StatusDictionary)
+class StatusDictionaryList(List):
+
+    """Sample list container."""
+
+
+class Level(String):
+
+    """Sample custom attribute."""
+
+    @classmethod
+    def to_data(cls, obj):
+        value = cls.to_value(obj)
+        count = value.split('.')
+        if count == 0:
+            return int(value)
+        elif count == 1:
+            return float(value)
+        else:
+            return value
+
+
+@yorm.sync("path/to/directory/{UUID}.yml", attrs={'level': Level})
+class SampleCustomDecorated:
+
+    """Sample class using custom attribute types."""
+
+    def __init__(self, name):
+        self.name = name
+        self.level = '1.0'
+
+    def __repr__(self):
+        return "<custom {}>".format(id(self))
+
+
+@yorm.attr(string=String)
+@yorm.sync("sample.yml", auto=False)
+class SampleDecoratedAutoOff:
+
+    """Sample class with automatic storage turned off."""
+
+    def __init__(self):
+        self.string = ""
+
+    def __repr__(self):
+        return "<auto off {}>".format(id(self))
+
+
+@yorm.sync("sample.yml")
+class SampleEmptyDecorated:
+
+    """Sample class using standard attribute types."""
+
+    def __repr__(self):
+        return "<empty {}>".format(id(self))
+
+
+class SampleExtended:
+
+    """Sample class using extended attribute types."""
+
+    def __init__(self):
+        self.text = ""
+
+    def __repr__(self):
+        return "<extended {}>".format(id(self))
+
+
+class SampleNested:
+
+    """Sample class using nested attribute types."""
+
+    def __init__(self):
+        self.count = 0
+        self.results = []
+
+    def __repr__(self):
+        return "<nested {}>".format(id(self))
+
+# tests ########################################################################
 
 
 class TestStandard:
@@ -25,7 +167,7 @@ class TestStandard:
         """Verify standard attribute types dump/load correctly (decorator)."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        assert "path/to/default/sample.yml" == sample.yorm_mapper.path
+        assert "path/to/default/sample.yml" == sample.__mapper__.path
 
         # check defaults
         assert {} == sample.object
@@ -58,11 +200,11 @@ class TestStandard:
         object: {}
         string: Hello, world!
         'true': false
-        """) == sample.yorm_mapper.text
+        """) == sample.__mapper__.text
 
         # change file values
         refresh_file_modification_times()
-        sample.yorm_mapper.text = strip("""
+        sample.__mapper__.text = strip("""
         array: [4, 5, 6]
         'false': null
         number_int: 42
@@ -93,7 +235,7 @@ class TestStandard:
                  'true': Boolean,
                  'false': Boolean}
         sample = yorm.sync(_sample, "path/to/directory/sample.yml", attrs)
-        assert "path/to/directory/sample.yml" == sample.yorm_mapper.path
+        assert "path/to/directory/sample.yml" == sample.__mapper__.path
 
         # check defaults
         assert {'status': False} == sample.object
@@ -127,7 +269,7 @@ class TestStandard:
           status: false
         string: Hello, world!
         'true': false
-        """) == sample.yorm_mapper.text
+        """) == sample.__mapper__.text
 
     def test_auto_off(self, tmpdir):
         """Verify file updates are disabled with auto off."""
@@ -135,24 +277,24 @@ class TestStandard:
         sample = SampleDecoratedAutoOff()
 
         # ensure the file does not exist
-        assert False is sample.yorm_mapper.exists
-        assert "" == sample.yorm_mapper.text
+        assert False is sample.__mapper__.exists
+        assert "" == sample.__mapper__.text
 
         # store value
         sample.string = "hello"
 
         # ensure the file still does not exist
-        assert False is sample.yorm_mapper.exists
-        assert "" == sample.yorm_mapper.text
+        assert False is sample.__mapper__.exists
+        assert "" == sample.__mapper__.text
 
         # enable auto and store value
-        sample.yorm_mapper.auto = True
+        sample.__mapper__.auto = True
         sample.string = "world"
 
         # check for changed file values
         assert strip("""
         string: world
-        """) == sample.yorm_mapper.text
+        """) == sample.__mapper__.text
 
 
 class TestContainers:
@@ -193,11 +335,11 @@ class TestContainers:
           status: true
         - label: ''
           status: false
-        """) == sample.yorm_mapper.text
+        """) == sample.__mapper__.text
 
         # change file values
         refresh_file_modification_times()
-        sample.yorm_mapper.text = strip("""
+        sample.__mapper__.text = strip("""
         count: 3
         other: 4.2
         results:
@@ -221,21 +363,21 @@ class TestContainers:
 
         # change file values
         refresh_file_modification_times()
-        sample.yorm_mapper.text = strip("""
+        sample.__mapper__.text = strip("""
         object: {'key': 'value'}
         array: [1, '2', '3.0']
         """)
 
         # (a mapped attribute must be read first to trigger retrieving)
-        sample.yorm_mapper.fetch()
+        sample.__mapper__.fetch()
 
         # check object values
         assert {'key': 'value'} == sample.object
         assert [1, '2', '3.0'] == sample.array
 
         # check object types
-        assert Object == sample.yorm_mapper.attrs['object']
-        assert Object == sample.yorm_mapper.attrs['array']
+        assert Object == sample.__mapper__.attrs['object']
+        assert Object == sample.__mapper__.attrs['array']
 
         # change object values
         sample.object = None  # pylint: disable=W0201
@@ -245,7 +387,7 @@ class TestContainers:
         assert strip("""
         array: abc
         object: null
-        """) == sample.yorm_mapper.text
+        """) == sample.__mapper__.text
 
 
 class TestExtended:
@@ -275,11 +417,11 @@ class TestExtended:
           This is the first sentence.
           This is the second sentence.
           This is the third sentence.
-        """) == sample.yorm_mapper.text
+        """) == sample.__mapper__.text
 
         # change file values
         refresh_file_modification_times()
-        sample.yorm_mapper.text = strip("""
+        sample.__mapper__.text = strip("""
         text: |
           This is a
           sentence.
@@ -307,17 +449,13 @@ class TestCustom:
         # check file values
         assert strip("""
         level: 1.2.3
-        """) == sample.yorm_mapper.text
+        """) == sample.__mapper__.text
 
         # change file values
         refresh_file_modification_times()
-        sample.yorm_mapper.text = strip("""
+        sample.__mapper__.text = strip("""
         level: 1
         """)
 
         # check object values
         assert '1' == sample.level
-
-
-if __name__ == '__main__':
-    pytest.main()

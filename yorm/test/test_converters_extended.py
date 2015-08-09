@@ -1,12 +1,40 @@
-# pylint:disable=R,C
-
-"""Unit tests for the `extended` module."""
+# pylint: disable=missing-docstring,no-self-use
 
 import pytest
 
+from yorm.utilities import attr
+from yorm.converters import Integer, String, Float
 from yorm.converters.extended import Markdown, AttributeDictionary, SortedList
 
-from .samples import *  # pylint: disable=W0401,W0614
+
+# classes ######################################################################
+
+
+@attr(var1=Integer, var2=String)
+class SampleAttributeDictionary(AttributeDictionary):
+
+    """Sample dictionary container with initialization."""
+
+    def __init__(self, var1, var2, var3):
+        super().__init__()
+        # pylint: disable=duplicate-code
+        self.var1 = var1
+        self.var2 = var2
+        self.var3 = var3
+
+
+@attr(all=Float)
+class SampleSortedList(SortedList):
+
+    """Sample sorted list container."""
+
+
+class UnknownSortedList(SortedList):
+
+    """Sample list container."""
+
+
+# tests ########################################################################
 
 
 class TestMarkdown:

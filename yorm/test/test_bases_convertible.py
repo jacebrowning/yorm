@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# pylint:disable=W0201,W0613,R,C
-
-"""Unit tests for the `base.convertible` module."""
+# pylint: disable=missing-docstring,no-self-use
 
 import pytest
 
@@ -16,7 +13,7 @@ class TestConvertible:
 
         def __init__(self, number):
             from unittest.mock import MagicMock
-            self.yorm_mapper = MagicMock()
+            self.__mapper__ = MagicMock()
             self.value = number
 
         @classmethod
@@ -40,7 +37,3 @@ class TestConvertible:
         convertible.update_value(10)
         assert 52 == convertible.value
         assert "52" == convertible.format_data()
-
-
-if __name__ == '__main__':
-    pytest.main()

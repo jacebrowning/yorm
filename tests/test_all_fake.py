@@ -1,15 +1,16 @@
-#!/usr/bin/env python
-# pylint:disable=R0201,C0111
-
 """Integration tests for the `yorm.settings.fake` option."""
+# pylint: disable=missing-docstring,no-self-use,no-member
+
 
 import os
-import pytest
 from unittest.mock import patch
 
 import yorm
 
 from . import strip
+
+
+# classes ######################################################################
 
 
 @yorm.attr(value=yorm.converters.standard.Integer)
@@ -26,6 +27,9 @@ class Sample:
         return "<sample {}>".format(id(self))
 
 
+# tests ########################################################################
+
+
 @patch('yorm.settings.fake', True)
 class TestFake:
 
@@ -36,8 +40,8 @@ class TestFake:
         sample = Sample('sample')
 
         # ensure no file is created
-        assert "path/to/sample.yml" == sample.yorm_mapper.path
-        assert not os.path.exists(sample.yorm_mapper.path)
+        assert "path/to/sample.yml" == sample.__mapper__.path
+        assert not os.path.exists(sample.__mapper__.path)
 
         # change object values
         sample.value = 42
@@ -45,32 +49,32 @@ class TestFake:
         # check fake file
         assert strip("""
         value: 42
-        """) == sample.yorm_mapper.text
+        """) == sample.__mapper__.text
 
         # ensure no file is created
-        assert not os.path.exists(sample.yorm_mapper.path)
+        assert not os.path.exists(sample.__mapper__.path)
 
         # change fake file
-        sample.yorm_mapper.text = "value: 0\n"
+        sample.__mapper__.text = "value: 0\n"
 
         # check object values
         assert 0 == sample.value
 
         # ensure no file is created
-        assert not os.path.exists(sample.yorm_mapper.path)
+        assert not os.path.exists(sample.__mapper__.path)
 
     def test_fake_changes_indicate_modified(self, tmpdir):
         tmpdir.chdir()
         sample = Sample('sample')
 
-        assert False is sample.yorm_mapper.modified
+        assert False is sample.__mapper__.modified
         assert 0 == sample.value
 
-        sample.yorm_mapper.text = "value: 42\n"
+        sample.__mapper__.text = "value: 42\n"
 
-        assert True is sample.yorm_mapper.modified
+        assert True is sample.__mapper__.modified
         assert 42 == sample.value
-        assert False is sample.yorm_mapper.modified
+        assert False is sample.__mapper__.modified
 
 
 class TestReal:
@@ -81,7 +85,7 @@ class TestReal:
         tmpdir.chdir()
         sample = Sample('sample')
 
-        sample.yorm_mapper.text = "value: 42"
+        sample.__mapper__.text = "value: 42"
 
         assert 42 == sample.value
 
@@ -93,8 +97,4 @@ class TestReal:
 
         assert strip("""
         value: 42
-        """) == sample.yorm_mapper.text
-
-
-if __name__ == '__main__':
-    pytest.main()
+        """) == sample.__mapper__.text
