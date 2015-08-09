@@ -61,7 +61,7 @@ class SampleMappable(Mappable):
     """Sample mappable class with hard-coded settings."""
 
     def __init__(self):
-        self.yorm_mapper = None
+        self.__mapper__ = None
 
         logging.debug("initializing sample...")
         self.var1 = None
@@ -77,8 +77,8 @@ class SampleMappable(Mappable):
                  'var3': Boolean,
                  'var4': IntegerList,
                  'var5': StatusDictionary}
-        self.yorm_mapper = MockMapper(self, path, attrs)
-        self.yorm_mapper.store()
+        self.__mapper__ = MockMapper(self, path, attrs)
+        self.__mapper__.store()
 
     def __repr__(self):
         return "<sample {}>".format(id(self))
@@ -93,7 +93,7 @@ class TestGetMapper:
 
     def test_yorm_mapper_required(self):
         sample = SampleMappable()
-        del sample.yorm_mapper
+        del sample.__mapper__
         with pytest.raises(AttributeError):
             print(get_mapper(sample))
 
@@ -108,7 +108,7 @@ class TestMappable:
 
     def test_init(self):
         """Verify files are created after initialized."""
-        text = self.sample.yorm_mapper._read()
+        text = self.sample.__mapper__._read()
         assert strip("""
         var1: ''
         var2: 0
@@ -125,7 +125,7 @@ class TestMappable:
         self.sample.var3 = True
         self.sample.var4 = [42]
         self.sample.var5 = {'status': True}
-        text = self.sample.yorm_mapper._read()
+        text = self.sample.__mapper__._read()
         assert strip("""
         var1: abc123
         var2: 1
@@ -143,7 +143,7 @@ class TestMappable:
         self.sample.var3 = 'off'
         self.sample.var4 = None
         self.sample.var5 = {'status': 1}
-        text = self.sample.yorm_mapper._read()
+        text = self.sample.__mapper__._read()
         assert strip("""
         var1: '42'
         var2: 1
@@ -165,7 +165,7 @@ class TestMappable:
         var2: 42
         var3: off
         """)
-        self.sample.yorm_mapper._write(text)
+        self.sample.__mapper__._write(text)
         assert"def456" == self.sample.var1
         assert 42 == self.sample.var2
         assert False is self.sample.var3
@@ -175,7 +175,7 @@ class TestMappable:
         text = strip("""
         invalid: -
         """)
-        self.sample.yorm_mapper._write(text)
+        self.sample.__mapper__._write(text)
         with pytest.raises(ValueError):
             print(self.sample.var1)
 
@@ -184,7 +184,7 @@ class TestMappable:
         text = strip("""
         not a dictionary
         """)
-        self.sample.yorm_mapper._write(text)
+        self.sample.__mapper__._write(text)
         with pytest.raises(ValueError):
             print(self.sample.var1)
 
@@ -193,7 +193,7 @@ class TestMappable:
         text = strip("""
         new: 42
         """)
-        self.sample.yorm_mapper._write(text)
+        self.sample.__mapper__._write(text)
         assert 42 == self.sample.new
 
     def test_new_unknown(self):
@@ -201,7 +201,7 @@ class TestMappable:
         text = strip("""
         new: !!timestamp 2001-12-15T02:59:43.1Z
         """)
-        self.sample.yorm_mapper._write(text)
+        self.sample.__mapper__._write(text)
         with pytest.raises(ValueError):
             print(self.sample.var1)
 
@@ -218,70 +218,70 @@ class TestMappableTriggers:
 
     class Sample(MockDict, MockList):
 
-        yorm_mapper = Mock()
-        yorm_mapper.attrs = {}
-        yorm_mapper.fetch = Mock()
-        yorm_mapper.store = Mock()
+        __mapper__ = Mock()
+        __mapper__.attrs = {}
+        __mapper__.fetch = Mock()
+        __mapper__.store = Mock()
 
     def setup_method(self, _):
         """Create an mappable instance for tests."""
         self.sample = self.Sample()
-        self.sample.yorm_mapper.fetch.reset_mock()
-        self.sample.yorm_mapper.store.reset_mock()
-        self.sample.yorm_mapper.auto_store = False
+        self.sample.__mapper__.fetch.reset_mock()
+        self.sample.__mapper__.store.reset_mock()
+        self.sample.__mapper__.auto_store = False
 
     def test_getattribute(self):
         with pytest.raises(AttributeError):
             getattr(self.sample, 'foo')
-        assert 1 == self.sample.yorm_mapper.fetch.call_count
-        assert 0 == self.sample.yorm_mapper.store.call_count
+        assert 1 == self.sample.__mapper__.fetch.call_count
+        assert 0 == self.sample.__mapper__.store.call_count
 
     def test_setattr(self):
-        self.sample.yorm_mapper.attrs['foo'] = Mock()
+        self.sample.__mapper__.attrs['foo'] = Mock()
         setattr(self.sample, 'foo', 'bar')
-        assert 0 == self.sample.yorm_mapper.fetch.call_count
-        assert 1 == self.sample.yorm_mapper.store.call_count
+        assert 0 == self.sample.__mapper__.fetch.call_count
+        assert 1 == self.sample.__mapper__.store.call_count
 
     def test_getitem(self):
         with pytest.raises(KeyError):
             print(self.sample['foo'])
-        assert 1 == self.sample.yorm_mapper.fetch.call_count
-        assert 0 == self.sample.yorm_mapper.store.call_count
+        assert 1 == self.sample.__mapper__.fetch.call_count
+        assert 0 == self.sample.__mapper__.store.call_count
 
     def test_setitem(self):
         self.sample['foo'] = 'bar'
-        assert 0 == self.sample.yorm_mapper.fetch.call_count
-        assert 1 == self.sample.yorm_mapper.store.call_count
+        assert 0 == self.sample.__mapper__.fetch.call_count
+        assert 1 == self.sample.__mapper__.store.call_count
 
     def test_delitem(self):
         self.sample['foo'] = 'bar'
-        self.sample.yorm_mapper.store.reset_mock()
+        self.sample.__mapper__.store.reset_mock()
 
         del self.sample['foo']
-        assert 0 == self.sample.yorm_mapper.fetch.call_count
-        assert 1 == self.sample.yorm_mapper.store.call_count
+        assert 0 == self.sample.__mapper__.fetch.call_count
+        assert 1 == self.sample.__mapper__.store.call_count
 
     def test_append(self):
         self.sample.append('foo')
-        assert 0 == self.sample.yorm_mapper.fetch.call_count
-        assert 1 == self.sample.yorm_mapper.store.call_count
+        assert 0 == self.sample.__mapper__.fetch.call_count
+        assert 1 == self.sample.__mapper__.store.call_count
 
     def test_iter(self):
         self.sample.append('foo')
         self.sample.append('bar')
-        self.sample.yorm_mapper.fetch.reset_mock()
-        self.sample.yorm_mapper.store.reset_mock()
-        self.sample.yorm_mapper.auto_store = False
-        self.sample.yorm_mapper.modified = True
+        self.sample.__mapper__.fetch.reset_mock()
+        self.sample.__mapper__.store.reset_mock()
+        self.sample.__mapper__.auto_store = False
+        self.sample.__mapper__.modified = True
 
         for item in self.sample:
             print(item)
-        assert 1 == self.sample.yorm_mapper.fetch.call_count
-        assert 0 == self.sample.yorm_mapper.store.call_count
+        assert 1 == self.sample.__mapper__.fetch.call_count
+        assert 0 == self.sample.__mapper__.store.call_count
 
     def test_handle_missing_mapper(self):
         sample = self.MockDict()
-        sample.yorm_mapper = None
+        sample.__mapper__ = None
         sample[0] = 0
         print(sample[0])
-        assert None is sample.yorm_mapper
+        assert None is sample.__mapper__

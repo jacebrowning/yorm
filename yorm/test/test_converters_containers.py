@@ -207,9 +207,9 @@ class TestReservedNames:
         assert strip("""
         items:
         - foo
-        """) == obj.yorm_mapper.text
+        """) == obj.__mapper__.text
 
-        obj.yorm_mapper.text = strip("""
+        obj.__mapper__.text = strip("""
         items:
         - bar
         """)

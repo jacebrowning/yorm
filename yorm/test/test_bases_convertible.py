@@ -13,7 +13,7 @@ class TestConvertible:
 
         def __init__(self, number):
             from unittest.mock import MagicMock
-            self.yorm_mapper = MagicMock()
+            self.__mapper__ = MagicMock()
             self.value = number
 
         @classmethod

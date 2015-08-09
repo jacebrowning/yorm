@@ -1,12 +1,11 @@
 """Integration tests for nested attributes."""
-# pylint: disable=missing-docstring,no-self-use,attribute-defined-outside-init
+# pylint: disable=missing-docstring,no-self-use,attribute-defined-outside-init,no-member
 
 
 from unittest.mock import patch
 import logging
 
 import yorm
-from yorm.mapper import get_mapper
 
 from . import strip
 
@@ -106,7 +105,7 @@ class TestNestedOnce:
             nested_list_3: []
             number: 0.0
           number: 1.0
-        """) == get_mapper(top).text
+        """) == top.__mapper__.text
 
     def test_set_by_index_triggers_store(self):
         top = Top()
@@ -120,7 +119,7 @@ class TestNestedOnce:
             nested_list_3: []
             number: 0.0
           number: 1.5
-        """) == get_mapper(top).text
+        """) == top.__mapper__.text
         top.nested_list[0] = {'number': 1.6}
         assert strip("""
         nested_dict:
@@ -131,11 +130,11 @@ class TestNestedOnce:
             nested_list_3: []
             number: 0.0
           number: 1.6
-        """) == get_mapper(top).text
+        """) == top.__mapper__.text
 
     def test_get_by_index_triggers_fetch(self):
         top = Top()
-        get_mapper(top).text = strip("""
+        top.__mapper__.text = strip("""
         nested_list:
         - number: 1.7
         """)
@@ -157,7 +156,7 @@ class TestNestedOnce:
             nested_list_3: []
             number: 0.0
           number: 1.9
-        """) == get_mapper(top).text
+        """) == top.__mapper__.text
         del top.nested_list[0]
         assert strip("""
         nested_dict:
@@ -168,7 +167,7 @@ class TestNestedOnce:
             nested_list_3: []
             number: 0.0
           number: 1.9
-        """) == get_mapper(top).text
+        """) == top.__mapper__.text
 
     def test_set_dict_as_attribute_triggers_store(self):
         top = Top()
@@ -178,11 +177,11 @@ class TestNestedOnce:
           nested_list_2: []
           number: 2.0
         nested_list: []
-        """) == get_mapper(top).text
+        """) == top.__mapper__.text
 
 
 @patch('yorm.settings.fake', True)
-class TestNestedTwice:  # pylint: disable=no-member
+class TestNestedTwice:
 
     def test_nested_list_item_value_change_triggers_store(self):
         top = Top()
@@ -196,7 +195,7 @@ class TestNestedTwice:  # pylint: disable=no-member
             nested_list_3: []
             number: 0.0
           number: 3.0
-        """) == get_mapper(top).text
+        """) == top.__mapper__.text
         top.nested_list[0].number = 4
         assert strip("""
         nested_dict:
@@ -207,7 +206,7 @@ class TestNestedTwice:  # pylint: disable=no-member
             nested_list_3: []
             number: 0.0
           number: 4.0
-        """) == get_mapper(top).text
+        """) == top.__mapper__.text
 
     def test_nested_dict_item_value_change_triggers_store(self):
         top = Top()
@@ -218,7 +217,7 @@ class TestNestedTwice:  # pylint: disable=no-member
           - 5.0
           number: 0.0
         nested_list: []
-        """) == get_mapper(top).text
+        """) == top.__mapper__.text
         top.nested_dict.nested_list_2.append(6)
         assert strip("""
         nested_dict:
@@ -227,7 +226,7 @@ class TestNestedTwice:  # pylint: disable=no-member
           - 6.0
           number: 0.0
         nested_list: []
-        """) == get_mapper(top).text
+        """) == top.__mapper__.text
 
     def test_dict_in_list_value_change_triggers_store(self):
         top = Top()
@@ -242,7 +241,7 @@ class TestNestedTwice:  # pylint: disable=no-member
             nested_list_3: []
             number: 8.0
           number: 0.0
-        """) == get_mapper(top).text
+        """) == top.__mapper__.text
 
     def test_list_in_dict_append_triggers_store(self):
         top = Top()
@@ -266,11 +265,11 @@ class TestNestedTwice:  # pylint: disable=no-member
             - 10.0
             number: 0.0
           number: 9.0
-        """) == get_mapper(top).text
+        """) == top.__mapper__.text
 
 
 @patch('yorm.settings.fake', True)
-class TestAliases:  # pylint: disable=no-member
+class TestAliases:
 
     @yorm.attr(var4=NestedList3)
     @yorm.attr(var5=StatusDictionary)

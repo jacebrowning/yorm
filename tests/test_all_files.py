@@ -1,5 +1,5 @@
 """Integration tests for file IO."""
-# pylint: disable=missing-docstring,no-self-use
+# pylint: disable=missing-docstring,no-self-use,no-member
 
 
 import logging
@@ -8,7 +8,6 @@ import pytest
 
 import yorm
 from yorm.converters import Integer, String, Float, Boolean, Dictionary, List
-from yorm.mapper import get_mapper
 
 from . import refresh_file_modification_times
 
@@ -64,7 +63,7 @@ class TestCreate:
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
         sample2 = SampleStandardDecorated('sample')
-        assert get_mapper(sample2).path == get_mapper(sample).path
+        assert sample2.__mapper__.path == sample.__mapper__.path
 
         refresh_file_modification_times()
 
@@ -93,7 +92,7 @@ class TestDelete:
         """Verify a deleted file cannot be read from."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        get_mapper(sample).delete()
+        sample.__mapper__.delete()
 
         with pytest.raises(FileNotFoundError):
             print(sample.string)
@@ -105,7 +104,7 @@ class TestDelete:
         """Verify a deleted file cannot be written to."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        get_mapper(sample).delete()
+        sample.__mapper__.delete()
 
         with pytest.raises(FileNotFoundError):
             sample.string = "def456"
@@ -114,8 +113,8 @@ class TestDelete:
         """Verify a deleted file can be deleted again."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        get_mapper(sample).delete()
-        get_mapper(sample).delete()
+        sample.__mapper__.delete()
+        sample.__mapper__.delete()
 
 
 class TestUpdate:
@@ -125,26 +124,26 @@ class TestUpdate:
     def test_automatic_store_after_first_modification(self, tmpdir):
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        assert "number_int: 0\n" in get_mapper(sample).text
+        assert "number_int: 0\n" in sample.__mapper__.text
 
         sample.number_int = 42
-        assert "number_int: 42\n" in get_mapper(sample).text
+        assert "number_int: 42\n" in sample.__mapper__.text
 
-        get_mapper(sample).text = "number_int: true\n"
+        sample.__mapper__.text = "number_int: true\n"
         assert 1 is sample.number_int
-        assert "number_int: 1\n" in get_mapper(sample).text
+        assert "number_int: 1\n" in sample.__mapper__.text
 
     def test_automatic_store_after_first_modification_on_list(self, tmpdir):
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        assert "array: []\n" in get_mapper(sample).text
+        assert "array: []\n" in sample.__mapper__.text
 
         sample.array.append(42)
-        assert "array:\n- 42\n" in get_mapper(sample).text
+        assert "array:\n- 42\n" in sample.__mapper__.text
 
-        get_mapper(sample).text = "array: [true]\n"
+        sample.__mapper__.text = "array: [true]\n"
         try:
             iter(sample)
         except AttributeError:
             pass
-        assert "array:\n- 1\n" in get_mapper(sample).text
+        assert "array:\n- 1\n" in sample.__mapper__.text

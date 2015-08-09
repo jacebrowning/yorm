@@ -1,11 +1,10 @@
 """Integration tests for the package."""
-# pylint: disable=missing-docstring,no-self-use
+# pylint: disable=missing-docstring,no-self-use,no-member
 
 
 import yorm
 from yorm.converters import Object, String, Integer, Float, Boolean
 from yorm.converters import Markdown, Dictionary, List
-from yorm.mapper import get_mapper
 
 from . import strip, refresh_file_modification_times
 
@@ -156,7 +155,7 @@ class SampleNested:
 # tests ########################################################################
 
 
-class TestStandard:  # pylint: disable=no-member
+class TestStandard:
 
     """Integration tests for standard attribute types."""
 
@@ -168,7 +167,7 @@ class TestStandard:  # pylint: disable=no-member
         """Verify standard attribute types dump/load correctly (decorator)."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        assert "path/to/default/sample.yml" == get_mapper(sample).path
+        assert "path/to/default/sample.yml" == sample.__mapper__.path
 
         # check defaults
         assert {} == sample.object
@@ -201,11 +200,11 @@ class TestStandard:  # pylint: disable=no-member
         object: {}
         string: Hello, world!
         'true': false
-        """) == get_mapper(sample).text
+        """) == sample.__mapper__.text
 
         # change file values
         refresh_file_modification_times()
-        get_mapper(sample).text = strip("""
+        sample.__mapper__.text = strip("""
         array: [4, 5, 6]
         'false': null
         number_int: 42
@@ -236,7 +235,7 @@ class TestStandard:  # pylint: disable=no-member
                  'true': Boolean,
                  'false': Boolean}
         sample = yorm.sync(_sample, "path/to/directory/sample.yml", attrs)
-        assert "path/to/directory/sample.yml" == get_mapper(sample).path
+        assert "path/to/directory/sample.yml" == sample.__mapper__.path
 
         # check defaults
         assert {'status': False} == sample.object
@@ -270,7 +269,7 @@ class TestStandard:  # pylint: disable=no-member
           status: false
         string: Hello, world!
         'true': false
-        """) == get_mapper(sample).text
+        """) == sample.__mapper__.text
 
     def test_auto_off(self, tmpdir):
         """Verify file updates are disabled with auto off."""
@@ -278,27 +277,27 @@ class TestStandard:  # pylint: disable=no-member
         sample = SampleDecoratedAutoOff()
 
         # ensure the file does not exist
-        assert False is get_mapper(sample).exists
-        assert "" == get_mapper(sample).text
+        assert False is sample.__mapper__.exists
+        assert "" == sample.__mapper__.text
 
         # store value
         sample.string = "hello"
 
         # ensure the file still does not exist
-        assert False is get_mapper(sample).exists
-        assert "" == get_mapper(sample).text
+        assert False is sample.__mapper__.exists
+        assert "" == sample.__mapper__.text
 
         # enable auto and store value
-        get_mapper(sample).auto = True
+        sample.__mapper__.auto = True
         sample.string = "world"
 
         # check for changed file values
         assert strip("""
         string: world
-        """) == get_mapper(sample).text
+        """) == sample.__mapper__.text
 
 
-class TestContainers:  # pylint: disable=no-member
+class TestContainers:
 
     """Integration tests for attribute containers."""
 
@@ -336,11 +335,11 @@ class TestContainers:  # pylint: disable=no-member
           status: true
         - label: ''
           status: false
-        """) == get_mapper(sample).text
+        """) == sample.__mapper__.text
 
         # change file values
         refresh_file_modification_times()
-        get_mapper(sample).text = strip("""
+        sample.__mapper__.text = strip("""
         count: 3
         other: 4.2
         results:
@@ -364,21 +363,21 @@ class TestContainers:  # pylint: disable=no-member
 
         # change file values
         refresh_file_modification_times()
-        get_mapper(sample).text = strip("""
+        sample.__mapper__.text = strip("""
         object: {'key': 'value'}
         array: [1, '2', '3.0']
         """)
 
         # (a mapped attribute must be read first to trigger retrieving)
-        get_mapper(sample).fetch()
+        sample.__mapper__.fetch()
 
         # check object values
         assert {'key': 'value'} == sample.object
         assert [1, '2', '3.0'] == sample.array
 
         # check object types
-        assert Object == get_mapper(sample).attrs['object']
-        assert Object == get_mapper(sample).attrs['array']
+        assert Object == sample.__mapper__.attrs['object']
+        assert Object == sample.__mapper__.attrs['array']
 
         # change object values
         sample.object = None  # pylint: disable=W0201
@@ -388,7 +387,7 @@ class TestContainers:  # pylint: disable=no-member
         assert strip("""
         array: abc
         object: null
-        """) == get_mapper(sample).text
+        """) == sample.__mapper__.text
 
 
 class TestExtended:
@@ -418,11 +417,11 @@ class TestExtended:
           This is the first sentence.
           This is the second sentence.
           This is the third sentence.
-        """) == get_mapper(sample).text
+        """) == sample.__mapper__.text
 
         # change file values
         refresh_file_modification_times()
-        get_mapper(sample).text = strip("""
+        sample.__mapper__.text = strip("""
         text: |
           This is a
           sentence.
@@ -450,11 +449,11 @@ class TestCustom:
         # check file values
         assert strip("""
         level: 1.2.3
-        """) == get_mapper(sample).text
+        """) == sample.__mapper__.text
 
         # change file values
         refresh_file_modification_times()
-        get_mapper(sample).text = strip("""
+        sample.__mapper__.text = strip("""
         level: 1
         """)
 

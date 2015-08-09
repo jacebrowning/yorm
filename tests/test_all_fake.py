@@ -1,12 +1,11 @@
 """Integration tests for the `yorm.settings.fake` option."""
-# pylint: disable=missing-docstring,no-self-use
+# pylint: disable=missing-docstring,no-self-use,no-member
 
 
 import os
 from unittest.mock import patch
 
 import yorm
-from yorm.mapper import get_mapper
 
 from . import strip
 
@@ -41,8 +40,8 @@ class TestFake:
         sample = Sample('sample')
 
         # ensure no file is created
-        assert "path/to/sample.yml" == get_mapper(sample).path
-        assert not os.path.exists(get_mapper(sample).path)
+        assert "path/to/sample.yml" == sample.__mapper__.path
+        assert not os.path.exists(sample.__mapper__.path)
 
         # change object values
         sample.value = 42
@@ -50,32 +49,32 @@ class TestFake:
         # check fake file
         assert strip("""
         value: 42
-        """) == get_mapper(sample).text
+        """) == sample.__mapper__.text
 
         # ensure no file is created
-        assert not os.path.exists(get_mapper(sample).path)
+        assert not os.path.exists(sample.__mapper__.path)
 
         # change fake file
-        get_mapper(sample).text = "value: 0\n"
+        sample.__mapper__.text = "value: 0\n"
 
         # check object values
         assert 0 == sample.value
 
         # ensure no file is created
-        assert not os.path.exists(get_mapper(sample).path)
+        assert not os.path.exists(sample.__mapper__.path)
 
     def test_fake_changes_indicate_modified(self, tmpdir):
         tmpdir.chdir()
         sample = Sample('sample')
 
-        assert False is get_mapper(sample).modified
+        assert False is sample.__mapper__.modified
         assert 0 == sample.value
 
-        get_mapper(sample).text = "value: 42\n"
+        sample.__mapper__.text = "value: 42\n"
 
-        assert True is get_mapper(sample).modified
+        assert True is sample.__mapper__.modified
         assert 42 == sample.value
-        assert False is get_mapper(sample).modified
+        assert False is sample.__mapper__.modified
 
 
 class TestReal:
@@ -86,7 +85,7 @@ class TestReal:
         tmpdir.chdir()
         sample = Sample('sample')
 
-        get_mapper(sample).text = "value: 42"
+        sample.__mapper__.text = "value: 42"
 
         assert 42 == sample.value
 
@@ -98,4 +97,4 @@ class TestReal:
 
         assert strip("""
         value: 42
-        """) == get_mapper(sample).text
+        """) == sample.__mapper__.text
