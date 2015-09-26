@@ -25,6 +25,7 @@ class ConfigModel:
         self.key = key
         self.root = root
         print(self.key)
+        self.unmapped = 0
 
     @staticmethod
     def pm_to_dm(model):
@@ -75,6 +76,12 @@ class TestPersistanceMapping:
         assert config.key == "my_key"
         assert config.root == self.root
         assert config.name == "my_name"
+
+    def test_nonmapped_attribute_is_kept(self):
+        model = ConfigModel('my_key', self.root)
+        model.unmapped = 42
+        yorm.update(model, force=True)
+        assert 42 == model.unmapped
 
 
 class TestStore:
