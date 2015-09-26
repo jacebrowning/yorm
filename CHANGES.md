@@ -1,6 +1,6 @@
 # Revision History
 
-## 0.5 (unreleased)
+## 0.5 (2015/09/25)
 
 - Renamed `yorm.base` to `yorm.bases`.
 - Stopped creating files on instantiation when `auto=False`.
