@@ -91,7 +91,7 @@ class TestSyncObject:
     def test_multiple(self):
         """Verify mapping cannot be enabled twice."""
         sample = utilities.sync(self.Sample(), "sample.yml")
-        with pytest.raises(exceptions.UseageError):
+        with pytest.raises(exceptions.MappingError):
             utilities.sync(sample, "sample.yml")
 
     @patch('os.path.isfile', Mock(return_value=True))
@@ -336,7 +336,7 @@ class TestUpdate:
         """Verify an exception is raised with the wrong base."""
         instance = Mock()
 
-        with pytest.raises(exceptions.UseageError):
+        with pytest.raises(exceptions.MappingError):
             utilities.update(instance)
 
 
@@ -358,7 +358,7 @@ class TestUpdateObject:
         """Verify an exception is raised with the wrong base."""
         instance = Mock()
 
-        with pytest.raises(exceptions.UseageError):
+        with pytest.raises(exceptions.MappingError):
             utilities.update_object(instance)
 
 
@@ -373,14 +373,14 @@ class TestUpdateFile:
 
         utilities.update_file(instance)
 
-        assert not instance.__mapper__.fetch.called
-        assert instance.__mapper__.store.called
+        assert False is instance.__mapper__.fetch.called
+        assert True is instance.__mapper__.store.called
 
     def test_update_wrong_base(self):
         """Verify an exception is raised with the wrong base."""
         instance = Mock()
 
-        with pytest.raises(exceptions.UseageError):
+        with pytest.raises(exceptions.MappingError):
             utilities.update_file(instance)
 
     def test_store_not_called_with_auto_off(self):
@@ -392,3 +392,14 @@ class TestUpdateFile:
 
         assert False is instance.__mapper__.fetch.called
         assert False is instance.__mapper__.store.called
+
+    def test_create_called_if_the_file_is_missing(self):
+        instance = MockMappable()
+        instance.__mapper__.reset_mock()
+        instance.__mapper__.exists = False
+
+        utilities.update_file(instance)
+
+        assert False is instance.__mapper__.fetch.called
+        assert True is instance.__mapper__.create.called
+        assert True is instance.__mapper__.store.called

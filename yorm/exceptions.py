@@ -35,6 +35,6 @@ class ConversionError(Error, ValueError):
     """Value could not be converted to the specified type."""
 
 
-class UseageError(Error):
+class MappingError(Error):
 
     """The API was called incorrectly."""

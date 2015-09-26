@@ -47,14 +47,10 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
 
         """Original class with `Mappable` as the base."""
 
-    mapper = set_mapper(instance, path, attrs, auto=auto)
+    instance.__class__ = Mapped
 
-    if existing is True:
-        if not mapper.exists:
-            raise exceptions.FileMissingError
-    elif existing is False:
-        if mapper.exists:
-            raise exceptions.FileAlreadyExistsError
+    mapper = set_mapper(instance, path, attrs, auto=auto)
+    _check_existance(mapper, existing)
 
     if mapper.auto:
         if not mapper.exists:
@@ -62,9 +58,7 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
             mapper.store()
         mapper.fetch()
 
-    instance.__class__ = Mapped
     log.info("mapped %r to '%s'", instance, path)
-
     return instance
 
 
@@ -148,10 +142,11 @@ def update(instance, fetch=True, force=True, store=True):
         update_object(instance, force=force)
 
 
-def update_object(instance, force=True):
+def update_object(instance, existing=True, force=True):
     """Synchronize changes into a mapped object from its file.
 
     :param instance: object with patched YAML mapping behavior
+    :param existing: indicate if file is expected to exist or not
     :param force: update the object even if the file appears unchanged
 
     """
@@ -159,14 +154,17 @@ def update_object(instance, force=True):
     _check_base(instance, mappable=True)
 
     mapper = get_mapper(instance)
+    _check_existance(mapper, existing)
+
     if mapper.modified or force:
         mapper.fetch()
 
 
-def update_file(instance, force=True):
+def update_file(instance, existing=None, force=True):
     """Synchronize changes into a mapped object's file.
 
     :param instance: object with patched YAML mapping behavior
+    :param existing: indicate if file is expected to exist or not
     :param force: update the file even if automatic sync is off
 
     """
@@ -174,14 +172,31 @@ def update_file(instance, force=True):
     _check_base(instance, mappable=True)
 
     mapper = get_mapper(instance)
-    print(mapper.auto)
+    _check_existance(mapper, existing)
+
     if mapper.auto or force:
+        if not mapper.exists:
+            mapper.create()
         mapper.store()
 
 
 def _check_base(obj, mappable=True):
     """Confirm an object's base class is `Mappable` as required."""
     if mappable and not isinstance(obj, Mappable):
-        raise exceptions.UseageError("{} is not mapped".format(repr(obj)))
+        raise exceptions.MappingError("{} is not mapped".format(repr(obj)))
     if not mappable and isinstance(obj, Mappable):
-        raise exceptions.UseageError("{} is already mapped".format(repr(obj)))
+        raise exceptions.MappingError("{} is already mapped".format(repr(obj)))
+
+
+def _check_existance(mapper, existing=None):
+    """Confirm the expected state of the file.
+
+    :param existing: indicate if file is expected to exist or not
+
+    """
+    if existing is True:
+        if not mapper.exists:
+            raise exceptions.FileMissingError
+    elif existing is False:
+        if mapper.exists:
+            raise exceptions.FileAlreadyExistsError
