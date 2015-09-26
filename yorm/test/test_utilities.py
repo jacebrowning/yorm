@@ -6,10 +6,9 @@
 import pytest
 from unittest.mock import patch, Mock
 
-from yorm import common
+from yorm import exceptions
 from yorm import utilities
-from yorm.base.converter import Converter
-from yorm.base.mappable import Mappable
+from yorm.bases import Converter, Mappable
 
 
 class MockConverter(Converter):
@@ -89,7 +88,7 @@ class TestSyncObject:
     def test_multiple(self):
         """Verify mapping cannot be enabled twice."""
         sample = utilities.sync(self.Sample(), "sample.yml")
-        with pytest.raises(common.UseageError):
+        with pytest.raises(exceptions.MappingError):
             utilities.sync(sample, "sample.yml")
 
     @patch('os.path.isfile', Mock(return_value=True))
@@ -98,6 +97,18 @@ class TestSyncObject:
         with patch('yorm.common.read_text', Mock(return_value="abc: 123")):
             sample = utilities.sync(self.Sample(), "sample.yml")
         assert 123 == sample.abc
+
+    @patch('os.path.isfile', Mock(return_value=False))
+    def test_exception_when_file_expected_but_missing(self):
+        utilities.sync(self.Sample(), "sample.yml", existing=False)
+        with pytest.raises(exceptions.FileMissingError):
+            utilities.sync(self.Sample(), "sample.yml", existing=True)
+
+    @patch('os.path.isfile', Mock(return_value=True))
+    def test_exception_when_file_not_expected_but_found(self):
+        utilities.sync(self.Sample(), "sample.yml", existing=True)
+        with pytest.raises(exceptions.FileAlreadyExistsError):
+            utilities.sync(self.Sample(), "sample.yml", existing=False)
 
 
 @patch('yorm.common.create_dirname', Mock())
@@ -322,7 +333,7 @@ class TestUpdate:
         """Verify an exception is raised with the wrong base."""
         instance = Mock()
 
-        with pytest.raises(common.UseageError):
+        with pytest.raises(exceptions.MappingError):
             utilities.update(instance)
 
 
@@ -344,7 +355,7 @@ class TestUpdateObject:
         """Verify an exception is raised with the wrong base."""
         instance = Mock()
 
-        with pytest.raises(common.UseageError):
+        with pytest.raises(exceptions.MappingError):
             utilities.update_object(instance)
 
 
@@ -359,15 +370,38 @@ class TestUpdateFile:
 
         utilities.update_file(instance)
 
-        assert not instance.yorm_mapper.fetch.called
-        assert instance.yorm_mapper.store.called
+        assert False is instance.yorm_mapper.fetch.called
+        assert False is instance.yorm_mapper.create.called
+        assert True is instance.yorm_mapper.store.called
 
     def test_update_wrong_base(self):
         """Verify an exception is raised with the wrong base."""
         instance = Mock()
 
-        with pytest.raises(common.UseageError):
+        with pytest.raises(exceptions.MappingError):
             utilities.update_file(instance)
+
+    def test_store_not_called_with_auto_off(self):
+        instance = MockMappable()
+        instance.yorm_mapper.reset_mock()
+        instance.yorm_mapper.auto = False
+
+        utilities.update_file(instance, force=False)
+
+        assert False is instance.yorm_mapper.fetch.called
+        assert False is instance.yorm_mapper.create.called
+        assert False is instance.yorm_mapper.store.called
+
+    def test_create_called_if_the_file_is_missing(self):
+        instance = MockMappable()
+        instance.yorm_mapper.reset_mock()
+        instance.yorm_mapper.exists = False
+
+        utilities.update_file(instance)
+
+        assert False is instance.yorm_mapper.fetch.called
+        assert True is instance.yorm_mapper.create.called
+        assert True is instance.yorm_mapper.store.called
 
 
 if __name__ == '__main__':

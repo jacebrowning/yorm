@@ -4,28 +4,10 @@ import abc
 import functools
 
 from .. import common
+from ..mapper import MAPPER, get_mapper
+
 
 log = common.logger(__name__)
-
-
-MAPPER = 'yorm_mapper'
-
-
-def get_mapper(obj):
-    """Get `Mapper` instance attached to an object."""
-    if not isinstance(obj, Mappable):
-        msg = "object {!r} must be a `Mappable` instance".format(obj)
-        raise TypeError(msg)
-    try:
-        mapper = getattr(obj, MAPPER)
-    except AttributeError:
-        if isinstance(obj, (dict, list)):
-            return None
-        else:
-            msg = "mapped {!r} missing {!r} attribute".format(obj, MAPPER)
-            raise AttributeError(msg) from None
-    else:
-        return mapper
 
 
 def fetch_before(method):
@@ -34,9 +16,12 @@ def fetch_before(method):
     def fetch_before(self, *args, **kwargs):  # pylint: disable=W0621
         """Decorated method."""
         mapper = get_mapper(self)
-        if mapper:
+        if mapper and mapper.modified:
             log.debug("fetch before call: %s", method.__name__)
             mapper.fetch()
+            if mapper.auto_store:
+                mapper.store()
+                mapper.modified = False
         return method(self, *args, **kwargs)
     return fetch_before
 
@@ -48,7 +33,7 @@ def store_after(method):
         """Decorated method."""
         result = method(self, *args, **kwargs)
         mapper = get_mapper(self)
-        if mapper:
+        if mapper and mapper.auto:
             log.debug("store after call: %s", method.__name__)
             mapper.store()
         return result
@@ -61,7 +46,8 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
 
     def __getattribute__(self, name):
         """Trigger object update when reading attributes."""
-        if name in ('__dict__', '__class__', MAPPER):
+        # TODO: remove MAPPER once renamed to '__mapper__'
+        if name.startswith('__') or name == MAPPER:
             # avoid infinite recursion (attribute requested in this function)
             return object.__getattribute__(self, name)
 
@@ -78,20 +64,25 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
             missing = False
 
         # Fetch a new value from disk if the attribute is mapped or missing
-        if mapper and (missing or name in mapper.attrs):
+        if mapper and (missing or (name in mapper.attrs and mapper.modified)):
             mapper.fetch()
             value = object.__getattribute__(self, name)
+
+            # Store back to disk if this has been done before
+            if mapper.auto_store:
+                mapper.store()
+                mapper.modified = False
 
         return value
 
     def __setattr__(self, name, value):
         """Trigger file update when setting attributes."""
         super().__setattr__(name, value)
-        if name in ('__dict__', MAPPER):
+        if name.startswith('__'):
             return
 
         mapper = get_mapper(self)
-        if mapper and name in mapper.attrs:
+        if mapper and mapper.auto and name in mapper.attrs:
             mapper.store()
 
     @fetch_before

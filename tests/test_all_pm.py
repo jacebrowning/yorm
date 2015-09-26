@@ -25,6 +25,7 @@ class ConfigModel:
         self.key = key
         self.root = root
         print(self.key)
+        self.unmapped = 0
 
     @staticmethod
     def pm_to_dm(model):
@@ -32,6 +33,27 @@ class ConfigModel:
         config.name = model.name
         config.root = model.root
         return config
+
+
+class ConfigStore:
+
+    def __init__(self, root):
+        self.root = root
+        self.path = self.root + "/{}/config.yml"
+        self.attrs = dict(key=yorm.converters.String,
+                          name=yorm.converters.String)
+
+    def read(self, key):
+        instance = Config(key)
+        path = self.path.format(key)
+        attrs = self.attrs
+        try:
+            yorm.sync(instance, path, attrs, existing=True, auto=False)
+        except yorm.exceptions.FileMissingError:
+            return None
+        else:
+            yorm.update_object(instance)
+            return instance
 
 
 class TestPersistanceMapping:
@@ -54,3 +76,16 @@ class TestPersistanceMapping:
         assert config.key == "my_key"
         assert config.root == self.root
         assert config.name == "my_name"
+
+    def test_nonmapped_attribute_is_kept(self):
+        model = ConfigModel('my_key', self.root)
+        model.unmapped = 42
+        yorm.update(model, force=True)
+        assert 42 == model.unmapped
+
+
+class TestStore:
+
+    def test_read_missing(self, tmpdir):
+        store = ConfigStore(str(tmpdir))
+        assert None is store.read('unknown')

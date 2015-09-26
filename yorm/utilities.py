@@ -2,9 +2,9 @@
 
 import uuid
 
-from . import common
-from .base.mappable import MAPPER, Mappable
-from .mapper import Mapper
+from . import common, exceptions
+from .bases import Mappable
+from .mapper import get_mapper, set_mapper
 
 log = common.logger(__name__)
 
@@ -28,44 +28,47 @@ def sync(*args, **kwargs):
         return sync_object(*args, **kwargs)
 
 
-def sync_object(instance, path, attrs=None, auto=True):
+def sync_object(instance, path, attrs=None, existing=None, auto=True):
     """Enable YAML mapping on an object.
 
     :param instance: object to patch with YAML mapping behavior
     :param path: file path for dump/load
     :param attrs: dictionary of attribute names mapped to converter classes
-    :param auto: automatically store attribute to file
+    :param existing: indicate if file is expected to exist or not
+    :param auto: automatically store attributes to file
 
     """
-    log.info("mapping object...")
+    log.info("mapping %r to %s...", instance, path)
     _check_base(instance, mappable=False)
 
-    attrs = attrs or common.ATTRS[instance.__class__]
+    attrs = attrs or common.attrs[instance.__class__]
 
     class Mapped(Mappable, instance.__class__):
 
         """Original class with `Mappable` as the base."""
 
-    mapper = Mapper(instance, path, attrs, auto=auto)
-
-    if not mapper.exists:
-        mapper.create()
-        mapper.store(force=True)
-    mapper.fetch(force=True)
-
-    setattr(instance, MAPPER, mapper)
     instance.__class__ = Mapped
-    log.info("mapped %r to '%s'", instance, path)
 
+    mapper = set_mapper(instance, path, attrs, auto=auto)
+    _check_existance(mapper, existing)
+
+    if mapper.auto:
+        if not mapper.exists:
+            mapper.create()
+            mapper.store()
+        mapper.fetch()
+
+    log.info("mapped %r to '%s'", instance, path)
     return instance
 
 
-def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
+def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
     """Class decorator to enable YAML mapping after instantiation.
 
     :param path_format: formatting string to create file paths for dump/load
     :param format_spec: dictionary to use for string formatting
     :param attrs: dictionary of attribute names mapped to converter classes
+    :param existing: indicate if file is expected to exist or not
     :param auto: automatically store attribute to file
 
     """
@@ -73,38 +76,33 @@ def sync_instances(path_format, format_spec=None, attrs=None, auto=True):
     attrs = attrs or {}
 
     def decorator(cls):
-        """Class decorator."""
+        """Class decorator to map instances to files.."""
 
-        class Mapped(Mappable, cls):
+        old_init = cls.__init__
 
-            """Original class with `Mappable` as the base."""
+        def new_init(self, *_args, **_kwargs):
+            """Modified class __init__ that maps the resulting instance."""
+            old_init(self, *_args, **_kwargs)
 
-            def __init__(self, *_args, **_kwargs):
-                setattr(self, MAPPER, None)
-                super().__init__(*_args, **_kwargs)
+            log.info("mapping instance of %r to '%s'...", cls, path_format)
 
-                log.info("mapping instance of %r to '%s'...", cls, path_format)
-                format_values = {}
-                for key, value in format_spec.items():
-                    format_values[key] = getattr(self, value)
-                if '{' + UUID + '}' in path_format:
-                    format_values[UUID] = uuid.uuid4().hex
-                format_values['self'] = self
+            format_values = {}
+            for key, value in format_spec.items():
+                format_values[key] = getattr(self, value)
+            if '{' + UUID + '}' in path_format:
+                format_values[UUID] = uuid.uuid4().hex
+            format_values['self'] = self
 
-                path = path_format.format(**format_values)
-                attrs.update(common.ATTRS[self.__class__])
-                attrs.update(common.ATTRS[cls])
-                mapper = Mapper(self, path, attrs, auto=auto)
+            path = path_format.format(**format_values)
+            attrs.update(common.attrs[self.__class__])
+            attrs.update(common.attrs[cls])
 
-                if not mapper.exists:
-                    mapper.create()
-                    mapper.store(force=True)
-                mapper.fetch(force=True)
+            sync_object(self, path, attrs, **kwargs)
 
-                setattr(self, MAPPER, mapper)
-                log.info("mapped %r to '%s'", self, path)
+        new_init.__doc__ = old_init.__doc__
+        cls.__init__ = new_init
 
-        return Mapped
+        return cls
 
     return decorator
 
@@ -118,7 +116,7 @@ def attr(**kwargs):
     def decorator(cls):
         """Class decorator."""
         for name, converter in kwargs.items():
-            common.ATTRS[cls][name] = converter
+            common.attrs[cls][name] = converter
 
         return cls
 
@@ -144,37 +142,61 @@ def update(instance, fetch=True, force=True, store=True):
         update_object(instance, force=force)
 
 
-def update_object(instance, force=True):
+def update_object(instance, existing=True, force=True):
     """Synchronize changes into a mapped object from its file.
 
     :param instance: object with patched YAML mapping behavior
+    :param existing: indicate if file is expected to exist or not
     :param force: update the object even if the file appears unchanged
 
     """
     log.info("manually updating %r from file...", instance)
     _check_base(instance, mappable=True)
 
-    mapper = getattr(instance, MAPPER)
-    mapper.fetch(force=force)
+    mapper = get_mapper(instance)
+    _check_existance(mapper, existing)
+
+    if mapper.modified or force:
+        mapper.fetch()
 
 
-def update_file(instance, force=True):
+def update_file(instance, existing=None, force=True):
     """Synchronize changes into a mapped object's file.
 
     :param instance: object with patched YAML mapping behavior
+    :param existing: indicate if file is expected to exist or not
     :param force: update the file even if automatic sync is off
 
     """
     log.info("manually saving %r to file...", instance)
     _check_base(instance, mappable=True)
 
-    mapper = getattr(instance, MAPPER)
-    mapper.store(force=force)
+    mapper = get_mapper(instance)
+    _check_existance(mapper, existing)
+
+    if mapper.auto or force:
+        if not mapper.exists:
+            mapper.create()
+        mapper.store()
 
 
 def _check_base(obj, mappable=True):
     """Confirm an object's base class is `Mappable` as required."""
     if mappable and not isinstance(obj, Mappable):
-        raise common.UseageError("{} is not mapped".format(repr(obj)))
+        raise exceptions.MappingError("{} is not mapped".format(repr(obj)))
     if not mappable and isinstance(obj, Mappable):
-        raise common.UseageError("{} is already mapped".format(repr(obj)))
+        raise exceptions.MappingError("{} is already mapped".format(repr(obj)))
+
+
+def _check_existance(mapper, existing=None):
+    """Confirm the expected state of the file.
+
+    :param existing: indicate if file is expected to exist or not
+
+    """
+    if existing is True:
+        if not mapper.exists:
+            raise exceptions.FileMissingError
+    elif existing is False:
+        if mapper.exists:
+            raise exceptions.FileAlreadyExistsError

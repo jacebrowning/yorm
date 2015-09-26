@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# pylint:disable=W0404,W0612,C0111
+# pylint:disable=W0404,W0612,C
 
 """Integration tests the package namespace."""
 
@@ -10,7 +9,7 @@ def test_top():
 
     import yorm
 
-    assert yorm.base
+    assert yorm.bases
     assert yorm.converters.Integer
     assert yorm.converters.extended.Markdown
 
@@ -44,7 +43,3 @@ def test_from_nested():
     from yorm.converters.standard import String
     from yorm.converters.extended import Markdown
     from yorm.converters.containers import List
-
-
-if __name__ == '__main__':
-    pytest.main()

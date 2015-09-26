@@ -1,23 +1,13 @@
 """Converter classes for builtin container types."""
 
 from .. import common
-from ..base.mappable import Mappable
-from ..base.convertible import Convertible
+from ..bases import Convertible, Container
 from . import standard
 
 log = common.logger(__name__)
 
 
-class Container(Mappable, Convertible):  # pylint: disable=W0223
-
-    """Base class for containers of attribute converters."""
-
-    @classmethod
-    def create_default(cls):
-        return cls.__new__(cls)
-
-
-class Dictionary(Container, dict):
+class Dictionary(Convertible, Container, dict):
 
     """Base class for a dictionary of attribute converters."""
 
@@ -34,7 +24,7 @@ class Dictionary(Container, dict):
 
         data = {}
 
-        for name, converter in common.ATTRS[cls].items():
+        for name, converter in common.attrs[cls].items():
             data[name] = converter.to_data(value2.get(name, None))
 
         return data
@@ -44,7 +34,7 @@ class Dictionary(Container, dict):
         value = cls.create_default()
 
         # Convert object attributes to a dictionary
-        attrs = common.ATTRS[cls].copy()
+        attrs = common.attrs[cls].copy()
         if isinstance(data, cls):
             dictionary = {}
             for k, v in data.items():
@@ -64,7 +54,7 @@ class Dictionary(Container, dict):
             except KeyError:
                 if match:
                     converter = match(name, data2, nested=True)
-                    common.ATTRS[cls][name] = converter
+                    common.attrs[cls][name] = converter
                 else:
                     continue
 
@@ -84,14 +74,16 @@ class Dictionary(Container, dict):
         # Create default values for unmapped converters
         for name, converter in attrs.items():
             value[name] = converter.create_default()
-            log.warn("added missing nested key '%s'...", name)
+            # TODO: clean this up more
+            # https://github.com/jacebrowning/yorm/issues/69
+            log.info("added missing nested key '%s'...", name)
 
         # Apply the new value
         self.clear()
         self.update(value)
 
 
-class List(Container, list):
+class List(Convertible, Container, list):
 
     """Base class for a homogeneous list of attribute converters."""
 
@@ -107,7 +99,7 @@ class List(Container, list):
     @common.classproperty
     def item_type(cls):  # pylint: disable=E0213
         """Get the converter class for all items."""
-        return common.ATTRS[cls].get(cls.ALL)
+        return common.attrs[cls].get(cls.ALL)
 
     @classmethod
     def to_data(cls, value):

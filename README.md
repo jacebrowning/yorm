@@ -1,5 +1,4 @@
-YORM
-====
+# YORM
 
 Enables automatic, bidirectional, human-friendly mappings of object attributes to YAML files.
 
@@ -16,21 +15,18 @@ Uses beyond typical object serialization and relational mapping include:
 * storage of content in text files optimized for version control
 * extensible converters to customize formatting on complex classes
 
-Getting Started
-===============
+# Getting Started
 
-Requirements
-------------
+## Requirements
 
 * Python 3.3+
 
-Installation
-------------
+## Installation
 
 YORM can be installed with pip:
 
 ```
-$ pip install YORM
+$ pip3 install YORM
 ```
 
 or directly from the source code:
@@ -38,11 +34,10 @@ or directly from the source code:
 ```
 $ git clone https://github.com/jacebrowning/yorm.git
 $ cd yorm
-$ python setup.py install
+$ python3 setup.py install
 ```
 
-Basic Usage
-===========
+# Basic Usage
 
 Simply take an existing class:
 

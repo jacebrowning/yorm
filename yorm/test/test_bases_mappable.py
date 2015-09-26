@@ -8,8 +8,8 @@ import logging
 from unittest.mock import Mock
 
 import yorm
-from yorm.base.mappable import get_mapper, Mappable
-from yorm.mapper import Mapper
+from yorm.bases import Mappable
+from yorm.mapper import get_mapper, Mapper
 from yorm.converters import String, Integer, Boolean, List, Dictionary
 
 from . import strip
@@ -92,10 +92,6 @@ class SampleMappable(Mappable):
 class TestGetMapper:
 
     """Unit tests for the `get_mapper` function."""
-
-    def test_mappable_required(self):
-        with pytest.raises(TypeError):
-            print(get_mapper(None))
 
     def test_yorm_mapper_required(self):
         sample = SampleMappable()
@@ -234,6 +230,7 @@ class TestMappableTriggers:
         self.sample = self.Sample()
         self.sample.yorm_mapper.fetch.reset_mock()
         self.sample.yorm_mapper.store.reset_mock()
+        self.sample.yorm_mapper.auto_store = False
 
     def test_getattribute(self):
         with pytest.raises(AttributeError):
@@ -276,6 +273,8 @@ class TestMappableTriggers:
         self.sample.append('bar')
         self.sample.yorm_mapper.fetch.reset_mock()
         self.sample.yorm_mapper.store.reset_mock()
+        self.sample.yorm_mapper.auto_store = False
+        self.sample.yorm_mapper.modified = True
 
         for item in self.sample:
             print(item)

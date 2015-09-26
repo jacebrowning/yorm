@@ -1,7 +1,7 @@
 """Convertible classes for builtin immutable types."""
 
-from .. import common
-from ..base.convertible import Converter
+from .. import common, exceptions
+from ..bases import Converter
 
 log = common.logger(__name__)
 
@@ -55,7 +55,9 @@ class Integer(Object):
 
     @classmethod
     def to_value(cls, obj):
-        if isinstance(obj, cls.TYPE):
+        if all((isinstance(obj, cls.TYPE),
+                obj is not True,
+                obj is not False)):
             return obj
         elif obj:
             try:
@@ -122,4 +124,5 @@ def match(name, data, nested=False):
         log.warn("new%s attribute with unknown type: %s", nested, name)
         return Object
 
-    raise common.ConversionError("no converter available for: {}".format(data))
+    msg = "no converter available for: {}".format(data)
+    raise exceptions.ConversionError(msg)
