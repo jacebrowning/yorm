@@ -6,7 +6,7 @@ EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 
 # Python settings
 PYTHON_MAJOR ?= 3
-PYTHON_MINOR ?= 4
+PYTHON_MINOR ?= 5
 
 # Test settings
 UNIT_TEST_COVERAGE := 97
@@ -117,7 +117,7 @@ $(DEPENDS_DEV_FLAG): Makefile
 ifdef WINDOWS
 	$(PIP) install --upgrade pywin32
 else ifdef MAC
-	$(PIP) install --upgrade pync MacFSEvents
+	$(PIP) install --upgrade pync MacFSEvents==0.4
 else ifdef LINUX
 	$(PIP) install --upgrade pyinotify
 endif
@@ -172,10 +172,7 @@ pep8: depends-ci
 
 .PHONY: pep257
 pep257: depends-ci
-# D102: docstring missing (checked by PyLint)
-# D202: No blank lines allowed *after* function docstring (personal preference)
-# D203: 1 blank line required before class (deprecated warning)
-	$(PEP257) $(PACKAGE) tests --ignore=D102,D202,D203
+	$(PEP257) $(PACKAGE) tests
 
 .PHONY: pylint
 pylint: depends-ci

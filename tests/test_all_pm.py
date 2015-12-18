@@ -1,5 +1,5 @@
 """Integration tests using YORM as a persistence model."""
-# pylint: disable=missing-docstring,no-self-use
+# pylint: disable=missing-docstring,no-self-use,misplaced-comparison-constant
 
 
 import os

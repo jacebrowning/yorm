@@ -9,7 +9,6 @@ log = common.logger(__name__)
 
 
 class Converter(metaclass=abc.ABCMeta):
-
     """Base class for immutable attribute converters."""
 
     @abc.abstractclassmethod

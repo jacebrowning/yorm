@@ -10,7 +10,6 @@ log = common.logger(__name__)
 
 
 class Convertible(Mappable, Converter, metaclass=ABCMeta):  # pragma: no cover (abstract)
-
     """Base class for mutable attributes."""
 
     @classmethod

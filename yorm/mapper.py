@@ -87,7 +87,6 @@ def prefix(obj):
 
 
 class BaseHelper(metaclass=abc.ABCMeta):
-
     """Utility class to map attributes to text files.
 
     To start mapping attributes to a file:
@@ -223,7 +222,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
             if not hasattr(obj, name):
                 value = converter.to_value(None)
                 msg = "fetched default value for missing attribute: %s = %r"
-                log.warn(msg, name, value)
+                log.warning(msg, name, value)
                 setattr(obj, name, value)
 
         # Set meta attributes
@@ -243,7 +242,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
             except AttributeError:
                 value = None
                 msg = "storing default data for missing attribute '%s'..."
-                log.warn(msg, name)
+                log.warning(msg, name)
 
             data2 = converter.to_data(value)
 
@@ -335,7 +334,6 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
 
 class Helper(BaseHelper):
-
     """Utility class to map attributes to YAML files."""
 
     @staticmethod
@@ -363,7 +361,6 @@ class Helper(BaseHelper):
 
 
 class Mapper(Helper):
-
     """Maps an object's attribute to YAML files."""
 
     def __init__(self, obj, path, attrs, auto=True, root=None):

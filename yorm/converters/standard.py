@@ -7,7 +7,6 @@ log = common.logger(__name__)
 
 
 class Object(Converter):  # pylint: disable=W0223
-
     """Base class for immutable types."""
 
     TYPE = None  # type for inferred converters (set in subclasses)
@@ -27,7 +26,6 @@ class Object(Converter):  # pylint: disable=W0223
 
 
 class String(Object):
-
     """Convertible for the `str` type."""
 
     TYPE = str
@@ -47,7 +45,6 @@ class String(Object):
 
 
 class Integer(Object):
-
     """Convertible for the `int` type."""
 
     TYPE = int
@@ -69,7 +66,6 @@ class Integer(Object):
 
 
 class Float(Object):
-
     """Convertible for the `float` type."""
 
     TYPE = float
@@ -86,7 +82,6 @@ class Float(Object):
 
 
 class Boolean(Object):
-
     """Convertible for the `bool` type."""
 
     TYPE = bool
@@ -121,7 +116,7 @@ def match(name, data, nested=False):
 
     if data is None or isinstance(data, (dict, list)):
         log.info("default converter: %s", Object)
-        log.warn("new%s attribute with unknown type: %s", nested, name)
+        log.warning("new%s attribute with unknown type: %s", nested, name)
         return Object
 
     msg = "no converter available for: {}".format(data)

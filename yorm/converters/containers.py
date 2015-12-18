@@ -8,7 +8,6 @@ log = common.logger(__name__)
 
 
 class Dictionary(Convertible, Container, dict):
-
     """Base class for a dictionary of attribute converters."""
 
     def __new__(cls, *args, **kwargs):
@@ -84,7 +83,6 @@ class Dictionary(Convertible, Container, dict):
 
 
 class List(Convertible, Container, list):
-
     """Base class for a homogeneous list of attribute converters."""
 
     ALL = 'all'
@@ -110,7 +108,7 @@ class List(Convertible, Container, list):
 
         if value2:
             for item in value2:
-                data.append(cls.item_type.to_data(item))
+                data.append(cls.item_type.to_data(item))  # pylint: disable=no-member
 
         return data
 
@@ -127,13 +125,13 @@ class List(Convertible, Container, list):
             try:
                 attr = self[len(value)]
             except IndexError:
-                attr = converter.create_default()
+                attr = converter.create_default()  # pylint: disable=no-member
 
             if all((isinstance(attr, converter),
                     issubclass(converter, Convertible))):
                 attr.update_value(item, match=match)
             else:
-                attr = converter.to_value(item)
+                attr = converter.to_value(item)  # pylint: disable=no-member
 
             value.append(attr)
 

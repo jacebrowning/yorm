@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring,no-self-use
+# pylint: disable=missing-docstring,no-self-use,misplaced-comparison-constant
 
 import pytest
 

@@ -44,7 +44,6 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
     attrs = attrs or common.attrs[instance.__class__]
 
     class Mapped(Mappable, instance.__class__):
-
         """Original class with `Mappable` as the base."""
 
     instance.__class__ = Mapped

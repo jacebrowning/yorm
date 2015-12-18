@@ -48,7 +48,6 @@ log = logger(__name__)
 
 
 class classproperty(object):
-
     """Read-only class property decorator."""
 
     def __init__(self, getter):

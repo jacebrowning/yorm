@@ -1,5 +1,5 @@
 """Integration tests for the `yorm.settings.fake` option."""
-# pylint: disable=missing-docstring,no-self-use,no-member
+# pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
 
 
 import os

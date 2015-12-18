@@ -41,8 +41,9 @@ def store_after(method):
 
 
 class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
-
     """Base class for objects with attributes mapped to file."""
+
+    # pylint: disable=no-member
 
     def __getattribute__(self, name):
         """Trigger object update when reading attributes."""

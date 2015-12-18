@@ -6,11 +6,13 @@ import logging
 
 def strip(text, tabs=None, end='\n'):
     """Strip leading whitespace indentation on multiline string literals."""
-    lines = text.strip().splitlines()
-    for index in range(len(lines)):
+    lines = []
+
+    for line in text.strip().splitlines():
         if not tabs:
-            tabs = lines[index].count(' ' * 4)
-        lines[index] = lines[index].replace(' ' * tabs * 4, '')
+            tabs = line.count(' ' * 4)
+        lines.append(line.replace(' ' * tabs * 4, ''))
+
     return '\n'.join(lines) + end
 
 

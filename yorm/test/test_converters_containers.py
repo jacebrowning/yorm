@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring,no-self-use,no-member
+# pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
 
 from unittest.mock import patch, Mock
 

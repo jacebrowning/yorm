@@ -1,8 +1,9 @@
-# pylint: disable=missing-docstring,no-self-use,no-member
+# pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
 
 import os
-import pytest
 from unittest.mock import patch, Mock
+
+import pytest
 
 from yorm import exceptions
 from yorm.mapper import Helper, Mapper

@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring,no-self-use,attribute-defined-outside-init,protected-access
+# pylint: disable=missing-docstring,no-self-use,attribute-defined-outside-init,protected-access,misplaced-comparison-constant
 
 import logging
 from unittest.mock import Mock

@@ -12,28 +12,24 @@ from .containers import Dictionary, List
 
 
 class NullableString(String):
-
     """Converter for the `str` type with `None` as default."""
 
     DEFAULT = None
 
 
 class NullableInteger(Integer):
-
     """Converter for the `int` type with `None` as default."""
 
     DEFAULT = None
 
 
 class NullableFloat(Float):
-
     """Converter for the `float` type with `None` as default."""
 
     DEFAULT = None
 
 
 class NullableBoolean(Boolean):
-
     """Converter for the `bool` type with `None` as default."""
 
     DEFAULT = None
@@ -43,7 +39,6 @@ class NullableBoolean(Boolean):
 
 
 class _Literal(str):
-
     """Custom type for strings which should be dumped in the literal style."""
 
     @staticmethod
@@ -56,7 +51,6 @@ yaml.add_representer(_Literal, _Literal.representer)
 
 
 class Markdown(String):
-
     """Converter for a `str` type that contains Markdown."""
 
     REGEX_MARKDOWN_SPACES = re.compile(r"""
@@ -150,7 +144,6 @@ class Markdown(String):
 
 
 class AttributeDictionary(Dictionary):
-
     """Dictionary converter with keys available as attributes."""
 
     def __init__(self, *args, **kwargs):
@@ -170,7 +163,6 @@ class AttributeDictionary(Dictionary):
 
 
 class SortedList(List):
-
     """List converter that is sorted on disk."""
 
     @classmethod
@@ -193,6 +185,6 @@ class SortedList(List):
         data = []
 
         for item in sorted(value):
-            data.append(cls.item_type.to_data(item))
+            data.append(cls.item_type.to_data(item))  # pylint: disable=no-member
 
         return data
