@@ -69,7 +69,7 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
     :param format_spec: dictionary to use for string formatting
     :param attrs: dictionary of attribute names mapped to converter classes
     :param existing: indicate if file is expected to exist or not
-    :param auto: automatically store attribute to file
+    :param auto: automatically store attributes to file
 
     """
     format_spec = format_spec or {}
