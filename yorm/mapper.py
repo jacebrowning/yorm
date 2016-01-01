@@ -4,8 +4,6 @@ import os
 import abc
 import functools
 
-import yaml
-
 from . import common, exceptions, settings
 from .bases import Container
 
@@ -109,6 +107,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
     def __init__(self, path, auto=True):
         self.path = path
+        self.ext = self.path.split('.')[-1].lower()
         self.auto = auto
         self.auto_store = False
         self.exists = self.path and os.path.isfile(self.path)
@@ -188,7 +187,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
         # Parse data from file
         text = self._read()
-        data = self._load(text, self.path)
+        data = self._load(text=text, path=self.path, ext=self.ext)
         log.trace("loaded: {}".format(data))
 
         # Update all attributes
@@ -250,7 +249,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
             data[name] = data2
 
         # Dump data to file
-        text = self._dump(data)
+        text = self._dump(data=data, ext=self.ext)
         self._write(text)
 
         # Set meta attributes
@@ -298,7 +297,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
             common.write_text(text, self.path)
 
     @abc.abstractstaticmethod
-    def _load(text, path):  # pragma: no cover (abstract method)
+    def _load(text, path, ext):  # pragma: no cover (abstract method)
         """Parsed data from text.
 
         :param text: text read from a file
@@ -310,7 +309,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractstaticmethod
-    def _dump(data):  # pragma: no cover (abstract method)
+    def _dump(data, ext):  # pragma: no cover (abstract method)
         """Dump data to text.
 
         :param data: dictionary of data
@@ -337,7 +336,7 @@ class Helper(BaseHelper):
     """Utility class to map attributes to YAML files."""
 
     @staticmethod
-    def _load(text, path):
+    def _load(text, path, ext):
         """Load YAML data from text.
 
         :param text: text read from a file
@@ -346,10 +345,10 @@ class Helper(BaseHelper):
         :return: dictionary of YAML data
 
         """
-        return common.load_yaml(text, path)
+        return common.load_file(text, path, ext)
 
     @staticmethod
-    def _dump(data):
+    def _dump(data, ext):
         """Dump YAML data to text.
 
         :param data: dictionary of YAML data
@@ -357,7 +356,7 @@ class Helper(BaseHelper):
         :return: text to write to a file
 
         """
-        return yaml.dump(data, default_flow_style=False, allow_unicode=True)
+        return common.dump_file(data, ext)
 
 
 class Mapper(Helper):
