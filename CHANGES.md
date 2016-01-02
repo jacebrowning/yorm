@@ -2,6 +2,8 @@
 
 ## 0.6 (unreleased)
 
+-  Added preliminary support for JSON serialization (@pr0xmeh).
+
 ## 0.5 (2015/09/25)
 
 - Renamed `yorm.base` to `yorm.bases`.
