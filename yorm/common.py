@@ -5,6 +5,7 @@ import shutil
 import collections
 import logging
 
+import simplejson as json
 import yaml
 
 from . import exceptions
@@ -83,7 +84,7 @@ def read_text(path, encoding='utf-8'):
     return text
 
 
-def load_yaml(text, path):
+def load_file(text, path, ext='yml'):
     """Parse a dictionary from YAML text.
 
     :param text: string containing dumped YAML data
@@ -93,17 +94,33 @@ def load_yaml(text, path):
 
     """
     # Load the YAML data
+    data = {}
     try:
-        data = yaml.load(text) or {}
+        if ext in ['yml', 'yaml']:
+            data = yaml.load(text) or {}
+        elif ext in ['json']:
+            data = json.loads(text) or {}
     except yaml.error.YAMLError as exc:
-        msg = "invalid contents: {}:\n{}".format(path, exc)
+        msg = "invalid YAML contents: {}:\n{}".format(path, exc)
+        raise exceptions.ContentError(msg) from None
+    except json.JSONDecodeError as exc:
+        msg = "invalid JSON contents: {}:\n{}".format(path, exc)
         raise exceptions.ContentError(msg) from None
     # Ensure data is a dictionary
     if not isinstance(data, dict):
-        msg = "invalid contents: {}".format(path)
+        msg = "invalid file contents: {}".format(path)
         raise exceptions.ContentError(msg)
-    # Return the parsed data
+
+    # Return the parsed data.
     return data
+
+
+def dump_file(data, ext):
+    if ext in ['yml', 'yaml']:
+        return yaml.dump(data, default_flow_style=False, allow_unicode=True)
+
+    if ext in ['json']:
+        return json.dumps(data, indent=4)
 
 
 def write_text(text, path, encoding='utf-8'):
