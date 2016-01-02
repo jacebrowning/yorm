@@ -5,7 +5,7 @@ import shutil
 import collections
 import logging
 
-import json
+import simplejson as json
 import yaml
 
 from . import exceptions
