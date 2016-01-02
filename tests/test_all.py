@@ -271,6 +271,58 @@ class TestStandard:
         'true': false
         """) == sample.__mapper__.text
 
+    def test_function_to_json(self, tmpdir):
+        """Verify standard attribute types dump/load correctly (function)."""
+        tmpdir.chdir()
+        _sample = SampleStandard()
+        attrs = {'object': self.StatusDictionary,
+                 'array': IntegerList,
+                 'string': String,
+                 'number_int': Integer,
+                 'number_real': Float,
+                 'true': Boolean,
+                 'false': Boolean}
+        sample = yorm.sync(_sample, "path/to/directory/sample.json", attrs)
+        assert "path/to/directory/sample.json" == sample.__mapper__.path
+
+        # check defaults
+        assert {'status': False} == sample.object
+        assert [] == sample.array
+        assert "" == sample.string
+        assert 0 == sample.number_int
+        assert 0.0 == sample.number_real
+        assert True is sample.true
+        assert False is sample.false
+        assert None is sample.null
+
+        # change object values
+        sample.object = {'key': 'value'}
+        sample.array = [1, 2, 3]
+        sample.string = "Hello, world!"
+        sample.number_int = 42
+        sample.number_real = 4.2
+        sample.true = None
+        sample.false = 1
+
+        # check file values
+        assert strip("""
+        {
+            "array": [
+                1,
+                2,
+                3
+            ],
+            "false": true,
+            "number_int": 42,
+            "number_real": 4.2,
+            "object": {
+                "status": false
+            },
+            "string": "Hello, world!",
+            "true": false
+        }
+        """, tabs=2, end='') == sample.__mapper__.text
+
     def test_auto_off(self, tmpdir):
         """Verify file updates are disabled with auto off."""
         tmpdir.chdir()

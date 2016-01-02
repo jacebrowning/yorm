@@ -120,7 +120,7 @@ def dump_file(data, ext):
         return yaml.dump(data, default_flow_style=False, allow_unicode=True)
 
     if ext in ['json']:
-        return json.dumps(data, indent=4)
+        return json.dumps(data, indent=4, sort_keys=True)
 
 
 def write_text(text, path, encoding='utf-8'):
