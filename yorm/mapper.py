@@ -107,7 +107,6 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
     def __init__(self, path, auto=True):
         self.path = path
-        self.ext = self.path.split('.')[-1].lower()
         self.auto = auto
         self.auto_store = False
         self.exists = self.path and os.path.isfile(self.path)
@@ -166,6 +165,13 @@ class BaseHelper(metaclass=abc.ABCMeta):
             else:
                 self._timestamp = common.stamp(self.path)
             log.debug("marked %s as unmodified", prefix(self))
+
+    @property
+    def ext(self):
+        if '.' in self.path:
+            return self.path.split('.')[-1]
+        else:
+            return 'yml'
 
     def create(self, obj):
         """Create a new file for the object."""

@@ -98,7 +98,7 @@ def load_file(text, path, ext='yml'):
     try:
         if ext in ['yml', 'yaml']:
             data = yaml.load(text) or {}
-        if ext in ['json']:
+        elif ext in ['json']:
             data = json.loads(text) or {}
     except yaml.error.YAMLError as exc:
         msg = "invalid YAML contents: {}:\n{}".format(path, exc)
