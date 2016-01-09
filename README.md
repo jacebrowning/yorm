@@ -15,6 +15,8 @@ Uses beyond typical object serialization and relational mapping include:
 * storage of content in text files optimized for version control
 * extensible converters to customize formatting on complex classes
 
+View the talk from [PyOhio 2015](https://www.youtube.com/watch?v=0woNEKf-wAo).
+
 # Getting Started
 
 ## Requirements
