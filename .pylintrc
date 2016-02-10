@@ -12,9 +12,11 @@ ignore-imports=yes
 [FORMAT]
 
 max-line-length=80
+
 ignore-long-lines=^.*((https?:)|(pragma:)|(TODO:)).*$
 
 [REPORTS]
 
 reports=no
+
 msg-template={msg_id} ({symbol}):{line:3d},{column}: {msg}
