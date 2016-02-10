@@ -14,7 +14,6 @@ from . import strip
 
 
 class MockMapper(Mapper):
-
     """Mapped file with stubbed file IO."""
 
     def __init__(self, obj, path, attrs):
@@ -46,18 +45,15 @@ class MockMapper(Mapper):
 
 @yorm.attr(all=Integer)
 class IntegerList(List):
-
     """List of integers."""
 
 
 @yorm.attr(status=Boolean)
 class StatusDictionary(Dictionary):
-
     """Dictionary of statuses."""
 
 
 class SampleMappable(Mappable):
-
     """Sample mappable class with hard-coded settings."""
 
     def __init__(self):
@@ -88,7 +84,6 @@ class SampleMappable(Mappable):
 
 
 class TestGetMapper:
-
     """Unit tests for the `get_mapper` function."""
 
     def test_yorm_mapper_required(self):
@@ -99,7 +94,6 @@ class TestGetMapper:
 
 
 class TestMappable:
-
     """Unit tests for the `Mappable` class."""
 
     def setup_method(self, _):
@@ -263,7 +257,7 @@ class TestMappableTriggers:
 
     def test_append(self):
         self.sample.append('foo')
-        assert 0 == self.sample.__mapper__.fetch.call_count
+        assert 1 == self.sample.__mapper__.fetch.call_count
         assert 1 == self.sample.__mapper__.store.call_count
 
     def test_iter(self):
