@@ -7,7 +7,7 @@ import pytest
 
 import yorm
 from yorm.bases import Mappable
-from yorm.mapper import get_mapper, Mapper
+from yorm.mapper import Mapper
 from yorm.converters import String, Integer, Boolean, List, Dictionary
 
 from . import strip
@@ -81,16 +81,6 @@ class SampleMappable(Mappable):
 
 
 # tests ########################################################################
-
-
-class TestGetMapper:
-    """Unit tests for the `get_mapper` function."""
-
-    def test_yorm_mapper_required(self):
-        sample = SampleMappable()
-        del sample.__mapper__
-        with pytest.raises(AttributeError):
-            print(get_mapper(sample))
 
 
 class TestMappable:

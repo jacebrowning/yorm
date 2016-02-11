@@ -13,18 +13,9 @@ MAPPER = '__mapper__'
 log = common.logger(__name__)
 
 
-def get_mapper(obj, allow_missing=False):
+def get_mapper(obj):
     """Get `Mapper` instance attached to an object."""
-    try:
-        mapper = getattr(obj, MAPPER)
-    except AttributeError:
-        if allow_missing or isinstance(obj, (dict, list)):
-            mapper = None
-        else:
-            msg = "Mapped {!r} missing {!r} attribute".format(obj, MAPPER)
-            raise AttributeError(msg) from None
-    else:
-        return mapper
+    return getattr(obj, MAPPER, None)
 
 
 def set_mapper(obj, path, attrs, auto=True, root=None):

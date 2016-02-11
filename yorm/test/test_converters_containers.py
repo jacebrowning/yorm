@@ -205,7 +205,6 @@ class TestReservedNames:
         def __repr__(self):
             return "<my_object>"
 
-    @pytest.mark.xfail
     def test_list_named_items(self):
         my_object = self.MyObject()
         yorm.sync_object(my_object, "fake/path", {'items': StringList})

@@ -196,7 +196,7 @@ def update_file(instance, existing=None, force=True):
 
 def synced(obj):
     """Determine if an object is already mapped to a file."""
-    return bool(get_mapper(obj, allow_missing=True))
+    return bool(get_mapper(obj))
 
 
 def _check_base(obj, mappable=True):
