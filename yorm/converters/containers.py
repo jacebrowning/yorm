@@ -75,7 +75,7 @@ class Dictionary(Convertible, Container, dict):
             value[name] = converter.create_default()
             # TODO: clean this up more
             # https://github.com/jacebrowning/yorm/issues/69
-            log.info("added missing nested key '%s'...", name)
+            log.info("Added missing nested key '%s'...", name)
 
         # Apply the new value
         self.clear()

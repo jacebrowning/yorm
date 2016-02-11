@@ -18,7 +18,7 @@ PRINT_VERBOSITY = 0  # minimum verbosity to using `print`
 STR_VERBOSITY = 3  # minimum verbosity to use verbose `__str__`
 MAX_VERBOSITY = 4  # maximum verbosity level implemented
 
-OVERRIDE_MESSAGE = "method must be implemented in subclasses"
+OVERRIDE_MESSAGE = "Method must be implemented in subclasses"
 
 
 # GLOBALS ######################################################################

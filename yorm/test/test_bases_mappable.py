@@ -24,11 +24,11 @@ class MockMapper(Mapper):
 
     def _read(self):
         text = self._mock_file
-        logging.debug("mock read:\n%s", text.strip())
+        logging.debug("Mock read:\n%s", text.strip())
         return text
 
     def _write(self, text):
-        logging.debug("mock write:\n%s", text.strip())
+        logging.debug("Mock write:\n%s", text.strip())
         self._mock_file = text
         self.modified = True
 
@@ -59,13 +59,13 @@ class SampleMappable(Mappable):
     def __init__(self):
         self.__mapper__ = None
 
-        logging.debug("initializing sample...")
+        logging.debug("Initializing sample...")
         self.var1 = None
         self.var2 = None
         self.var3 = None
         self.var4 = None
         self.var5 = None
-        logging.debug("sample initialized")
+        logging.debug("Sample initialized")
 
         path = "mock/path/to/sample.yml"
         attrs = {'var1': String,

@@ -102,22 +102,22 @@ class Boolean(Object):
 def match(name, data, nested=False):
     """Determine the appropriate converter for new data."""
     nested = " nested" if nested else ""
-    msg = "determining converter for new%s: '%s' = %r"
+    msg = "Determining converter for new%s: '%s' = %r"
     log.debug(msg, nested, name, repr(data))
 
     converters = Object.__subclasses__()  # pylint: disable=no-member
-    log.trace("converter options: {}".format(converters))
+    log.trace("Converter options: {}".format(converters))
 
     for converter in converters:
         if converter.TYPE and type(data) == converter.TYPE:  # pylint: disable=unidiomatic-typecheck
-            log.debug("matched converter: %s", converter)
-            log.info("new%s attribute: %s", nested, name)
+            log.debug("Matched converter: %s", converter)
+            log.info("New%s attribute: %s", nested, name)
             return converter
 
     if data is None or isinstance(data, (dict, list)):
-        log.info("default converter: %s", Object)
-        log.warning("new%s attribute with unknown type: %s", nested, name)
+        log.info("Default converter: %s", Object)
+        log.warning("New%s attribute with unknown type: %s", nested, name)
         return Object
 
-    msg = "no converter available for: {}".format(data)
+    msg = "No converter available for: {}".format(data)
     raise exceptions.ConversionError(msg)

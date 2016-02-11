@@ -41,8 +41,9 @@ def file_required(create=False):
                 if create is True and not self.deleted:
                     self.create()
                 else:
-                    msg = "cannot access deleted: {}".format(self.path)
+                    msg = "Cannot access deleted: {}".format(self.path)
                     raise exceptions.FileDeletedError(msg)
+
             return method(self, *args, **kwargs)
 
         return wrapped

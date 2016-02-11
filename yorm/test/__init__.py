@@ -18,6 +18,6 @@ def strip(text, tabs=None, end='\n'):
 
 def refresh_file_modification_times(seconds=1.1):
     """Sleep to allow file modification times to refresh."""
-    logging.info("delaying for %s second%s...", seconds,
+    logging.info("Delaying for %s second%s...", seconds,
                  "" if seconds == 1 else "s")
     time.sleep(seconds)

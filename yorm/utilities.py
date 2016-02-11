@@ -164,7 +164,7 @@ def update_object(instance, existing=True, force=True):
     :param force: update the object even if the file appears unchanged
 
     """
-    log.info("manually updating %r from file...", instance)
+    log.info("Manually updating %r from file...", instance)
     _check_base(instance, mappable=True)
 
     mapper = get_mapper(instance)
@@ -182,7 +182,7 @@ def update_file(instance, existing=None, force=True):
     :param force: update the file even if automatic sync is off
 
     """
-    log.info("manually saving %r to file...", instance)
+    log.info("Manually saving %r to file...", instance)
     _check_base(instance, mappable=True)
 
     mapper = get_mapper(instance)

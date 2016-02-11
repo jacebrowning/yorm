@@ -94,7 +94,7 @@ class TestNestedOnce:
 
     def test_append_triggers_store(self):
         top = Top()
-        logging.info("appending dictionary to list...")
+        logging.info("Appending dictionary to list...")
         top.nested_list.append({'number': 1})
         assert strip("""
         nested_dict:
@@ -297,12 +297,12 @@ class TestAliases:
         self._log_ref('var4', self.sample.var4, var4_ref)
         assert [] == self.sample.var4
 
-        logging.info("appending 42 to var4_ref...")
+        logging.info("Appending 42 to var4_ref...")
         var4_ref.append(42)
         self._log_ref('var4', self.sample.var4, var4_ref)
         assert [42] == self.sample.var4
 
-        logging.info("appending 2015 to var4_ref...")
+        logging.info("Appending 2015 to var4_ref...")
         var4_ref.append(2015)
         assert [42, 2015] == self.sample.var4
 
@@ -312,12 +312,12 @@ class TestAliases:
         self._log_ref('var5', self.sample.var5, var5_ref)
         assert {'status': False} == self.sample.var5
 
-        logging.info("setting status=True in var5_ref...")
+        logging.info("Setting status=True in var5_ref...")
         var5_ref['status'] = True
         self._log_ref('var5', self.sample.var5, var5_ref)
         assert {'status': True} == self.sample.var5
 
-        logging.info("setting status=False in var5_ref...")
+        logging.info("Setting status=False in var5_ref...")
         var5_ref['status'] = False
         self._log_ref('var5', self.sample.var5, var5_ref)
         assert {'status': False} == self.sample.var5
@@ -335,9 +335,9 @@ class TestAliases:
 
     def test_alias_list_in_dict(self):
         top = Top()
-        logging.info("updating nested attribute...")
+        logging.info("Updating nested attribute...")
         top.nested_dict.number = 1
-        logging.info("storing refs...")
+        logging.info("Storing refs...")
         ref1 = top.nested_dict
         ref2 = top.nested_dict.nested_list_2
         yorm.update(top)
