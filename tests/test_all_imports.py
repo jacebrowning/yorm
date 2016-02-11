@@ -5,8 +5,8 @@
 def test_top():
     import yorm
     assert yorm.bases
-    assert yorm.converters.Integer
-    assert yorm.converters.extended.Markdown
+    assert yorm.types.Integer
+    assert yorm.types.extended.Markdown
 
 
 def test_from_top_constants():
@@ -15,7 +15,7 @@ def test_from_top_constants():
 
 def test_from_top_clases():
     from yorm import Mappable  # base class for mapped objects
-    from yorm import Converter, Convertible  # base class for converters
+    from yorm import Converter, Convertible  # base class for types
 
 
 def test_from_top_decorators():
@@ -33,7 +33,7 @@ def test_from_top_functions():
 
 
 def test_from_nested():
-    from yorm.converters import Integer
-    from yorm.converters.standard import String
-    from yorm.converters.extended import Markdown
-    from yorm.converters.containers import List
+    from yorm.types import Integer
+    from yorm.types.standard import String
+    from yorm.types.extended import Markdown
+    from yorm.types.containers import List

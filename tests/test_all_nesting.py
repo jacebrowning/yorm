@@ -10,22 +10,22 @@ import yorm
 from . import strip
 
 
-@yorm.attr(status=yorm.converters.Boolean)
-class StatusDictionary(yorm.converters.Dictionary):
+@yorm.attr(status=yorm.types.Boolean)
+class StatusDictionary(yorm.types.Dictionary):
 
     pass
 
 
-@yorm.attr(all=yorm.converters.Float)
-class NestedList3(yorm.converters.List):
+@yorm.attr(all=yorm.types.Float)
+class NestedList3(yorm.types.List):
 
     def __repr__(self):
         return "<nested-list-3 {}>".format((id(self)))
 
 
-@yorm.attr(number=yorm.converters.Float)
+@yorm.attr(number=yorm.types.Float)
 @yorm.attr(nested_list_3=NestedList3)
-class NestedDictionary3(yorm.converters.AttributeDictionary):
+class NestedDictionary3(yorm.types.AttributeDictionary):
 
     def __init__(self):
         super().__init__()
@@ -37,16 +37,16 @@ class NestedDictionary3(yorm.converters.AttributeDictionary):
         return "<nested-dictionary-3 {}>".format((id(self)))
 
 
-@yorm.attr(all=yorm.converters.Float)
-class NestedList2(yorm.converters.List):
+@yorm.attr(all=yorm.types.Float)
+class NestedList2(yorm.types.List):
 
     def __repr__(self):
         return "<nested-list-2 {}>".format((id(self)))
 
 
 @yorm.attr(nested_dict_3=NestedDictionary3)
-@yorm.attr(number=yorm.converters.Float)
-class NestedDictionary2(yorm.converters.AttributeDictionary):
+@yorm.attr(number=yorm.types.Float)
+class NestedDictionary2(yorm.types.AttributeDictionary):
 
     def __init__(self):
         super().__init__()
@@ -57,9 +57,9 @@ class NestedDictionary2(yorm.converters.AttributeDictionary):
         return "<nested-dictionary-2 {}>".format((id(self)))
 
 
-@yorm.attr(number=yorm.converters.Float)
+@yorm.attr(number=yorm.types.Float)
 @yorm.attr(nested_list_2=NestedList2)
-class NestedDictionary(yorm.converters.AttributeDictionary):
+class NestedDictionary(yorm.types.AttributeDictionary):
 
     def __init__(self):
         super().__init__()
@@ -71,7 +71,7 @@ class NestedDictionary(yorm.converters.AttributeDictionary):
 
 
 @yorm.attr(all=NestedDictionary2)
-class NestedList(yorm.converters.List):
+class NestedList(yorm.types.List):
 
     def __repr__(self):
         return "<nested-list {}>".format((id(self)))

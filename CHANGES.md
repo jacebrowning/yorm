@@ -2,7 +2,8 @@
 
 ## 0.6 (unreleased)
 
--  Added preliminary support for JSON serialization (@pr0xmeh).
+- Added preliminary support for JSON serialization (@pr0xmeh).
+- Renamed `yorm.converters` to `yorm.types`.
 
 ## 0.5 (2015/09/25)
 

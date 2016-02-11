@@ -9,7 +9,7 @@ log = common.logger(__name__)
 class Object(Converter):  # pylint: disable=W0223
     """Base class for immutable types."""
 
-    TYPE = None  # type for inferred converters (set in subclasses)
+    TYPE = None  # type for inferred types (set in subclasses)
     DEFAULT = None  # default value for conversion (set in subclasses)
 
     @classmethod
@@ -105,10 +105,10 @@ def match(name, data, nested=False):
     msg = "Determining converter for new%s: '%s' = %r"
     log.debug(msg, nested, name, repr(data))
 
-    converters = Object.__subclasses__()  # pylint: disable=no-member
-    log.trace("Converter options: {}".format(converters))
+    types = Object.__subclasses__()  # pylint: disable=no-member
+    log.trace("Converter options: {}".format(types))
 
-    for converter in converters:
+    for converter in types:
         if converter.TYPE and type(data) == converter.TYPE:  # pylint: disable=unidiomatic-typecheck
             log.debug("Matched converter: %s", converter)
             log.info("New%s attribute: %s", nested, name)

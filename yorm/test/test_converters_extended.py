@@ -3,8 +3,8 @@
 import pytest
 
 from yorm.utilities import attr
-from yorm.converters import Integer, String, Float
-from yorm.converters.extended import Markdown, AttributeDictionary, SortedList
+from yorm.types import Integer, String, Float
+from yorm.types.extended import Markdown, AttributeDictionary, SortedList
 
 
 # classes ######################################################################

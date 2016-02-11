@@ -18,8 +18,8 @@ class Config:
         self.root = root or ""
 
 
-@yorm.attr(key=yorm.converters.String)
-@yorm.attr(name=yorm.converters.String)
+@yorm.attr(key=yorm.types.String)
+@yorm.attr(name=yorm.types.String)
 @yorm.sync("{self.root}/{self.key}/config.yml")
 class ConfigModel:
 
@@ -42,8 +42,8 @@ class ConfigStore:
     def __init__(self, root):
         self.root = root
         self.path = self.root + "/{}/config.yml"
-        self.attrs = dict(key=yorm.converters.String,
-                          name=yorm.converters.String)
+        self.attrs = dict(key=yorm.types.String,
+                          name=yorm.types.String)
 
     def read(self, key):
         instance = Config(key)

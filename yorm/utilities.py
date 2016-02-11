@@ -122,7 +122,7 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
 
 
 def attr(**kwargs):
-    """Class decorator to map attributes to converters.
+    """Class decorator to map attributes to types.
 
     :param kwargs: keyword arguments mapping attribute name to converter class
 

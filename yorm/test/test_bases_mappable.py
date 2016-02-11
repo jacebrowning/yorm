@@ -8,7 +8,7 @@ import pytest
 import yorm
 from yorm.bases import Mappable
 from yorm.mapper import Mapper
-from yorm.converters import String, Integer, Boolean, List, Dictionary
+from yorm.types import String, Integer, Boolean, List, Dictionary
 
 from . import strip
 

@@ -7,7 +7,7 @@ import logging
 import pytest
 
 import yorm
-from yorm.converters import Integer, String, Float, Boolean, Dictionary, List
+from yorm.types import Integer, String, Float, Boolean, Dictionary, List
 
 from . import refresh_file_modification_times
 

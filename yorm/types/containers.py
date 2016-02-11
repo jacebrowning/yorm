@@ -8,7 +8,7 @@ log = common.logger(__name__)
 
 
 class Dictionary(Convertible, Container, dict):
-    """Base class for a dictionary of attribute converters."""
+    """Base class for a dictionary of attribute types."""
 
     def __new__(cls, *args, **kwargs):
         if cls is Dictionary:
@@ -45,7 +45,7 @@ class Dictionary(Convertible, Container, dict):
         else:
             dictionary = to_dict(data)
 
-        # Map object attributes to converters
+        # Map object attributes to types
         for name, data2 in dictionary.items():
 
             try:
@@ -70,7 +70,7 @@ class Dictionary(Convertible, Container, dict):
 
             value[name] = attr
 
-        # Create default values for unmapped converters
+        # Create default values for unmapped types
         for name, converter in attrs.items():
             value[name] = converter.create_default()
             # TODO: clean this up more
@@ -83,7 +83,7 @@ class Dictionary(Convertible, Container, dict):
 
 
 class List(Convertible, Container, list):
-    """Base class for a homogeneous list of attribute converters."""
+    """Base class for a homogeneous list of attribute types."""
 
     ALL = 'all'
 

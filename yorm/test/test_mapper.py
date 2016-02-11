@@ -7,7 +7,7 @@ import pytest
 
 from yorm import exceptions
 from yorm.mapper import Helper, Mapper
-from yorm.converters import Integer
+from yorm.types import Integer
 
 
 @patch('yorm.settings.fake', True)

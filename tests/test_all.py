@@ -4,8 +4,8 @@
 import logging
 
 import yorm
-from yorm.converters import Object, String, Integer, Float, Boolean
-from yorm.converters import Markdown, Dictionary, List
+from yorm.types import Object, String, Integer, Float, Boolean
+from yorm.types import Markdown, Dictionary, List
 
 from . import strip, refresh_file_modification_times
 
@@ -162,7 +162,7 @@ class TestStandard:
 
     """Integration tests for standard attribute types."""
 
-    @yorm.attr(status=yorm.converters.Boolean)
+    @yorm.attr(status=yorm.types.Boolean)
     class StatusDictionary(Dictionary):
         pass
 

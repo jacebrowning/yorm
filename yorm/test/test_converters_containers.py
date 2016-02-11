@@ -8,8 +8,8 @@ import pytest
 import yorm
 from yorm import common
 from yorm.utilities import attr
-from yorm.converters import Dictionary, List
-from yorm.converters import String, Integer
+from yorm.types import Dictionary, List
+from yorm.types import String, Integer
 
 from . import strip
 
@@ -171,11 +171,11 @@ class TestExtensions:
                     return value2
             return None
 
-    @yorm.attr(a=yorm.converters.String)
+    @yorm.attr(a=yorm.types.String)
     class MyDictionary(Dictionary, FindMixin):
         pass
 
-    @yorm.attr(all=yorm.converters.String)
+    @yorm.attr(all=yorm.types.String)
     class MyList(List, FindMixin):
         pass
 

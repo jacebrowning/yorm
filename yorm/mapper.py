@@ -200,7 +200,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
             except KeyError:
                 # TODO: determine if runtime import is the best way to avoid
                 # cyclic import
-                from .converters import match
+                from .types import match
                 converter = match(name, data)
                 attrs[name] = converter
 

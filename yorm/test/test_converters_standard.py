@@ -2,7 +2,7 @@
 
 import pytest
 
-from yorm.converters import Object, String, Integer, Float, Boolean
+from yorm.types import Object, String, Integer, Float, Boolean
 
 
 class TestObject:
