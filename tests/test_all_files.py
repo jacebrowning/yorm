@@ -142,8 +142,5 @@ class TestUpdate:
         assert "array:\n- 42\n" in sample.__mapper__.text
 
         sample.__mapper__.text = "array: [true]\n"
-        try:
-            iter(sample)
-        except AttributeError:
-            pass
+        iter(sample.array)
         assert "array:\n- 1\n" in sample.__mapper__.text

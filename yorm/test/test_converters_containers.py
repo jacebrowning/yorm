@@ -1,5 +1,6 @@
 # pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
 
+import logging
 from unittest.mock import patch, Mock
 
 import pytest
@@ -11,6 +12,8 @@ from yorm.converters import Dictionary, List
 from yorm.converters import String, Integer
 
 from . import strip
+
+log = logging.getLogger(__name__)
 
 
 # classes ######################################################################
@@ -199,18 +202,28 @@ class TestReservedNames:
         def __init__(self, items=None):
             self.items = items or []
 
-    def test_list_named_items(self):
-        obj = self.MyObject()
-        yorm.sync_object(obj, "fake/path", {'items': StringList})
+        def __repr__(self):
+            return "<my_object>"
 
-        obj.items.append('foo')
+    @pytest.mark.xfail
+    def test_list_named_items(self):
+        my_object = self.MyObject()
+        yorm.sync_object(my_object, "fake/path", {'items': StringList})
+
+        log.info("Appending value to list of items...")
+        my_object.items.append('foo')
+
+        log.info("Checking object contents...")
         assert strip("""
         items:
         - foo
-        """) == obj.__mapper__.text
+        """) == my_object.__mapper__.text
 
-        obj.__mapper__.text = strip("""
+        log.info("Writting new file contents...")
+        my_object.__mapper__.text = strip("""
         items:
         - bar
         """)
-        assert ['bar'] == obj.items
+
+        log.info("Checking file contents...")
+        assert ['bar'] == my_object.items

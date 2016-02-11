@@ -16,11 +16,10 @@ def fetch_before(method):
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
         """Decorated method."""
-
         if not _private_name(args):
-            mapper = get_mapper(self)
+            mapper = get_mapper(self, allow_missing=True)
             if mapper and mapper.modified:
-                log.debug("fetch before call: %s", method.__name__)
+                log.debug("Fetching before call: %s", method.__name__)
                 mapper.fetch()
                 if mapper.auto_store:
                     mapper.store()
@@ -40,9 +39,9 @@ def store_after(method):
         result = method(self, *args, **kwargs)
 
         if not _private_name(args):
-            mapper = get_mapper(self)
+            mapper = get_mapper(self, allow_missing=True)
             if mapper and mapper.auto:
-                log.debug("store after call: %s", method.__name__)
+                log.debug("Storing after call: %s", method.__name__)
                 mapper.store()
 
         return result

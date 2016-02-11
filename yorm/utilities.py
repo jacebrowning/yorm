@@ -3,7 +3,7 @@
 import uuid
 
 from . import common, exceptions
-from .bases import Mappable
+from .bases.mappable import fetch_before, store_after
 from .mapper import get_mapper, set_mapper
 
 log = common.logger(__name__)
@@ -38,15 +38,30 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
     :param auto: automatically store attributes to file
 
     """
-    log.info("mapping %r to %s...", instance, path)
+    log.info("Mapping %r to %s...", instance, path)
     _check_base(instance, mappable=False)
 
     attrs = attrs or common.attrs[instance.__class__]
 
-    class Mapped(Mappable, instance.__class__):
-        """Original class with `Mappable` as the base."""
+    for name in ['__getattribute__', '__iter__', '__getitem__']:
+        try:
+            method = getattr(instance.__class__, name)
+        except AttributeError:
+            log.trace("No method: %s", name)
+        else:
+            modified_method = fetch_before(method)
+            setattr(instance.__class__, name, modified_method)
+            log.trace("Method patched to fetch: %s", name)
 
-    instance.__class__ = Mapped
+    for name in ['__setattr__', '__setitem__', '__delitem__', 'append']:
+        try:
+            method = getattr(instance.__class__, name)
+        except AttributeError:
+            log.trace("No method: %s", name)
+        else:
+            modified_method = store_after(method)
+            setattr(instance.__class__, name, modified_method)
+            log.trace("Method patched to store: %s", name)
 
     mapper = set_mapper(instance, path, attrs, auto=auto)
     _check_existance(mapper, existing)
@@ -57,7 +72,7 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
             mapper.store()
         mapper.fetch()
 
-    log.info("mapped %r to '%s'", instance, path)
+    log.info("Mapped %r to %s", instance, path)
     return instance
 
 
@@ -77,13 +92,13 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
     def decorator(cls):
         """Class decorator to map instances to files.."""
 
-        old_init = cls.__init__
+        init = cls.__init__
 
-        def new_init(self, *_args, **_kwargs):
+        def modified_init(self, *_args, **_kwargs):
             """Modified class __init__ that maps the resulting instance."""
-            old_init(self, *_args, **_kwargs)
+            init(self, *_args, **_kwargs)
 
-            log.info("mapping instance of %r to '%s'...", cls, path_format)
+            log.info("Mapping instance of %r to '%s'...", cls, path_format)
 
             format_values = {}
             for key, value in format_spec.items():
@@ -98,8 +113,8 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
 
             sync_object(self, path, attrs, **kwargs)
 
-        new_init.__doc__ = old_init.__doc__
-        cls.__init__ = new_init
+        modified_init.__doc__ = init.__doc__
+        cls.__init__ = modified_init
 
         return cls
 
@@ -179,11 +194,16 @@ def update_file(instance, existing=None, force=True):
         mapper.store()
 
 
+def synced(obj):
+    """Determine if an object is already mapped to a file."""
+    return bool(get_mapper(obj, allow_missing=True))
+
+
 def _check_base(obj, mappable=True):
     """Confirm an object's base class is `Mappable` as required."""
-    if mappable and not isinstance(obj, Mappable):
+    if mappable and not synced(obj):
         raise exceptions.MappingError("{} is not mapped".format(repr(obj)))
-    if not mappable and isinstance(obj, Mappable):
+    if not mappable and synced(obj):
         raise exceptions.MappingError("{} is already mapped".format(repr(obj)))
 
 

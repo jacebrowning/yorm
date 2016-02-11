@@ -65,7 +65,7 @@ def create_dirname(path):
     """Ensure a parent directory exists for a path."""
     dirpath = os.path.dirname(path)
     if dirpath and not os.path.isdir(dirpath):
-        log.trace("creating directory '{}'...".format(dirpath))
+        log.trace("Creating directory '{}'...".format(dirpath))
         os.makedirs(dirpath)
 
 
@@ -78,7 +78,7 @@ def read_text(path, encoding='utf-8'):
     :return: string
 
     """
-    log.trace("reading text from '{}'...".format(path))
+    log.trace("Reading text from '{}'...".format(path))
     with open(path, 'r', encoding=encoding) as stream:
         text = stream.read()
     return text
@@ -101,14 +101,14 @@ def load_file(text, path, ext='yml'):
         elif ext in ['json']:
             data = json.loads(text) or {}
     except yaml.error.YAMLError as exc:
-        msg = "invalid YAML contents: {}:\n{}".format(path, exc)
+        msg = "Invalid YAML contents: {}:\n{}".format(path, exc)
         raise exceptions.ContentError(msg) from None
     except json.JSONDecodeError as exc:
-        msg = "invalid JSON contents: {}:\n{}".format(path, exc)
+        msg = "Invalid JSON contents: {}:\n{}".format(path, exc)
         raise exceptions.ContentError(msg) from None
     # Ensure data is a dictionary
     if not isinstance(data, dict):
-        msg = "invalid file contents: {}".format(path)
+        msg = "Invalid file contents: {}".format(path)
         raise exceptions.ContentError(msg)
 
     # Return the parsed data.
@@ -134,7 +134,7 @@ def write_text(text, path, encoding='utf-8'):
 
     """
     if text:
-        log.trace("writing text to '{}'...".format(path))
+        log.trace("Writing text to '{}'...".format(path))
     with open(path, 'wb') as stream:
         data = text.encode(encoding)
         stream.write(data)
@@ -146,9 +146,9 @@ def touch(path):
     if not os.path.exists(path):
         dirpath = os.path.dirname(path)
         if dirpath and not os.path.isdir(dirpath):
-            log.trace("creating directory '{}'...".format(dirpath))
+            log.trace("Creating directory '{}'...".format(dirpath))
             os.makedirs(dirpath)
-        log.trace("creating empty '{}'...".format(path))
+        log.trace("Creating empty '{}'...".format(path))
         write_text('', path)
 
 
@@ -161,12 +161,12 @@ def delete(path):
     """Delete a file or directory with error handling."""
     if os.path.isdir(path):
         try:
-            log.trace("deleting '{}'...".format(path))
+            log.trace("Deleting '{}'...".format(path))
             shutil.rmtree(path)
         except IOError:  # pragma: no cover (manual test)
             # bug: http://code.activestate.com/lists/python-list/159050
-            msg = "unable to delete: {}".format(path)
+            msg = "Unable to delete: {}".format(path)
             log.warning(msg)
     elif os.path.isfile(path):
-        log.trace("deleting '{}'...".format(path))
+        log.trace("Deleting '{}'...".format(path))
         os.remove(path)

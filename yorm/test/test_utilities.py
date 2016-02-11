@@ -1,5 +1,6 @@
 # pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
 
+import logging
 from unittest.mock import patch, Mock
 
 import pytest
@@ -8,6 +9,7 @@ from yorm import exceptions
 from yorm import utilities
 from yorm.bases import Converter, Mappable
 
+log = logging.getLogger(__name__)
 
 # classes ######################################################################
 

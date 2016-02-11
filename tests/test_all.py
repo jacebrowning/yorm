@@ -1,12 +1,15 @@
 """Integration tests for the package."""
 # pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
 
+import logging
 
 import yorm
 from yorm.converters import Object, String, Integer, Float, Boolean
 from yorm.converters import Markdown, Dictionary, List
 
 from . import strip, refresh_file_modification_times
+
+log = logging.getLogger(__name__)
 
 
 # classes ######################################################################
@@ -169,7 +172,7 @@ class TestStandard:
         sample = SampleStandardDecorated('sample')
         assert "path/to/default/sample.yml" == sample.__mapper__.path
 
-        # check defaults
+        log.info("Checking object default values...")
         assert {} == sample.object
         assert [] == sample.array
         assert "" == sample.string
@@ -179,7 +182,7 @@ class TestStandard:
         assert False is sample.false
         assert None is sample.null
 
-        # change object values
+        log.info("Changing object values...")
         sample.object = {'key2': 'value'}
         sample.array = [0, 1, 2]
         sample.string = "Hello, world!"
@@ -188,7 +191,7 @@ class TestStandard:
         sample.true = False
         sample.false = True
 
-        # check file values
+        log.info("Checking file contents...")
         assert strip("""
         array:
         - 0
@@ -202,7 +205,7 @@ class TestStandard:
         'true': false
         """) == sample.__mapper__.text
 
-        # change file values
+        log.info("Changing file contents...")
         refresh_file_modification_times()
         sample.__mapper__.text = strip("""
         array: [4, 5, 6]
@@ -214,7 +217,7 @@ class TestStandard:
         'true': null
         """)
 
-        # check object values
+        log.info("Checking object values...")
         assert {'status': False} == sample.object
         assert [4, 5, 6] == sample.array
         assert "abc" == sample.string

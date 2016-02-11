@@ -3,6 +3,7 @@
 import os
 import abc
 import functools
+from pprint import pformat
 
 from . import common, exceptions, settings
 from .bases import Container
@@ -12,15 +13,15 @@ MAPPER = '__mapper__'
 log = common.logger(__name__)
 
 
-def get_mapper(obj):
+def get_mapper(obj, allow_missing=False):
     """Get `Mapper` instance attached to an object."""
     try:
         mapper = getattr(obj, MAPPER)
     except AttributeError:
-        if isinstance(obj, (dict, list)):
-            return None
+        if allow_missing or isinstance(obj, (dict, list)):
+            mapper = None
         else:
-            msg = "mapped {!r} missing {!r} attribute".format(obj, MAPPER)
+            msg = "Mapped {!r} missing {!r} attribute".format(obj, MAPPER)
             raise AttributeError(msg) from None
     else:
         return mapper
@@ -121,23 +122,23 @@ class BaseHelper(metaclass=abc.ABCMeta):
     @property
     def text(self):
         """Get file contents."""
-        log.info("getting contents of %s...", prefix(self))
+        log.info("Getting contents of %s...", prefix(self))
         if settings.fake:
             text = self._fake
         else:
             text = self._read()
-        log.trace("text read: %r", text)
+        log.trace("Text read: \n%s", text[:-1])
         return text
 
     @text.setter
     def text(self, text):
         """Set file contents."""
-        log.info("setting contents of %s...", prefix(self))
+        log.info("Setting contents of %s...", prefix(self))
         if settings.fake:
             self._fake = text
         else:
             self._write(text)
-        log.trace("text wrote: %r", text)
+        log.trace("Text wrote: \n%s", text[:-1])
         self.modified = True
 
     @property
@@ -157,14 +158,14 @@ class BaseHelper(metaclass=abc.ABCMeta):
     def modified(self, changes):
         """Mark the file as modified if there are changes."""
         if changes:
-            log.debug("marked %s as modified", prefix(self))
+            log.debug("Marked %s as modified", prefix(self))
             self._timestamp = 0
         else:
             if settings.fake or self.path is None:
                 self._timestamp = None
             else:
                 self._timestamp = common.stamp(self.path)
-            log.debug("marked %s as unmodified", prefix(self))
+            log.debug("Marked %s as unmodified", prefix(self))
 
     @property
     def ext(self):
@@ -175,9 +176,9 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
     def create(self, obj):
         """Create a new file for the object."""
-        log.info("creating %s for %r...", prefix(self), obj)
+        log.info("Creating %s for %r...", prefix(self), obj)
         if self.exists:
-            log.warning("already created: %s", self)
+            log.warning("Already created: %s", self)
             return
         if not settings.fake:
             common.create_dirname(self.path)
@@ -189,12 +190,12 @@ class BaseHelper(metaclass=abc.ABCMeta):
     @prevent_recursion
     def fetch(self, obj, attrs):
         """Update the object's mapped attributes from its file."""
-        log.info("fetching %r from %s...", obj, prefix(self))
+        log.info("Fetching %r from %s...", obj, prefix(self))
 
         # Parse data from file
         text = self._read()
         data = self._load(text=text, path=self.path, ext=self.ext)
-        log.trace("loaded: {}".format(data))
+        log.trace("Loaded data: \n%s", pformat(data))
 
         # Update all attributes
         attrs2 = attrs.copy()
@@ -220,13 +221,13 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 attr = converter.to_value(data)
                 setattr(obj, name, attr)
             self._remap(attr)
-            log.trace("value fetched: %s = %r", name, attr)
+            log.trace("Value fetched: %s = %r", name, attr)
 
         # Add missing attributes
         for name, converter in attrs2.items():
             if not hasattr(obj, name):
                 value = converter.to_value(None)
-                msg = "fetched default value for missing attribute: %s = %r"
+                msg = "Fetched default value for missing attribute: %s = %r"
                 log.warning(msg, name, value)
                 setattr(obj, name, value)
 
@@ -237,7 +238,7 @@ class BaseHelper(metaclass=abc.ABCMeta):
     @prevent_recursion
     def store(self, obj, attrs):
         """Format and save the object's mapped attributes to its file."""
-        log.info("storing %r to %s...", obj, prefix(self))
+        log.info("Storing %r to %s...", obj, prefix(self))
 
         # Format the data items
         data = {}
@@ -246,12 +247,12 @@ class BaseHelper(metaclass=abc.ABCMeta):
                 value = getattr(obj, name)
             except AttributeError:
                 value = None
-                msg = "storing default data for missing attribute '%s'..."
+                msg = "Storing default data for missing attribute '%s'..."
                 log.warning(msg, name)
 
             data2 = converter.to_data(value)
 
-            log.trace("data to store: %s = %r", name, data2)
+            log.trace("Data to store: %s = %r", name, data2)
             data[name] = data2
 
         # Dump data to file
@@ -265,11 +266,11 @@ class BaseHelper(metaclass=abc.ABCMeta):
     def delete(self):
         """Delete the object's file from the file system."""
         if self.exists:
-            log.info("deleting %s...", prefix(self))
+            log.info("Deleting %s...", prefix(self))
             if not settings.fake:
                 common.delete(self.path)
         else:
-            log.warning("already deleted: %s", self)
+            log.warning("Already deleted: %s", self)
         self.exists = False
         self.deleted = True
 
