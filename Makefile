@@ -201,7 +201,7 @@ pep257: depends-ci
 
 .PHONY: pylint
 pylint: depends-ci
-	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc --disable=cyclic-import
+	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc
 	$(PYLINT) tests --rcfile=.pylintrc --disable=duplicate-code
 
 .PHONY: fix
