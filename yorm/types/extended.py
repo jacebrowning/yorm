@@ -8,7 +8,7 @@ from .standard import String, Integer, Float, Boolean
 from .containers import Dictionary, List
 
 
-# standard types with None as a default #######################################
+# standard types with None as a default ########################################
 
 
 class NullableString(String):
@@ -35,7 +35,7 @@ class NullableBoolean(Boolean):
     DEFAULT = None
 
 
-# standard types with additional behavior #####################################
+# standard types with additional behavior ######################################
 
 
 class _Literal(str):
@@ -140,7 +140,7 @@ class Markdown(String):
         else:
             return ''
 
-# container types with additional behavior ####################################
+# container types with additional behavior #####################################
 
 
 class AttributeDictionary(Dictionary):

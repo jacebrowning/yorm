@@ -37,7 +37,7 @@ class MockMapper(Mapper):
         return self._mock_modified
 
     @modified.setter
-    def modified(self, changes):  # pylint: disable=W0221
+    def modified(self, changes):
         self._mock_modified = changes
 
 

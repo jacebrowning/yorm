@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring,no-self-use,misplaced-comparison-constant
+# pylint: disable=missing-docstring,no-self-use,misplaced-comparison-constant,abstract-class-instantiated
 
 import pytest
 
@@ -29,7 +29,7 @@ class TestConvertible:
 
     def test_convertible_class_cannot_be_instantiated(self):
         with pytest.raises(TypeError):
-            Convertible()  # pylint: disable=E0110
+            Convertible()
 
     def test_convertible_instance_methods_can_be_called(self):
         convertible = self.MyConvertible(42)

@@ -1,5 +1,5 @@
 """Integration tests for the package."""
-# pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
+# pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant,attribute-defined-outside-init
 
 import logging
 
@@ -435,8 +435,8 @@ class TestContainers:
         assert Object == sample.__mapper__.attrs['array']
 
         # change object values
-        sample.object = None  # pylint: disable=W0201
-        sample.array = "abc"  # pylint: disable=W0201
+        sample.object = None
+        sample.array = "abc"
 
         # check file values
         assert strip("""

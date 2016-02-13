@@ -23,7 +23,7 @@ class Convertible(Mappable, Converter, metaclass=ABCMeta):  # pragma: no cover (
         return value
 
     @abstractmethod
-    def update_value(self, data, match=None):  # pylint: disable=E0213,
+    def update_value(self, data, match=None):
         """Update the attribute's value from loaded data."""
         raise NotImplementedError(common.OVERRIDE_MESSAGE)
 

@@ -95,7 +95,7 @@ class List(Convertible, Container, list):
         return super().__new__(cls, *args, **kwargs)
 
     @common.classproperty
-    def item_type(cls):  # pylint: disable=E0213
+    def item_type(cls):  # pylint: disable=no-self-argument
         """Get the converter class for all items."""
         return common.attrs[cls].get(cls.ALL)
 

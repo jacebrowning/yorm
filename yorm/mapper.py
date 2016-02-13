@@ -34,7 +34,7 @@ def file_required(create=False):
     def decorator(method):
 
         @functools.wraps(method)
-        def wrapped(self, *args, **kwargs):  # pylint: disable=W0621
+        def wrapped(self, *args, **kwargs):
             if not self.path:
                 return None
             if not self.exists and self.auto:
@@ -57,9 +57,10 @@ def file_required(create=False):
 def prevent_recursion(method):
     """Decorator to prevent indirect recursive calls."""
 
+    # pylint: disable=protected-access
+
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
-        # pylint: disable=W0212
         if self._activity:
             return
         self._activity = True
@@ -361,23 +362,26 @@ class Helper(BaseHelper):
 class Mapper(Helper):
     """Maps an object's attribute to YAML files."""
 
+    # TODO: rewrite this class to use composition
+    # pylint: disable=arguments-differ
+
     def __init__(self, obj, path, attrs, auto=True, root=None):
         super().__init__(path, auto=auto)
         self.obj = obj
         self.attrs = attrs
         self.root = root
 
-    def create(self):  # pylint: disable=W0221
+    def create(self):
         super().create(self.obj)
 
-    def fetch(self):  # pylint: disable=W0221
+    def fetch(self):
         if self.root and self.root.auto and not self._activity:
             self._activity = True
             self.root.fetch()
             self._activity = False
         super().fetch(self.obj, self.attrs)
 
-    def store(self):  # pylint: disable=W0221
+    def store(self):
         if self.root and self.root.auto and not self._activity:
             self._activity = True
             self.root.store()

@@ -6,7 +6,7 @@ from ..bases import Converter
 log = common.logger(__name__)
 
 
-class Object(Converter):  # pylint: disable=W0223
+class Object(Converter):
     """Base class for immutable types."""
 
     TYPE = None  # type for inferred types (set in subclasses)

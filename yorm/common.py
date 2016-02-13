@@ -35,7 +35,7 @@ attrs = collections.defaultdict(dict)
 def _trace(self, message, *args, **kwargs):  # pragma: no cover (manual test)
     """Handler for a new TRACE logging level."""
     if self.isEnabledFor(logging.DEBUG - 1):
-        self._log(logging.DEBUG - 1, message, args, **kwargs)  # pylint: disable=W0212
+        self._log(logging.DEBUG - 1, message, args, **kwargs)  # pylint: disable=protected-access
 
 
 logging.addLevelName(logging.DEBUG - 1, "TRACE")
@@ -163,7 +163,7 @@ def delete(path):
         try:
             log.trace("Deleting '{}'...".format(path))
             shutil.rmtree(path)
-        except IOError:  # pragma: no cover (manual test)
+        except IOError:
             # bug: http://code.activestate.com/lists/python-list/159050
             msg = "Unable to delete: {}".format(path)
             log.warning(msg)

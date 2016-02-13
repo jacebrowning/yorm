@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring,no-self-use
+# pylint: disable=missing-docstring,no-self-use,abstract-class-instantiated
 
 import pytest
 
@@ -11,7 +11,7 @@ class TestConverter:
 
     def test_converter_class_cannot_be_instantiated(self):
         with pytest.raises(TypeError):
-            Converter()  # pylint: disable=E0110
+            Converter()
 
     def test_converter_class_methods_cannot_be_called(self):
         with pytest.raises(NotImplementedError):
