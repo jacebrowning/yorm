@@ -1,4 +1,4 @@
-"""Unit test configuration file."""
+"""Unit tests configuration file."""
 
 import logging
 

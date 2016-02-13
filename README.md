@@ -28,7 +28,7 @@ View the talk from [PyOhio 2015](https://www.youtube.com/watch?v=0woNEKf-wAo).
 YORM can be installed with pip:
 
 ```
-$ pip3 install YORM
+$ pip install YORM
 ```
 
 or directly from the source code:
@@ -36,7 +36,7 @@ or directly from the source code:
 ```
 $ git clone https://github.com/jacebrowning/yorm.git
 $ cd yorm
-$ python3 setup.py install
+$ python setup.py install
 ```
 
 # Basic Usage

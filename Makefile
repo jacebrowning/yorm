@@ -212,7 +212,7 @@ fix: depends-dev
 
 RANDOM_SEED ?= $(shell date +%s)
 
-PYTEST_CORE_OPTS := --doctest-modules --verbose -r xXw --maxfail=3
+PYTEST_CORE_OPTS := --doctest-modules -r xXw -vv
 PYTEST_COV_OPTS := --cov=$(PACKAGE) --no-cov-on-fail --cov-report=term-missing --cov-report=html
 PYTEST_RANDOM_OPTS := --random --random-seed=$(RANDOM_SEED)
 
@@ -263,9 +263,9 @@ clean-all: clean .clean-env .clean-workspace
 
 .PHONY: .clean-build
 .clean-build:
-	find $(PACKAGE) -name '*.pyc' -delete
-	find $(PACKAGE) -name '__pycache__' -delete
-	rm -rf $(INSTALLED_FLAG)
+	find $(PACKAGE) tests -name '*.pyc' -delete
+	find $(PACKAGE) tests -name '__pycache__' -delete
+	rm -rf $(INSTALLED_FLAG) *.egg-info
 
 .PHONY: .clean-doc
 .clean-doc:
@@ -332,4 +332,4 @@ install:
 
 .PHONY: download
 download:
-	pip install $(PROJECT)
+	$(SYS_PYTHON) -m pip install $(PROJECT)

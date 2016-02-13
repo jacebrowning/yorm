@@ -4,6 +4,7 @@
 
 - Added preliminary support for JSON serialization (@pr0xmeh).
 - Renamed `yorm.converters` to `yorm.types`.
+- Now maintaining the signature on mapped objects.
 
 ## 0.5 (2015/09/25)
 
