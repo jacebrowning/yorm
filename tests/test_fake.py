@@ -10,13 +10,12 @@ import yorm
 from . import strip
 
 
-# classes ######################################################################
+# CLASSES ######################################################################
 
 
 @yorm.attr(value=yorm.types.standard.Integer)
 @yorm.sync("path/to/{self.name}.yml")
 class Sample:
-
     """Sample class for fake mapping."""
 
     def __init__(self, name):
@@ -27,12 +26,11 @@ class Sample:
         return "<sample {}>".format(id(self))
 
 
-# tests ########################################################################
+# TESTS ########################################################################
 
 
 @patch('yorm.settings.fake', True)
 class TestFake:
-
     """Integration tests with `yorm.settings.fake` enabled."""
 
     def test_no_file_create_when_fake(self, tmpdir):
@@ -78,7 +76,6 @@ class TestFake:
 
 
 class TestReal:
-
     """Integration tests with `yorm.settings.fake` disabled."""
 
     def test_setting_text_updates_attributes(self, tmpdir):

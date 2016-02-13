@@ -12,22 +12,19 @@ from . import strip, refresh_file_modification_times
 log = logging.getLogger(__name__)
 
 
-# classes ######################################################################
+# CLASSES ######################################################################
 
 
 class EmptyDictionary(Dictionary):
-
     """Sample dictionary container."""
 
 
 @yorm.attr(all=Integer)
 class IntegerList(List):
-
     """Sample list container."""
 
 
 class SampleStandard:
-
     """Sample class using standard attribute types."""
 
     def __init__(self):
@@ -50,7 +47,6 @@ class SampleStandard:
 @yorm.attr(true=Boolean, false=Boolean)
 @yorm.sync("path/to/{self.category}/{self.name}.yml")
 class SampleStandardDecorated:
-
     """Sample class using standard attribute types."""
 
     def __init__(self, name, category='default'):
@@ -72,18 +68,15 @@ class SampleStandardDecorated:
 
 @yorm.attr(status=Boolean, label=String)
 class StatusDictionary(Dictionary):
-
     """Sample dictionary container."""
 
 
 @yorm.attr(all=StatusDictionary)
 class StatusDictionaryList(List):
-
     """Sample list container."""
 
 
 class Level(String):
-
     """Sample custom attribute."""
 
     @classmethod
@@ -100,7 +93,6 @@ class Level(String):
 
 @yorm.sync("path/to/directory/{UUID}.yml", attrs={'level': Level})
 class SampleCustomDecorated:
-
     """Sample class using custom attribute types."""
 
     def __init__(self, name):
@@ -114,7 +106,6 @@ class SampleCustomDecorated:
 @yorm.attr(string=String)
 @yorm.sync("sample.yml", auto=False)
 class SampleDecoratedAutoOff:
-
     """Sample class with automatic storage turned off."""
 
     def __init__(self):
@@ -126,7 +117,6 @@ class SampleDecoratedAutoOff:
 
 @yorm.sync("sample.yml")
 class SampleEmptyDecorated:
-
     """Sample class using standard attribute types."""
 
     def __repr__(self):
@@ -134,7 +124,6 @@ class SampleEmptyDecorated:
 
 
 class SampleExtended:
-
     """Sample class using extended attribute types."""
 
     def __init__(self):
@@ -145,7 +134,6 @@ class SampleExtended:
 
 
 class SampleNested:
-
     """Sample class using nested attribute types."""
 
     def __init__(self):
@@ -155,11 +143,10 @@ class SampleNested:
     def __repr__(self):
         return "<nested {}>".format(id(self))
 
-# tests ########################################################################
+# TESTS ########################################################################
 
 
 class TestStandard:
-
     """Integration tests for standard attribute types."""
 
     @yorm.attr(status=yorm.types.Boolean)
@@ -353,7 +340,6 @@ class TestStandard:
 
 
 class TestContainers:
-
     """Integration tests for attribute containers."""
 
     def test_nesting(self, tmpdir):
@@ -446,7 +432,6 @@ class TestContainers:
 
 
 class TestExtended:
-
     """Integration tests for extended attribute types."""
 
     def test_function(self, tmpdir):
@@ -487,7 +472,6 @@ class TestExtended:
 
 
 class TestCustom:
-
     """Integration tests for custom attribute types."""
 
     def test_decorator(self, tmpdir):
