@@ -226,7 +226,7 @@ test: test-unit
 test-unit: depends-ci
 	$(PYTEST) $(PYTEST_OPTS) $(PACKAGE)
 ifndef TRAVIS
-	$(COVERAGE_SPACE) jacebrowning/coverage-space unit
+	$(COVERAGE_SPACE) jacebrowning/yorm unit
 endif
 
 .PHONY: test-int
@@ -235,7 +235,7 @@ test-int: depends-ci
 	$(PYTEST) $(PYTEST_OPTS_FAILFAST) tests
 ifndef TRAVIS
 	@ rm -rf $(FAILED_FLAG)  # next time, don't run the previously failing test
-	$(COVERAGE_SPACE) jacebrowning/coverage-space integration
+	$(COVERAGE_SPACE) jacebrowning/yorm integration
 endif
 
 .PHONY: tests test-all
@@ -245,7 +245,7 @@ test-all: depends-ci
 	$(PYTEST) $(PYTEST_OPTS_FAILFAST) $(PACKAGE) tests
 ifndef TRAVIS
 	@ rm -rf $(FAILED_FLAG)  # next time, don't run the previously failing test
-	$(COVERAGE_SPACE) jacebrowning/coverage-space overall
+	$(COVERAGE_SPACE) jacebrowning/yorm overall
 endif
 
 .PHONY: read-coverage
