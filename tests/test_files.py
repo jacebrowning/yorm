@@ -12,17 +12,15 @@ from yorm.types import Integer, String, Float, Boolean, Dictionary, List
 from . import refresh_file_modification_times
 
 
-# classes ######################################################################
+# CLASSES ######################################################################
 
 
 class EmptyDictionary(Dictionary):
-
     """Sample dictionary container."""
 
 
 @yorm.attr(all=Integer)
 class IntegerList(List):
-
     """Sample list container."""
 
 
@@ -31,7 +29,6 @@ class IntegerList(List):
 @yorm.attr(true=Boolean, false=Boolean)
 @yorm.sync("path/to/{self.category}/{self.name}.yml")
 class SampleStandardDecorated:
-
     """Sample class using standard attribute types."""
 
     def __init__(self, name, category='default'):
@@ -51,11 +48,10 @@ class SampleStandardDecorated:
         return "<decorated {}>".format(id(self))
 
 
-# tests ########################################################################
+# TESTS ########################################################################
 
 
 class TestCreate:
-
     """Integration tests for creating mapped classes."""
 
     def test_fetch_from_existing(self, tmpdir):
@@ -85,7 +81,6 @@ class TestCreate:
 
 
 class TestDelete:
-
     """Integration tests for deleting files."""
 
     def test_read(self, tmpdir):
@@ -118,7 +113,6 @@ class TestDelete:
 
 
 class TestUpdate:
-
     """Integration tests for updating files/object."""
 
     def test_automatic_store_after_first_modification(self, tmpdir):

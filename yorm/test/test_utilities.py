@@ -11,7 +11,7 @@ from yorm.bases import Converter, Mappable
 
 log = logging.getLogger(__name__)
 
-# classes ######################################################################
+# CLASSES ######################################################################
 
 
 class MockConverter(Converter):
@@ -64,7 +64,7 @@ class MockMappable(Mappable):
     __mapper__.attrs = {}
 
 
-# tests ########################################################################
+# TESTS ########################################################################
 
 
 @patch('yorm.common.write_text', Mock())
