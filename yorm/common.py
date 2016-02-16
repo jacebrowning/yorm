@@ -93,8 +93,8 @@ def load_file(text, path, ext='yml'):
     :return: dictionary
 
     """
-    # Load the YAML data
     data = {}
+
     try:
         if ext in ['yml', 'yaml']:
             data = yaml.load(text) or {}
@@ -106,21 +106,23 @@ def load_file(text, path, ext='yml'):
     except json.JSONDecodeError as exc:
         msg = "Invalid JSON contents: {}:\n{}".format(path, exc)
         raise exceptions.ContentError(msg) from None
+
     # Ensure data is a dictionary
     if not isinstance(data, dict):
         msg = "Invalid file contents: {}".format(path)
         raise exceptions.ContentError(msg)
 
-    # Return the parsed data.
     return data
 
 
 def dump_file(data, ext):
-    if ext in ['yml', 'yaml']:
-        return yaml.dump(data, default_flow_style=False, allow_unicode=True)
-
     if ext in ['json']:
         return json.dumps(data, indent=4, sort_keys=True)
+
+    if ext not in ['yml', 'yaml']:
+        log.warning("Unrecognized file extension: %s", ext)
+
+    return yaml.dump(data, default_flow_style=False, allow_unicode=True)
 
 
 def write_text(text, path, encoding='utf-8'):
@@ -135,9 +137,11 @@ def write_text(text, path, encoding='utf-8'):
     """
     if text:
         log.trace("Writing text to '{}'...".format(path))
+
     with open(path, 'wb') as stream:
         data = text.encode(encoding)
         stream.write(data)
+
     return path
 
 

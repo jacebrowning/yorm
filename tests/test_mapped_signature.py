@@ -53,3 +53,5 @@ def describe_mapped_object():
     def it_does_not_affect_unmapped_objects(mapped, unmapped):
         expect(hasattr(mapped, '__mapper__')) is True
         expect(hasattr(unmapped, '__mapper__')) is False
+        expect(hasattr(mapped.__setattr__, '_modified_by_yorm')) is True
+        expect(hasattr(unmapped.__setattr__, '_modified_by_yorm')) is False
