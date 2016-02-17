@@ -228,7 +228,9 @@ class TestSyncInstances:
 
     def test_filename_attributes_combination(self):
         """Verify attributes can be used to determine filename (combo)."""
+        log.info("Creating first object...")
         sample1 = self.SampleDecoratedAttributesCombination('A', 'B', 'C')
+        log.info("Creating second object...")
         sample2 = self.SampleDecoratedAttributesCombination(1, 2, 3)
         assert "A/B/C.yml" == sample1.__mapper__.path
         assert "1/2/3.yml" == sample2.__mapper__.path

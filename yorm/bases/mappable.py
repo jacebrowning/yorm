@@ -9,14 +9,19 @@ from ..mapper import get_mapper
 
 log = common.logger(__name__)
 
+TAG = '_modified_by_yorm'
+
 
 def fetch_before(method):
     """Decorator for methods that should fetch before call."""
 
+    if getattr(method, TAG, False):
+        return method
+
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
         """Decorated method."""
-        if not _private_name(args):
+        if not _private_call(method, args):
             mapper = get_mapper(self)
             if mapper and mapper.modified:
                 log.debug("Fetching before call: %s", method.__name__)
@@ -27,18 +32,23 @@ def fetch_before(method):
 
         return method(self, *args, **kwargs)
 
+    setattr(wrapped, TAG, True)
+
     return wrapped
 
 
 def store_after(method):
     """Decorator for methods that should store after call."""
 
+    if getattr(method, TAG, False):
+        return method
+
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
         """Decorated method."""
         result = method(self, *args, **kwargs)
 
-        if not _private_name(args):
+        if not _private_call(method, args):
             mapper = get_mapper(self)
             if mapper and mapper.auto:
                 log.debug("Storing after call: %s", method.__name__)
@@ -46,14 +56,17 @@ def store_after(method):
 
         return result
 
+    setattr(wrapped, TAG, True)
+
     return wrapped
 
 
-def _private_name(args, prefix='_'):
+def _private_call(method, args, prefix='_'):
     """Determine if a call's first argument is a private variable name."""
-    try:
+    if method.__name__ in ('__getattribute__', '__setattr__'):
+        assert isinstance(args[0], str)
         return args[0].startswith(prefix)
-    except (IndexError, AttributeError):
+    else:
         return False
 
 

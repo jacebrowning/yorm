@@ -51,7 +51,7 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
         else:
             modified_method = fetch_before(method)
             setattr(instance.__class__, name, modified_method)
-            log.trace("Method patched to fetch: %s", name)
+            log.trace("Patched to fetch before call: %s", name)
 
     for name in ['__setattr__', '__setitem__', '__delitem__', 'append']:
         try:
@@ -61,7 +61,7 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
         else:
             modified_method = store_after(method)
             setattr(instance.__class__, name, modified_method)
-            log.trace("Method patched to store: %s", name)
+            log.trace("Patched to store after call: %s", name)
 
     mapper = set_mapper(instance, path, attrs, auto=auto)
     _check_existance(mapper, existing)

@@ -15,7 +15,10 @@ log = common.logger(__name__)
 
 def get_mapper(obj):
     """Get `Mapper` instance attached to an object."""
-    return getattr(obj, MAPPER, None)
+    try:
+        return object.__getattribute__(obj, MAPPER)
+    except AttributeError:
+        return None
 
 
 def set_mapper(obj, path, attrs, auto=True, root=None):
