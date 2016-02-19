@@ -3,6 +3,20 @@
 import time
 import logging
 
+import expecter
+
+
+def is_true(x):
+    return x is True
+
+
+def is_false(x):
+    return x is False
+
+
+expecter.add_expectation(is_true)
+expecter.add_expectation(is_false)
+
 
 def strip(text, tabs=None, end='\n'):
     """Strip leading whitespace indentation on multiline string literals."""

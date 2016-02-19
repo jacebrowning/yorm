@@ -1,62 +1,62 @@
-# pylint: disable=missing-docstring,no-self-use
+# pylint: disable=missing-docstring,expression-not-assigned,unused-variable
 
 import os
+
+import pytest
+from expecter import expect
 
 from yorm import common
 
 
-def test_file_creation(tmpdir):
-    """Verify a file can be created in an existing directory."""
-    tmpdir.chdir()
+def describe_touch():
 
-    path = os.path.join('.', 'file.ext')
+    @pytest.fixture
+    def new_path(tmpdir):
+        tmpdir.chdir()
+        return os.path.join('.', 'file.ext')
 
-    common.touch(path)
-    assert os.path.isfile(path)
+    @pytest.fixture
+    def new_path_in_directory():
+        dirpath = os.path.join('path', 'to', 'directory')
+        return os.path.join(dirpath, 'file.ext')
 
-    common.touch(path)  # second call is ignored
-    assert os.path.isfile(path)
+    def it_creates_files(new_path):
+        common.touch(new_path)
+        expect(os.path.exists(new_path)).is_true()
 
+    def it_can_be_called_twice(new_path):
+        common.touch(new_path)
+        common.touch(new_path)
+        expect(os.path.exists(new_path)).is_true()
 
-def test_file_creation_nested(tmpdir):
-    """Verify a file can be created in a new directory."""
-    tmpdir.chdir()
-
-    dirpath = os.path.join('path', 'to', 'directory')
-    path = os.path.join(dirpath, 'file.ext')
-
-    common.touch(path)
-    assert os.path.isfile(path)
-
-
-def test_file_deletion(tmpdir):
-    """Verify a file can be deleted."""
-    tmpdir.chdir()
-
-    path = os.path.join('.', 'file.ext')
-
-    common.touch(path)
-    assert os.path.isfile(path)
-
-    common.delete(path)
-    assert not os.path.isfile(path)
-
-    common.delete(path)  # second call is ignored
-    assert not os.path.isfile(path)
+    def it_creates_missing_directories(new_path_in_directory):
+        common.touch(new_path_in_directory)
+        expect(os.path.exists(new_path_in_directory)).is_true()
 
 
-def test_directory_deletion(tmpdir):
-    """Verify a directory can be deleted."""
-    tmpdir.chdir()
+def describe_delete():
 
-    dirpath = os.path.join('path', 'to', 'directory')
-    path = os.path.join(dirpath, 'file.ext')
+    @pytest.fixture
+    def existing_path(tmpdir):
+        tmpdir.chdir()
+        path = "path/to/file.ext"
+        os.system("touch {}".format(path))
+        return path
 
-    common.touch(path)
-    assert os.path.isdir(dirpath)
+    @pytest.fixture
+    def existing_dirpath(tmpdir):
+        tmpdir.chdir()
+        dirpath = "path/to/directory"
+        os.system("mkdir -p {}".format(dirpath))
+        return dirpath
 
-    common.delete(dirpath)
-    assert not os.path.isdir(dirpath)
+    def it_deletes_existing_files(existing_path):
+        common.delete(existing_path)
+        expect(os.path.exists(existing_path)).is_false()
 
-    common.delete(dirpath)  # second call is ignored
-    assert not os.path.isdir(dirpath)
+    def it_ignores_missing_files():
+        common.delete("path/to/non/file")
+
+    def it_deletes_directories(existing_dirpath):
+        common.delete(existing_dirpath)
+        expect(os.path.exists(existing_dirpath)).is_false()
