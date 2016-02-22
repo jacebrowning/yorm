@@ -5,7 +5,7 @@ import os
 import pytest
 from expecter import expect
 
-from yorm import common
+from yorm import diskutils
 
 
 def describe_touch():
@@ -21,16 +21,16 @@ def describe_touch():
         return os.path.join(dirpath, 'file.ext')
 
     def it_creates_files(new_path):
-        common.touch(new_path)
+        diskutils.touch(new_path)
         expect(os.path.exists(new_path)).is_true()
 
     def it_can_be_called_twice(new_path):
-        common.touch(new_path)
-        common.touch(new_path)
+        diskutils.touch(new_path)
+        diskutils.touch(new_path)
         expect(os.path.exists(new_path)).is_true()
 
     def it_creates_missing_directories(new_path_in_directory):
-        common.touch(new_path_in_directory)
+        diskutils.touch(new_path_in_directory)
         expect(os.path.exists(new_path_in_directory)).is_true()
 
 
@@ -51,12 +51,12 @@ def describe_delete():
         return dirpath
 
     def it_deletes_existing_files(existing_path):
-        common.delete(existing_path)
+        diskutils.delete(existing_path)
         expect(os.path.exists(existing_path)).is_false()
 
     def it_ignores_missing_files():
-        common.delete("path/to/non/file")
+        diskutils.delete("path/to/non/file")
 
     def it_deletes_directories(existing_dirpath):
-        common.delete(existing_dirpath)
+        diskutils.delete(existing_dirpath)
         expect(os.path.exists(existing_dirpath)).is_false()

@@ -1,5 +1,6 @@
 """Unit tests for the `yorm` package."""
 
+import os
 import time
 import logging
 
@@ -14,8 +15,18 @@ def is_false(x):
     return x is False
 
 
+def exists(x):
+    return os.path.exists(x)
+
+
+def missing(x):
+    return not os.path.exists(x)
+
+
 expecter.add_expectation(is_true)
 expecter.add_expectation(is_false)
+expecter.add_expectation(exists)
+expecter.add_expectation(missing)
 
 
 def strip(text, tabs=None, end='\n'):

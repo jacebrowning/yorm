@@ -67,9 +67,9 @@ class MockMappable(Mappable):
 # TESTS ########################################################################
 
 
-@patch('yorm.common.write_text', Mock())
-@patch('yorm.common.stamp', Mock())
-@patch('yorm.common.read_text', Mock(return_value=""))
+@patch('yorm.diskutils.write', Mock())
+@patch('yorm.diskutils.stamp', Mock())
+@patch('yorm.diskutils.read', Mock(return_value=""))
 class TestSyncObject:
 
     """Unit tests for the `sync_object` function."""
@@ -100,7 +100,7 @@ class TestSyncObject:
     @patch('os.path.isfile', Mock(return_value=True))
     def test_init_existing(self):
         """Verify an existing file is read."""
-        with patch('yorm.common.read_text', Mock(return_value="abc: 123")):
+        with patch('yorm.diskutils.read', Mock(return_value="abc: 123")):
             sample = utilities.sync(self.Sample(), "sample.yml")
         assert 123 == sample.abc
 
@@ -117,10 +117,9 @@ class TestSyncObject:
             utilities.sync(self.Sample(), "sample.yml", existing=False)
 
 
-@patch('yorm.common.create_dirname', Mock())
-@patch('yorm.common.write_text', Mock())
-@patch('yorm.common.stamp', Mock())
-@patch('yorm.common.read_text', Mock(return_value=""))
+@patch('yorm.diskutils.write', Mock())
+@patch('yorm.diskutils.stamp', Mock())
+@patch('yorm.diskutils.read', Mock(return_value=""))
 class TestSyncInstances:
 
     """Unit tests for the `sync_instances` decorator."""
@@ -201,7 +200,7 @@ class TestSyncInstances:
     @patch('os.path.isfile', Mock(return_value=True))
     def test_init_existing(self):
         """Verify an existing file is read."""
-        with patch('yorm.common.read_text', Mock(return_value="abc: 123")):
+        with patch('yorm.diskutils.read', Mock(return_value="abc: 123")):
             sample = self.SampleDecorated()
         assert 123 == sample.abc
 
@@ -236,9 +235,9 @@ class TestSyncInstances:
         assert "1/2/3.yml" == sample2.__mapper__.path
 
 
-@patch('yorm.common.write_text', Mock())
-@patch('yorm.common.stamp', Mock())
-@patch('yorm.common.read_text', Mock(return_value=""))
+@patch('yorm.diskutils.write', Mock())
+@patch('yorm.diskutils.stamp', Mock())
+@patch('yorm.diskutils.read', Mock(return_value=""))
 class TestAttr:
 
     """Unit tests for the `attr` decorator."""
