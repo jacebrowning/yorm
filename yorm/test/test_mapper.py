@@ -23,8 +23,20 @@ def attrs():
     return {'var2': Integer, 'var3': Integer}
 
 
+@pytest.yield_fixture(params=("real", "fake"))
+def mapper(tmpdir, obj, attrs, request):
+    path = request.param + "/path/to/file"
+    backup = yorm.settings.fake
+    if "fake" in path:
+        yorm.settings.fake = True
+    elif "real" in path:
+        tmpdir.chdir()
+    yield Mapper(obj, path, attrs)
+    yorm.settings.fake = backup
+
+
 @pytest.fixture
-def mapper(tmpdir, obj, attrs):
+def mapper_real(tmpdir, obj, attrs):
     tmpdir.chdir()
     return Mapper(obj, "real/path/to/file", attrs)
 
@@ -41,12 +53,12 @@ def describe_mapper():
 
     def describe_create():
 
-        def it_creates_the_file(mapper):
-            mapper.create()
+        def it_creates_the_file(mapper_real):
+            mapper_real.create()
 
-            expect(mapper.path).exists()
-            expect(mapper.exists).is_true()
-            expect(mapper.deleted).is_false()
+            expect(mapper_real.path).exists()
+            expect(mapper_real.exists).is_true()
+            expect(mapper_real.deleted).is_false()
 
         def it_pretends_when_fake(mapper_fake):
             mapper_fake.create()
@@ -55,27 +67,21 @@ def describe_mapper():
             expect(mapper_fake.exists).is_true()
             expect(mapper_fake.deleted).is_false()
 
-        def it_can_be_called_twice(mapper):
-            mapper.create()
-            mapper.create()  # should be ignored
+        def it_can_be_called_twice(mapper_real):
+            mapper_real.create()
+            mapper_real.create()  # should be ignored
 
-            expect(mapper.path).exists()
+            expect(mapper_real.path).exists()
 
     def describe_delete():
 
         def it_deletes_the_file(mapper):
+            mapper.create()
             mapper.delete()
 
             expect(mapper.path).missing()
             expect(mapper.exists).is_false()
             expect(mapper.deleted).is_true()
-
-        def it_pretends_when_fake(mapper_fake):
-            mapper_fake.delete()
-
-            expect(mapper_fake.path).missing()
-            expect(mapper_fake.exists).is_false()
-            expect(mapper_fake.deleted).is_true()
 
         def it_can_be_called_twice(mapper):
             mapper.delete()
@@ -101,34 +107,53 @@ def describe_mapper():
 
     def describe_store():
 
-        def it_creates_the_file_automatically(mapper):
+        def it_creates_the_file_automatically(mapper_real):
+            mapper_real.store()
+
+            expect(mapper_real.path).exists()
+
+    def describe_text():
+
+        def can_get_the_file_contents(obj, mapper):
+            obj.var3 = 42
             mapper.store()
 
-            expect(mapper.path).exists()
+            expect(mapper.text) == "var2: 0\nvar3: 42\n"
+
+        def can_set_the_file_contents(obj, mapper):
+            mapper.create()
+            mapper.text = "var2: 42\n"
+            mapper.fetch()
+
+            expect(obj.var2) == 42
 
     def describe_modified():
 
-        def is_true_initially(mapper, mapper_fake):
+        def is_true_initially(mapper):
             expect(mapper.modified).is_true()
-            expect(mapper_fake.modified).is_true()
 
-        def is_true_after_create(mapper, mapper_fake):
+        def is_true_after_create(mapper):
             mapper.create()
-            mapper_fake.create()
 
             expect(mapper.modified).is_true()
-            expect(mapper_fake.modified).is_true()
 
-        def can_be_set_false(mapper, mapper_fake):
-            mapper.modified = False
-            mapper_fake.modified = False
+        def is_true_after_delete(mapper):
+            mapper.delete()
+
+            expect(mapper.modified).is_true()
+
+        def is_false_after_fetch(mapper):
+            mapper.create()
+            mapper.fetch()
 
             expect(mapper.modified).is_false()
-            expect(mapper_fake.modified).is_false()
 
-        def can_be_set_true(mapper, mapper_fake):
+        def can_be_set_false(mapper):
+            mapper.modified = False
+
+            expect(mapper.modified).is_false()
+
+        def can_be_set_true(mapper):
             mapper.modified = True
-            mapper_fake.modified = True
 
             expect(mapper.modified).is_true()
-            expect(mapper_fake.modified).is_true()

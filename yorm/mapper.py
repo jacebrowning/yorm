@@ -150,6 +150,7 @@ class Mapper:
             return was != now
 
     @modified.setter
+    @file_required(create=True)
     def modified(self, changes):
         """Mark the file as modified if there are changes."""
         if changes:

@@ -109,3 +109,29 @@ class Mappable(metaclass=abc.ABCMeta):
     def append(self, value):
         """Trigger file update when appending items."""
         super().append(value)
+
+
+def patch_methods(instance):
+    log.debug("Patching methods on: %r", instance)
+    cls = instance.__class__
+
+    # TODO: determine a way to share the lists of methods to patch
+    for name in ['__getattribute__', '__iter__', '__getitem__']:
+        try:
+            method = getattr(cls, name)
+        except AttributeError:
+            log.trace("No method: %s", name)
+        else:
+            modified_method = fetch_before(method)
+            setattr(cls, name, modified_method)
+            log.trace("Patched to fetch before call: %s", name)
+
+    for name in ['__setattr__', '__setitem__', '__delitem__', 'append']:
+        try:
+            method = getattr(cls, name)
+        except AttributeError:
+            log.trace("No method: %s", name)
+        else:
+            modified_method = store_after(method)
+            setattr(cls, name, modified_method)
+            log.trace("Patched to store after call: %s", name)

@@ -40,14 +40,15 @@ def describe_delete():
     def existing_path(tmpdir):
         tmpdir.chdir()
         path = "path/to/file.ext"
-        os.system("touch {}".format(path))
+        os.makedirs(os.path.dirname(path))
+        open(path, 'w').close()
         return path
 
     @pytest.fixture
     def existing_dirpath(tmpdir):
         tmpdir.chdir()
         dirpath = "path/to/directory"
-        os.system("mkdir -p {}".format(dirpath))
+        os.makedirs(dirpath)
         return dirpath
 
     def it_deletes_existing_files(existing_path):

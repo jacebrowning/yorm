@@ -3,7 +3,7 @@
 import uuid
 
 from . import common, exceptions
-from .bases.mappable import fetch_before, store_after
+from .bases.mappable import patch_methods
 from .mapper import get_mapper, set_mapper
 
 log = common.logger(__name__)
@@ -41,28 +41,9 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
     log.info("Mapping %r to %s...", instance, path)
     _check_base(instance, mappable=False)
 
+    patch_methods(instance)
+
     attrs = attrs or common.attrs[instance.__class__]
-
-    for name in ['__getattribute__', '__iter__', '__getitem__']:
-        try:
-            method = getattr(instance.__class__, name)
-        except AttributeError:
-            log.trace("No method: %s", name)
-        else:
-            modified_method = fetch_before(method)
-            setattr(instance.__class__, name, modified_method)
-            log.trace("Patched to fetch before call: %s", name)
-
-    for name in ['__setattr__', '__setitem__', '__delitem__', 'append']:
-        try:
-            method = getattr(instance.__class__, name)
-        except AttributeError:
-            log.trace("No method: %s", name)
-        else:
-            modified_method = store_after(method)
-            setattr(instance.__class__, name, modified_method)
-            log.trace("Patched to store after call: %s", name)
-
     mapper = set_mapper(instance, path, attrs, auto=auto)
     _check_existance(mapper, existing)
 
