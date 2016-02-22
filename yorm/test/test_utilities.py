@@ -97,20 +97,20 @@ class TestSyncObject:
         with pytest.raises(exceptions.MappingError):
             utilities.sync(sample, "sample.yml")
 
-    @patch('os.path.isfile', Mock(return_value=True))
+    @patch('yorm.diskutils.exists', Mock(return_value=True))
     def test_init_existing(self):
         """Verify an existing file is read."""
         with patch('yorm.diskutils.read', Mock(return_value="abc: 123")):
             sample = utilities.sync(self.Sample(), "sample.yml")
         assert 123 == sample.abc
 
-    @patch('os.path.isfile', Mock(return_value=False))
+    @patch('yorm.diskutils.exists', Mock(return_value=False))
     def test_exception_when_file_expected_but_missing(self):
         utilities.sync(self.Sample(), "sample.yml", existing=False)
         with pytest.raises(exceptions.FileMissingError):
             utilities.sync(self.Sample(), "sample.yml", existing=True)
 
-    @patch('os.path.isfile', Mock(return_value=True))
+    @patch('yorm.diskutils.exists', Mock(return_value=True))
     def test_exception_when_file_not_expected_but_found(self):
         utilities.sync(self.Sample(), "sample.yml", existing=True)
         with pytest.raises(exceptions.FileAlreadyExistsError):
@@ -197,7 +197,7 @@ class TestSyncInstances:
         assert "sample.yml" == sample.__mapper__.path
         assert ['var1'] == list(sample.__mapper__.attrs.keys())
 
-    @patch('os.path.isfile', Mock(return_value=True))
+    @patch('yorm.diskutils.exists', Mock(return_value=True))
     def test_init_existing(self):
         """Verify an existing file is read."""
         with patch('yorm.diskutils.read', Mock(return_value="abc: 123")):

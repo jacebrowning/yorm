@@ -11,6 +11,11 @@ from . import common, exceptions
 log = common.logger(__name__)
 
 
+def exists(path):
+    """Determine if a path exists."""
+    return os.path.exists(path)
+
+
 def touch(path):
     """Ensure a file path exists."""
     if not os.path.exists(path):
@@ -79,30 +84,24 @@ def delete(path):
         os.remove(path)
 
 
-def load(text, path, ext='yml'):
+def load(text, path):
     """Parse a dictionary a data from formatted text.
 
     :param text: string containing dumped data
-    :param path: file path for error messages
+    :param path: file path to specify formatting
 
     :return: dictionary of data
 
     """
-    data = {}
+    ext = _get_ext(path)
+    if ext in ['json']:
+        data = _load_json(text, path)
+    elif ext in ['yml', 'yaml']:
+        data = _load_yaml(text, path)
+    else:
+        log.warning("Unrecognized file extension: %s", ext)
+        data = _load_yaml(text, path)
 
-    try:
-        if ext in ['yml', 'yaml']:
-            data = yaml.load(text) or {}
-        elif ext in ['json']:
-            data = json.loads(text) or {}
-    except yaml.error.YAMLError as exc:
-        msg = "Invalid YAML contents: {}:\n{}".format(path, exc)
-        raise exceptions.ContentError(msg) from None
-    except json.JSONDecodeError as exc:
-        msg = "Invalid JSON contents: {}:\n{}".format(path, exc)
-        raise exceptions.ContentError(msg) from None
-
-    # Ensure data is a dictionary
     if not isinstance(data, dict):
         msg = "Invalid file contents: {}".format(path)
         raise exceptions.ContentError(msg)
@@ -110,8 +109,33 @@ def load(text, path, ext='yml'):
     return data
 
 
-def dump(data, ext):
-    """Format a dictionary into a serialization format."""
+def _load_json(text, path):
+    try:
+        return json.loads(text) or {}
+    except json.JSONDecodeError as exc:
+        msg = "Invalid JSON contents: {}:\n{}".format(path, exc)
+        raise exceptions.ContentError(msg) from None
+
+
+def _load_yaml(text, path):
+    try:
+        return yaml.load(text) or {}
+    except yaml.error.YAMLError as exc:
+        msg = "Invalid YAML contents: {}:\n{}".format(path, exc)
+        raise exceptions.ContentError(msg) from None
+
+
+def dump(data, path):
+    """Format a dictionary into a serialization format.
+
+    :param text: dictionary of data to format
+    :param path: file path to specify formatting
+
+    :return: string of formatted data
+
+    """
+    ext = _get_ext(path)
+
     if ext in ['json']:
         return json.dumps(data, indent=4, sort_keys=True)
 
@@ -119,3 +143,10 @@ def dump(data, ext):
         log.warning("Unrecognized file extension: %s", ext)
 
     return yaml.dump(data, default_flow_style=False, allow_unicode=True)
+
+
+def _get_ext(path):
+    if '.' in path:
+        return path.split('.')[-1].lower()
+    else:
+        return 'yml'

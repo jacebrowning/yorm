@@ -112,21 +112,6 @@ def describe_mapper():
 
             expect(mapper_real.path).exists()
 
-    def describe_text():
-
-        def can_get_the_file_contents(obj, mapper):
-            obj.var3 = 42
-            mapper.store()
-
-            expect(mapper.text) == "var2: 0\nvar3: 42\n"
-
-        def can_set_the_file_contents(obj, mapper):
-            mapper.create()
-            mapper.text = "var2: 42\n"
-            mapper.fetch()
-
-            expect(obj.var2) == 42
-
     def describe_modified():
 
         def is_true_initially(mapper):
@@ -157,3 +142,18 @@ def describe_mapper():
             mapper.modified = True
 
             expect(mapper.modified).is_true()
+
+    def describe_text():
+
+        def can_get_the_file_contents(obj, mapper):
+            obj.var3 = 42
+            mapper.store()
+
+            expect(mapper.text) == "var2: 0\nvar3: 42\n"
+
+        def can_set_the_file_contents(obj, mapper):
+            mapper.create()
+            mapper.text = "var2: 42\n"
+            mapper.fetch()
+
+            expect(obj.var2) == 42

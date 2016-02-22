@@ -1,6 +1,5 @@
 """Core object-file mapping functionality."""
 
-import os
 import functools
 from pprint import pformat
 
@@ -105,7 +104,7 @@ class Mapper:
         self.auto = auto
 
         self.auto_store = False
-        self.exists = self.path and os.path.isfile(self.path)
+        self.exists = diskutils.exists(self.path)
         self.deleted = False
         self._activity = False
         self._timestamp = 0
@@ -113,28 +112,6 @@ class Mapper:
 
     def __str__(self):
         return str(self.path)
-
-    @property
-    def text(self):
-        """Get file contents."""
-        log.info("Getting contents of %s...", prefix(self))
-        if settings.fake:
-            text = self._fake
-        else:
-            text = self._read()
-        log.trace("Text read: \n%s", text[:-1])
-        return text
-
-    @text.setter
-    def text(self, text):
-        """Set file contents."""
-        log.info("Setting contents of %s...", prefix(self))
-        if settings.fake:
-            self._fake = text
-        else:
-            self._write(text)
-        log.trace("Text wrote: \n%s", text[:-1])
-        self.modified = True
 
     @property
     def modified(self):
@@ -164,11 +141,26 @@ class Mapper:
             log.debug("Marked %s as unmodified", prefix(self))
 
     @property
-    def ext(self):
-        if '.' in self.path:
-            return self.path.split('.')[-1]
+    def text(self):
+        """Get file contents."""
+        log.info("Getting contents of %s...", prefix(self))
+        if settings.fake:
+            text = self._fake
         else:
-            return 'yml'
+            text = self._read()
+        log.trace("Text read: \n%s", text[:-1])
+        return text
+
+    @text.setter
+    def text(self, text):
+        """Set file contents."""
+        log.info("Setting contents of %s...", prefix(self))
+        if settings.fake:
+            self._fake = text
+        else:
+            self._write(text)
+        log.trace("Text wrote: \n%s", text[:-1])
+        self.modified = True
 
     def create(self):
         """Create a new file for the object."""
@@ -189,7 +181,7 @@ class Mapper:
 
         # Parse data from file
         text = self._read()
-        data = diskutils.load(text=text, path=self.path, ext=self.ext)
+        data = diskutils.load(text=text, path=self.path)
         log.trace("Loaded data: \n%s", pformat(data))
 
         # Update all attributes
@@ -251,7 +243,7 @@ class Mapper:
             data[name] = data2
 
         # Dump data to file
-        text = diskutils.dump(data=data, ext=self.ext)
+        text = diskutils.dump(data=data, path=self.path)
         self._write(text)
 
         # Set meta attributes
