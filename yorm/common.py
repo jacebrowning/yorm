@@ -6,6 +6,7 @@ import logging
 
 # CONSTANTS ####################################################################
 
+MAPPER = '__mapper__'
 
 PRINT_VERBOSITY = 0  # minimum verbosity to using `print`
 STR_VERBOSITY = 3  # minimum verbosity to use verbose `__str__`
@@ -49,3 +50,20 @@ class classproperty(object):
 
     def __get__(self, instance, owner):
         return self.getter(owner)
+
+
+# FUNCTIONS ####################################################################
+
+
+def get_mapper(obj):
+    """Get the `Mapper` instance attached to an object."""
+    try:
+        return object.__getattribute__(obj, MAPPER)
+    except AttributeError:
+        return None
+
+
+def set_mapper(obj, mapper):
+    """Attach a `Mapper` instance to an object."""
+    setattr(obj, MAPPER, mapper)
+    return mapper

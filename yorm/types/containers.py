@@ -1,13 +1,13 @@
 """Converter classes for builtin container types."""
 
 from .. import common
-from ..bases import Convertible, Container
+from ..bases import Container
 from . import standard
 
 log = common.logger(__name__)
 
 
-class Dictionary(Convertible, Container, dict):
+class Dictionary(Container, dict):
     """Base class for a dictionary of attribute types."""
 
     def __new__(cls, *args, **kwargs):
@@ -19,7 +19,7 @@ class Dictionary(Convertible, Container, dict):
     @classmethod
     def to_data(cls, value):
         value2 = cls.create_default()
-        value2.update_value(value, match=None)
+        value2.update_value(value, strict=True)
 
         data = {}
 
@@ -28,7 +28,7 @@ class Dictionary(Convertible, Container, dict):
 
         return data
 
-    def update_value(self, data, match=standard.match):
+    def update_value(self, data, strict=False):
         cls = self.__class__
         value = cls.create_default()
 
@@ -51,11 +51,13 @@ class Dictionary(Convertible, Container, dict):
             try:
                 converter = attrs.pop(name)
             except KeyError:
-                if match:
-                    converter = match(name, data2, nested=True)
-                    common.attrs[cls][name] = converter
-                else:
+                if strict:
+                    msg = "Ignored unknown nested file attribute: %s = %r"
+                    log.warning(msg, name, data2)
                     continue
+                else:
+                    converter = standard.match(name, data2, nested=True)
+                    common.attrs[cls][name] = converter
 
             try:
                 attr = self[name]
@@ -63,8 +65,8 @@ class Dictionary(Convertible, Container, dict):
                 attr = converter.create_default()
 
             if all((isinstance(attr, converter),
-                    issubclass(converter, Convertible))):
-                attr.update_value(data2, match=match)
+                    issubclass(converter, Container))):
+                attr.update_value(data2, strict=strict)
             else:
                 attr = converter.to_value(data2)
 
@@ -73,16 +75,15 @@ class Dictionary(Convertible, Container, dict):
         # Create default values for unmapped types
         for name, converter in attrs.items():
             value[name] = converter.create_default()
-            # TODO: clean this up more
-            # https://github.com/jacebrowning/yorm/issues/69
-            log.info("Added missing nested key '%s'...", name)
+            msg = "Default value for missing nested object attribute: %s = %r"
+            log.info(msg, name, value[name])
 
         # Apply the new value
         self.clear()
         self.update(value)
 
 
-class List(Convertible, Container, list):
+class List(Container, list):
     """Base class for a homogeneous list of attribute types."""
 
     ALL = 'all'
@@ -102,7 +103,7 @@ class List(Convertible, Container, list):
     @classmethod
     def to_data(cls, value):
         value2 = cls.create_default()
-        value2.update_value(value, match=None)
+        value2.update_value(value, strict=True)
 
         data = []
 
@@ -112,7 +113,7 @@ class List(Convertible, Container, list):
 
         return data
 
-    def update_value(self, data, match=standard.match):
+    def update_value(self, data, strict=False):
         cls = self.__class__
         value = cls.create_default()
 
@@ -128,8 +129,8 @@ class List(Convertible, Container, list):
                 attr = converter.create_default()  # pylint: disable=no-member
 
             if all((isinstance(attr, converter),
-                    issubclass(converter, Convertible))):
-                attr.update_value(item, match=match)
+                    issubclass(converter, Container))):
+                attr.update_value(item, strict=strict)
             else:
                 attr = converter.to_value(item)  # pylint: disable=no-member
 

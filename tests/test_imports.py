@@ -15,7 +15,7 @@ def test_from_top_constants():
 
 def test_from_top_clases():
     from yorm import Mappable  # base class for mapped objects
-    from yorm import Converter, Convertible  # base class for types
+    from yorm import Converter, Container  # base class for types
 
 
 def test_from_top_decorators():

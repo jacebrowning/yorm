@@ -3,27 +3,10 @@
 import functools
 from pprint import pformat
 
-from . import common, diskutils, exceptions, settings
+from . import common, diskutils, exceptions, types, settings
 from .bases import Container
 
-MAPPER = '__mapper__'
-
 log = common.logger(__name__)
-
-
-def get_mapper(obj):
-    """Get `Mapper` instance attached to an object."""
-    try:
-        return object.__getattribute__(obj, MAPPER)
-    except AttributeError:
-        return None
-
-
-def set_mapper(obj, path, attrs, auto=True):
-    """Create and attach a `Mapper` instance to an object."""
-    mapper = Mapper(obj, path, attrs, auto=auto)
-    setattr(obj, MAPPER, mapper)
-    return mapper
 
 
 def file_required(create=False):
@@ -97,15 +80,16 @@ class Mapper:
 
     """
 
-    def __init__(self, obj, path, attrs, auto=True):
+    def __init__(self, obj, path, attrs, *, auto=True, strict=True):
         self._obj = obj
         self.path = path
         self.attrs = attrs
         self.auto = auto
+        self.strict = strict
 
-        self.auto_store = False
         self.exists = diskutils.exists(self.path)
         self.deleted = False
+        self.store_after_fetch = False
         self._activity = False
         self._timestamp = 0
         self._fake = ""
@@ -159,7 +143,7 @@ class Mapper:
             self._fake = text
         else:
             self._write(text)
-        log.trace("Text wrote: \n%s", text[:-1])
+        log.trace("Text wrote: \n%s", text.rstrip())
         self.modified = True
 
     def create(self):
@@ -193,17 +177,19 @@ class Mapper:
             try:
                 converter = self.attrs[name]
             except KeyError:
-                # TODO: determine if runtime import is the best way to avoid
-                # cyclic import
-                from .types import match
-                converter = match(name, data)
-                self.attrs[name] = converter
+                if self.strict:
+                    msg = "Ignored unknown file attribute: %s = %r"
+                    log.warning(msg, name, data)
+                    continue
+                else:
+                    converter = types.match(name, data)
+                    self.attrs[name] = converter
 
             # Convert the loaded attribute
             attr = getattr(self._obj, name, None)
             if all((isinstance(attr, converter),
                     issubclass(converter, Container))):
-                attr.update_value(data)
+                attr.update_value(data, strict=self.strict)
             else:
                 attr = converter.to_value(data)
                 setattr(self._obj, name, attr)
@@ -214,12 +200,25 @@ class Mapper:
         for name, converter in attrs2.items():
             if not hasattr(self._obj, name):
                 value = converter.to_value(None)
-                msg = "Fetched default value for missing attribute: %s = %r"
+                msg = "Default value for missing object attribute: %s = %r"
                 log.warning(msg, name, value)
                 setattr(self._obj, name, value)
 
         # Set meta attributes
         self.modified = False
+
+    def _remap(self, obj, root):
+        """Restore mapping on nested attributes."""
+        if isinstance(obj, Container):
+            common.set_mapper(obj, root)
+
+            if isinstance(obj, dict):
+                for obj2 in obj.values():
+                    self._remap(obj2, root)
+            else:
+                assert isinstance(obj, list)
+                for obj2 in obj:
+                    self._remap(obj2, root)
 
     @file_required(create=True)
     @prevent_recursion
@@ -233,11 +232,11 @@ class Mapper:
             try:
                 value = getattr(self._obj, name)
             except AttributeError:
-                value = None
-                msg = "Storing default data for missing attribute '%s'..."
-                log.warning(msg, name)
-
-            data2 = converter.to_data(value)
+                data2 = converter.to_data(None)
+                msg = "Default data for missing object attribute: %s = %r"
+                log.warning(msg, name, data2)
+            else:
+                data2 = converter.to_data(value)
 
             log.trace("Data to store: %s = %r", name, data2)
             data[name] = data2
@@ -248,7 +247,7 @@ class Mapper:
 
         # Set meta attributes
         self.modified = True
-        self.auto_store = self.auto
+        self.store_after_fetch = self.auto
 
     def delete(self):
         """Delete the object's file from the file system."""
@@ -277,16 +276,3 @@ class Mapper:
             self._fake = text
         else:
             diskutils.write(text, self.path)
-
-    def _remap(self, obj, root):
-        """Restore mapping on nested attributes."""
-        if isinstance(obj, Container):
-            setattr(obj, MAPPER, root)
-
-            if isinstance(obj, dict):
-                for obj2 in obj.values():
-                    self._remap(obj2, root)
-            else:
-                assert isinstance(obj, list)
-                for obj2 in obj:
-                    self._remap(obj2, root)

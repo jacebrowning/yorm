@@ -5,6 +5,7 @@
 - Added preliminary support for JSON serialization (@pr0xmeh).
 - Renamed `yorm.converters` to `yorm.types`.
 - Now maintaining the signature on mapped objects.
+- Disabled attribute inference unless `strict=False`.
 
 ## 0.5 (2015/09/25)
 

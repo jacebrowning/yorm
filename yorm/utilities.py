@@ -4,7 +4,7 @@ import uuid
 
 from . import common, exceptions
 from .bases.mappable import patch_methods
-from .mapper import get_mapper, set_mapper
+from .mapper import Mapper
 
 log = common.logger(__name__)
 
@@ -28,7 +28,7 @@ def sync(*args, **kwargs):
         return sync_object(*args, **kwargs)
 
 
-def sync_object(instance, path, attrs=None, existing=None, auto=True):
+def sync_object(instance, path, attrs=None, existing=None, **kwargs):
     """Enable YAML mapping on an object.
 
     :param instance: object to patch with YAML mapping behavior
@@ -36,6 +36,7 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
     :param attrs: dictionary of attribute names mapped to converter classes
     :param existing: indicate if file is expected to exist or not
     :param auto: automatically store attributes to file
+    :param strict: ignore new attributes in files
 
     """
     log.info("Mapping %r to %s...", instance, path)
@@ -44,7 +45,8 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
     patch_methods(instance)
 
     attrs = attrs or common.attrs[instance.__class__]
-    mapper = set_mapper(instance, path, attrs, auto=auto)
+    mapper = Mapper(instance, path, attrs, **kwargs)
+    common.set_mapper(instance, mapper)
     _check_existance(mapper, existing)
 
     if mapper.auto:
@@ -148,7 +150,7 @@ def update_object(instance, existing=True, force=True):
     log.info("Manually updating %r from file...", instance)
     _check_base(instance, mappable=True)
 
-    mapper = get_mapper(instance)
+    mapper = common.get_mapper(instance)
     _check_existance(mapper, existing)
 
     if mapper.modified or force:
@@ -166,7 +168,7 @@ def update_file(instance, existing=None, force=True):
     log.info("Manually saving %r to file...", instance)
     _check_base(instance, mappable=True)
 
-    mapper = get_mapper(instance)
+    mapper = common.get_mapper(instance)
     _check_existance(mapper, existing)
 
     if mapper.auto or force:
@@ -177,7 +179,7 @@ def update_file(instance, existing=None, force=True):
 
 def synced(obj):
     """Determine if an object is already mapped to a file."""
-    return bool(get_mapper(obj))
+    return bool(common.get_mapper(obj))
 
 
 def _check_base(obj, mappable=True):

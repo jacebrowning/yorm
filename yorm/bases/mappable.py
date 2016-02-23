@@ -4,7 +4,6 @@ import abc
 import functools
 
 from .. import common
-from ..mapper import get_mapper
 
 
 log = common.logger(__name__)
@@ -22,11 +21,11 @@ def fetch_before(method):
     def wrapped(self, *args, **kwargs):
         """Decorated method."""
         if not _private_call(method, args):
-            mapper = get_mapper(self)
+            mapper = common.get_mapper(self)
             if mapper and mapper.modified:
                 log.debug("Fetching before call: %s", method.__name__)
                 mapper.fetch()
-                if mapper.auto_store:
+                if mapper.store_after_fetch:
                     mapper.store()
                     mapper.modified = False
 
@@ -49,7 +48,7 @@ def store_after(method):
         result = method(self, *args, **kwargs)
 
         if not _private_call(method, args):
-            mapper = get_mapper(self)
+            mapper = common.get_mapper(self)
             if mapper and mapper.auto:
                 log.debug("Storing after call: %s", method.__name__)
                 mapper.store()
@@ -70,6 +69,7 @@ def _private_call(method, args, prefix='_'):
         return False
 
 
+# TODO: move these methods inside of `Container`
 class Mappable(metaclass=abc.ABCMeta):
     """Base class for objects with attributes mapped to file."""
 

@@ -23,7 +23,7 @@ class MockConverter(Converter):
         return None
 
     @classmethod
-    def to_value(cls, _):
+    def to_value(cls, *_):
         return None
 
     @classmethod
@@ -101,7 +101,7 @@ class TestSyncObject:
     def test_init_existing(self):
         """Verify an existing file is read."""
         with patch('yorm.diskutils.read', Mock(return_value="abc: 123")):
-            sample = utilities.sync(self.Sample(), "sample.yml")
+            sample = utilities.sync(self.Sample(), "sample.yml", strict=False)
         assert 123 == sample.abc
 
     @patch('yorm.diskutils.exists', Mock(return_value=False))
@@ -124,7 +124,7 @@ class TestSyncInstances:
 
     """Unit tests for the `sync_instances` decorator."""
 
-    @utilities.sync("sample.yml")
+    @utilities.sync("sample.yml", strict=False)
     class SampleDecorated:
 
         """Sample decorated class using a single path."""
