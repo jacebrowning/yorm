@@ -31,7 +31,7 @@ def mapper(tmpdir, obj, attrs, request):
         yorm.settings.fake = True
     elif "real" in path:
         tmpdir.chdir()
-    yield Mapper(obj, path, attrs)
+    yield Mapper(obj, path, attrs, strict=True)
     yorm.settings.fake = backup
 
 
@@ -98,6 +98,28 @@ def describe_mapper():
             expect(obj.var1) == 1
             expect(obj.var2) == 0
             expect(obj.var3) == 0
+
+        def it_ignores_new_attributes(obj, mapper):
+            mapper.create()
+            mapper.text = "var4: foo"
+
+            mapper.fetch()
+            with expect.raises(AttributeError):
+                print(obj.var4)
+
+        def it_infers_types_on_new_attributes_when_not_strict(obj, mapper):
+            mapper.strict = False
+            mapper.create()
+            mapper.text = "var4: foo"
+
+            mapper.fetch()
+            expect(obj.var4) == "foo"
+
+            obj.var4 = 42
+            mapper.store()
+
+            mapper.fetch()
+            expect(obj.var4) == "42"
 
         def it_raises_an_exception_after_delete(mapper):
             mapper.delete()

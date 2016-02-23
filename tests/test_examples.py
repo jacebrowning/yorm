@@ -115,7 +115,7 @@ class SampleDecoratedAutoOff:
         return "<auto off {}>".format(id(self))
 
 
-@yorm.sync("sample.yml")
+@yorm.sync("sample.yml", strict=False)
 class SampleEmptyDecorated:
     """Sample class using standard attribute types."""
 
@@ -348,7 +348,7 @@ class TestContainers:
         _sample = SampleNested()
         attrs = {'count': Integer,
                  'results': StatusDictionaryList}
-        sample = yorm.sync(_sample, "sample.yml", attrs)
+        sample = yorm.sync(_sample, "sample.yml", attrs, strict=False)
 
         # check defaults
         assert 0 == sample.count

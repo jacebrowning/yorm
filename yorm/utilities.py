@@ -28,7 +28,7 @@ def sync(*args, **kwargs):
         return sync_object(*args, **kwargs)
 
 
-def sync_object(instance, path, attrs=None, existing=None, auto=True):
+def sync_object(instance, path, attrs=None, existing=None, **kwargs):
     """Enable YAML mapping on an object.
 
     :param instance: object to patch with YAML mapping behavior
@@ -36,6 +36,7 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
     :param attrs: dictionary of attribute names mapped to converter classes
     :param existing: indicate if file is expected to exist or not
     :param auto: automatically store attributes to file
+    :param strict: ignore new attributes in files
 
     """
     log.info("Mapping %r to %s...", instance, path)
@@ -44,7 +45,7 @@ def sync_object(instance, path, attrs=None, existing=None, auto=True):
     patch_methods(instance)
 
     attrs = attrs or common.attrs[instance.__class__]
-    mapper = set_mapper(instance, path, attrs, auto=auto)
+    mapper = set_mapper(instance, path, attrs, **kwargs)
     _check_existance(mapper, existing)
 
     if mapper.auto:

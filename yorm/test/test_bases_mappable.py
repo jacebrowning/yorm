@@ -174,6 +174,7 @@ class TestMappable:
 
     def test_new(self):
         """Verify new attributes are added to the object."""
+        self.sample.__mapper__.strict = False
         text = strip("""
         new: 42
         """)
@@ -182,6 +183,7 @@ class TestMappable:
 
     def test_new_unknown(self):
         """Verify an exception is raised on new attributes w/ unknown types"""
+        self.sample.__mapper__.strict = False
         text = strip("""
         new: !!timestamp 2001-12-15T02:59:43.1Z
         """)
