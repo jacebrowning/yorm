@@ -1,5 +1,9 @@
 # Revision History
 
+## 0.6.1 (2015/02/23)
+
+- Fixed handling of `None` in `NullableString`.
+
 ## 0.6 (2015/02/23)
 
 - Added preliminary support for JSON serialization (@pr0xmeh).
