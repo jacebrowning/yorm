@@ -112,6 +112,11 @@ class TestDictionary:
         assert not hasattr(value2, 'var2')
         assert not hasattr(value2, 'var3')
 
+    def test_strict_update(self):
+        obj = SampleDictionary.create_default()
+        obj.update_value({'key': "value", 'abc': 7}, strict=True)
+        assert {'abc': 7} == obj
+
 
 class TestList:
 

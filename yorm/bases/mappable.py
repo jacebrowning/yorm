@@ -69,6 +69,7 @@ def _private_call(method, args, prefix='_'):
         return False
 
 
+# TODO: move these methods inside of `Container`
 class Mappable(metaclass=abc.ABCMeta):
     """Base class for objects with attributes mapped to file."""
 

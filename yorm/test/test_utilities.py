@@ -23,7 +23,7 @@ class MockConverter(Converter):
         return None
 
     @classmethod
-    def to_value(cls, _):
+    def to_value(cls, *_):
         return None
 
     @classmethod

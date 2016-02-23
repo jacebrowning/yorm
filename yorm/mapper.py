@@ -189,7 +189,7 @@ class Mapper:
             attr = getattr(self._obj, name, None)
             if all((isinstance(attr, converter),
                     issubclass(converter, Container))):
-                attr.update_value(data)
+                attr.update_value(data, strict=self.strict)
             else:
                 attr = converter.to_value(data)
                 setattr(self._obj, name, attr)
