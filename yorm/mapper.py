@@ -3,27 +3,10 @@
 import functools
 from pprint import pformat
 
-from . import common, diskutils, exceptions, settings
+from . import common, diskutils, exceptions, types, settings
 from .bases import Container
 
-MAPPER = '__mapper__'
-
 log = common.logger(__name__)
-
-
-def get_mapper(obj):
-    """Get `Mapper` instance attached to an object."""
-    try:
-        return object.__getattribute__(obj, MAPPER)
-    except AttributeError:
-        return None
-
-
-def set_mapper(obj, *args, **kwargs):
-    """Create and attach a `Mapper` instance to an object."""
-    mapper = Mapper(obj, *args, **kwargs)
-    setattr(obj, MAPPER, mapper)
-    return mapper
 
 
 def file_required(create=False):
@@ -199,10 +182,7 @@ class Mapper:
                     log.warning(msg, name, data)
                     continue
                 else:
-                    # TODO: determine if runtime import is the best way to avoid
-                    # cyclic import
-                    from .types import match
-                    converter = match(name, data)
+                    converter = types.match(name, data)
                     self.attrs[name] = converter
 
             # Convert the loaded attribute
@@ -226,6 +206,19 @@ class Mapper:
 
         # Set meta attributes
         self.modified = False
+
+    def _remap(self, obj, root):
+        """Restore mapping on nested attributes."""
+        if isinstance(obj, Container):
+            common.set_mapper(obj, root)
+
+            if isinstance(obj, dict):
+                for obj2 in obj.values():
+                    self._remap(obj2, root)
+            else:
+                assert isinstance(obj, list)
+                for obj2 in obj:
+                    self._remap(obj2, root)
 
     @file_required(create=True)
     @prevent_recursion
@@ -283,16 +276,3 @@ class Mapper:
             self._fake = text
         else:
             diskutils.write(text, self.path)
-
-    def _remap(self, obj, root):
-        """Restore mapping on nested attributes."""
-        if isinstance(obj, Container):
-            setattr(obj, MAPPER, root)
-
-            if isinstance(obj, dict):
-                for obj2 in obj.values():
-                    self._remap(obj2, root)
-            else:
-                assert isinstance(obj, list)
-                for obj2 in obj:
-                    self._remap(obj2, root)

@@ -4,7 +4,7 @@ import uuid
 
 from . import common, exceptions
 from .bases.mappable import patch_methods
-from .mapper import get_mapper, set_mapper
+from .mapper import Mapper
 
 log = common.logger(__name__)
 
@@ -45,7 +45,8 @@ def sync_object(instance, path, attrs=None, existing=None, **kwargs):
     patch_methods(instance)
 
     attrs = attrs or common.attrs[instance.__class__]
-    mapper = set_mapper(instance, path, attrs, **kwargs)
+    mapper = Mapper(instance, path, attrs, **kwargs)
+    common.set_mapper(instance, mapper)
     _check_existance(mapper, existing)
 
     if mapper.auto:
@@ -149,7 +150,7 @@ def update_object(instance, existing=True, force=True):
     log.info("Manually updating %r from file...", instance)
     _check_base(instance, mappable=True)
 
-    mapper = get_mapper(instance)
+    mapper = common.get_mapper(instance)
     _check_existance(mapper, existing)
 
     if mapper.modified or force:
@@ -167,7 +168,7 @@ def update_file(instance, existing=None, force=True):
     log.info("Manually saving %r to file...", instance)
     _check_base(instance, mappable=True)
 
-    mapper = get_mapper(instance)
+    mapper = common.get_mapper(instance)
     _check_existance(mapper, existing)
 
     if mapper.auto or force:
@@ -178,7 +179,7 @@ def update_file(instance, existing=None, force=True):
 
 def synced(obj):
     """Determine if an object is already mapped to a file."""
-    return bool(get_mapper(obj))
+    return bool(common.get_mapper(obj))
 
 
 def _check_base(obj, mappable=True):
