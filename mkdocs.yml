@@ -2,7 +2,7 @@ site_name: YORM
 site_description: Automatic object-YAML mapping for Python.
 site_author: Jace Browning
 repo_url: https://github.com/jacebrowning/yorm
-google_analytics: ['UA-6468614-13', 'jacebrowning.github.io/yorm']
+google_analytics: ['UA-6468614-13', 'auto']
 
 theme: mkdocs
 
