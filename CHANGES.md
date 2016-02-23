@@ -6,6 +6,7 @@
 - Renamed `yorm.converters` to `yorm.types`.
 - Now maintaining the signature on mapped objects.
 - Disabled attribute inference unless `strict=False`.
+- Fixed formatting of `String` to only use quotes if absolutely necessary.
 
 ## 0.5 (2015/09/25)
 
