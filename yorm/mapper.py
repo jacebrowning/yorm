@@ -87,9 +87,9 @@ class Mapper:
         self.auto = auto
         self.strict = strict
 
-        self.auto_store = False
         self.exists = diskutils.exists(self.path)
         self.deleted = False
+        self.store_after_fetch = False
         self._activity = False
         self._timestamp = 0
         self._fake = ""
@@ -247,7 +247,7 @@ class Mapper:
 
         # Set meta attributes
         self.modified = True
-        self.auto_store = self.auto
+        self.store_after_fetch = self.auto
 
     def delete(self):
         """Delete the object's file from the file system."""

@@ -214,7 +214,7 @@ class TestMappableTriggers:
         self.sample = self.Sample()
         self.sample.__mapper__.fetch.reset_mock()
         self.sample.__mapper__.store.reset_mock()
-        self.sample.__mapper__.auto_store = False
+        self.sample.__mapper__.store_after_fetch = False
 
     def test_getattribute(self):
         with pytest.raises(AttributeError):
@@ -257,7 +257,7 @@ class TestMappableTriggers:
         self.sample.append('bar')
         self.sample.__mapper__.fetch.reset_mock()
         self.sample.__mapper__.store.reset_mock()
-        self.sample.__mapper__.auto_store = False
+        self.sample.__mapper__.store_after_fetch = False
         self.sample.__mapper__.modified = True
 
         for item in self.sample:

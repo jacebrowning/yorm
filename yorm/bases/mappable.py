@@ -25,7 +25,7 @@ def fetch_before(method):
             if mapper and mapper.modified:
                 log.debug("Fetching before call: %s", method.__name__)
                 mapper.fetch()
-                if mapper.auto_store:  # TODO: determine why this needs a separate variable
+                if mapper.store_after_fetch:
                     mapper.store()
                     mapper.modified = False
 
