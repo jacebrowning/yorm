@@ -43,6 +43,20 @@ class String(Object):
         else:
             return cls.DEFAULT
 
+    @classmethod
+    def to_data(cls, obj):
+        value = cls.to_value(obj)
+        return cls._optimize_for_quoting(value)
+
+    @staticmethod
+    def _optimize_for_quoting(value):
+        for num in (int, float):
+            try:
+                return num(value)
+            except ValueError:
+                continue
+        return value
+
 
 class Integer(Object):
     """Convertible for the `int` type."""

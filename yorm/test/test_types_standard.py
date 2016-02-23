@@ -1,17 +1,15 @@
-# pylint: disable=missing-docstring,no-self-use
+# pylint: disable=missing-docstring,unused-variable,expression-not-assigned
 
 import pytest
+from expecter import expect
 
 from yorm.types import Object, String, Integer, Float, Boolean
 
 
-class TestObject:
-
-    """Unit tests for the `Object` converter."""
+def describe_object():
 
     obj = None
-
-    common = [
+    pairs = [
         (obj, obj),
         (None, None),
         (1, 1),
@@ -19,61 +17,54 @@ class TestObject:
         (['a', 'b', 'c'], ['a', 'b', 'c']),
     ]
 
-    data_value = [
-    ] + common
+    def describe_to_value():
 
-    value_data = [
-    ] + common
+        @pytest.mark.parametrize("first,second", pairs)
+        def it_converts_correctly(first, second):
+            expect(Object.to_value(first)) == second
 
-    @pytest.mark.parametrize("data,value", data_value)
-    def test_to_value(self, data, value):
-        """Verify input data is converted to values."""
-        assert value == Object.to_value(data)
+    def describe_to_data():
 
-    @pytest.mark.parametrize("value,data", value_data)
-    def test_to_data(self, value, data):
-        """Verify values are converted to output data."""
-        assert data == Object.to_data(value)
+        @pytest.mark.parametrize("first,second", pairs)
+        def it_converts_correctly(first, second):
+            expect(Object.to_data(first)) == second
 
 
-class TestString:
-
-    """Unit tests for the `String` converter."""
+def describe_string():
 
     obj = "Hello, world!"
-
-    common = [
+    pairs = [
         (obj, obj),
         (None, ""),
-        (1, "1"),
-        (4.2, "4.2"),
+        ("1.2.3", "1.2.3"),
         (['a', 'b', 'c'], "a, b, c"),
     ]
+    pairs_to_value = pairs + [
+        (1, "1"),
+        (4.2, "4.2"),
+    ]
+    pairs_to_data = pairs + [
+        (42, 42),
+        (4.2, 4.2),
+    ]
 
-    data_value = [
-    ] + common
+    def describe_to_value():
 
-    value_data = [
-    ] + common
+        @pytest.mark.parametrize("first,second", pairs_to_value)
+        def it_converts_correctly(first, second):
+            expect(String.to_value(first)) == second
 
-    @pytest.mark.parametrize("data,value", data_value)
-    def test_to_value(self, data, value):
-        """Verify input data is converted to values."""
-        assert value == String.to_value(data)
+    def describe_to_data():
 
-    @pytest.mark.parametrize("value,data", value_data)
-    def test_to_data(self, value, data):
-        """Verify values are converted to output data."""
-        assert data == String.to_data(value)
+        @pytest.mark.parametrize("first,second", pairs_to_data)
+        def it_converts_correctly(first, second):
+            expect(String.to_data(first)) == second
 
 
-class TestInteger:
-
-    """Unit tests for the `Integer` converter."""
+def describe_integer():
 
     obj = 42
-
-    common = [
+    pairs = [
         (obj, obj),
         (None, 0),
         ("1", 1),
@@ -82,70 +73,54 @@ class TestInteger:
         (False, 0),
     ]
 
-    data_value = [
-    ] + common
+    def describe_to_value():
 
-    value_data = [
-    ] + common
+        @pytest.mark.parametrize("first,second", pairs)
+        def it_converts_correctly(first, second):
+            expect(Integer.to_value(first)) == second
 
-    @pytest.mark.parametrize("data,value", data_value)
-    def test_to_value(self, data, value):
-        """Verify input data is converted to values."""
-        assert value is Integer.to_value(data)
+        def it_raises_an_exception_when_unable_to_convert():
+            with expect.raises(ValueError):
+                Integer.to_value("abc")
 
-    def test_to_value_error(self):
-        """Verify an exception is raised for unconvertible values."""
-        with pytest.raises(ValueError):
-            Integer.to_value("abc")
+    def describe_to_data():
 
-    @pytest.mark.parametrize("value,data", value_data)
-    def test_to_data(self, value, data):
-        """Verify values are converted to output data."""
-        assert data is Integer.to_data(value)
+        @pytest.mark.parametrize("first,second", pairs)
+        def it_converts_correctly(first, second):
+            expect(Integer.to_data(first)) == second
 
 
-class TestFloat:
-
-    """Unit tests for the `Float` converter."""
+def describe_float():
 
     obj = 4.2
-
-    common = [
+    pairs = [
         (obj, obj),
         (None, 0.0),
         ("1.0", 1.0),
         ("1.1", 1.1),
     ]
 
-    data_value = [
-    ] + common
+    def describe_to_value():
 
-    value_data = [
-    ] + common
+        @pytest.mark.parametrize("first,second", pairs)
+        def it_converts_correctly(first, second):
+            expect(Float.to_value(first)) == second
 
-    @pytest.mark.parametrize("data,value", data_value)
-    def test_to_value(self, data, value):
-        """Verify input data is converted to values."""
-        assert value == Float.to_value(data)
+        def it_raises_an_exception_when_unable_to_convert():
+            with expect.raises(ValueError):
+                Float.to_value("abc")
 
-    def test_to_value_error(self):
-        """Verify an exception is raised for unconvertible values."""
-        with pytest.raises(ValueError):
-            Integer.to_value("abc")
+    def describe_to_data():
 
-    @pytest.mark.parametrize("value,data", value_data)
-    def test_to_data(self, value, data):
-        """Verify values are converted to output data."""
-        assert data == Float.to_data(value)
+        @pytest.mark.parametrize("first,second", pairs)
+        def it_converts_correctly(first, second):
+            expect(Float.to_data(first)) == second
 
 
-class TestBoolean:
-
-    """Unit tests for the `Boolean` converter."""
+def describe_boolean():
 
     obj = True
-
-    common = [
+    pairs = [
         (obj, obj),
         (None, False),
         (0, False),
@@ -168,18 +143,14 @@ class TestBoolean:
         ("Hello, world!", True)
     ]
 
-    data_value = [
-    ] + common
+    def describe_to_value():
 
-    value_data = [
-    ] + common
+        @pytest.mark.parametrize("first,second", pairs)
+        def it_converts_correctly(first, second):
+            expect(Boolean.to_value(first)) == second
 
-    @pytest.mark.parametrize("data,value", data_value)
-    def test_to_value(self, data, value):
-        """Verify input data is converted to values."""
-        assert value == Boolean.to_value(data)
+    def describe_to_data():
 
-    @pytest.mark.parametrize("value,data", value_data)
-    def test_to_data(self, value, data):
-        """Verify values are converted to output data."""
-        assert data == Boolean.to_data(value)
+        @pytest.mark.parametrize("first,second", pairs)
+        def it_converts_correctly(first, second):
+            expect(Boolean.to_data(first)) == second

@@ -129,7 +129,7 @@ class TestMappable:
         self.sample.var5 = {'status': 1}
         text = self.sample.__mapper__._read()
         assert strip("""
-        var1: '42'
+        var1: 42
         var2: 1
         var3: false
         var4: []
