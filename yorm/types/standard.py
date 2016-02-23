@@ -53,7 +53,7 @@ class String(Object):
         for num in (int, float):
             try:
                 return num(value)
-            except ValueError:
+            except (TypeError, ValueError):
                 continue
         return value
 

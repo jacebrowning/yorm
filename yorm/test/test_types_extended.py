@@ -1,10 +1,12 @@
-# pylint: disable=missing-docstring,no-self-use,misplaced-comparison-constant
+# pylint: disable=missing-docstring,unused-variable,misplaced-comparison-constant,no-self-use
 
 import pytest
+from expecter import expect
 
 from yorm.utilities import attr
-from yorm.types import Integer, String, Float
-from yorm.types.extended import Markdown, AttributeDictionary, SortedList
+from yorm.types.standard import Integer, String, Float
+from yorm.types.extended import (NullableString, Markdown,
+                                 AttributeDictionary, SortedList)
 
 
 # CLASSES ######################################################################
@@ -37,6 +39,20 @@ class UnknownSortedList(SortedList):
 # TESTS ########################################################################
 
 
+def describe_nullable_string():
+
+    def describe_to_value():
+
+        def it_allows_none():
+            expect(NullableString.to_value(None)).is_none()
+
+    def describe_to_data():
+
+        def it_allows_none():
+            expect(NullableString.to_data(None)).is_none()
+
+
+# TODO: make these tests look like `test_types_standard.py`
 class TestMarkdown:
 
     """Unit tests for the `Markdown` converter."""
