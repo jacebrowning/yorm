@@ -57,7 +57,7 @@ and define an attribute mapping:
 
 ```python
 import yorm
-from yorm.converters import String, Integer, Float
+from yorm.types import String, Integer, Float
 
 @yorm.attr(name=String, year=Integer, gpa=Float)
 @yorm.sync("students/{self.school}/{self.number}.yml")
@@ -89,7 +89,6 @@ Modifications and new content in each mapped file:
 $ echo "name: John Doe
 > gpa: 1.8
 > year: 2010
-> expelled: true
 " > students/GVSU/123.yml
 ```
 
@@ -98,6 +97,4 @@ are automatically reflected in their corresponding object:
 ```python
 >>> s1.gpa
 1.8
->>> s1.expelled
-True
 ```

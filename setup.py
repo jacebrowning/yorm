@@ -18,7 +18,7 @@ setuptools.setup(
     name=__project__,
     version=__version__,
 
-    description="Automatic object YAML mapping for Python.",
+    description="Automatic object-YAML mapping for Python.",
     url='https://github.com/jacebrowning/yorm',
     author='Jace Browning',
     author_email='jacebrowning@gmail.com',
