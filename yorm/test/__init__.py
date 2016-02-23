@@ -7,6 +7,10 @@ import logging
 import expecter
 
 
+def is_none(x):
+    return x is None
+
+
 def is_true(x):
     return x is True
 
@@ -23,6 +27,7 @@ def missing(x):
     return not os.path.exists(x)
 
 
+expecter.add_expectation(is_none)
 expecter.add_expectation(is_true)
 expecter.add_expectation(is_false)
 expecter.add_expectation(exists)
