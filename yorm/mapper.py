@@ -1,38 +1,12 @@
-"""Core YAML mapping functionality."""
+"""Core object-file mapping functionality."""
 
-import os
-import abc
 import functools
+from pprint import pformat
 
-import yaml
-
-from . import common, exceptions, settings
+from . import common, diskutils, exceptions, types, settings
 from .bases import Container
 
-MAPPER = 'yorm_mapper'
-
 log = common.logger(__name__)
-
-
-def get_mapper(obj):
-    """Get `Mapper` instance attached to an object."""
-    try:
-        mapper = getattr(obj, MAPPER)
-    except AttributeError:
-        if isinstance(obj, (dict, list)):
-            return None
-        else:
-            msg = "mapped {!r} missing {!r} attribute".format(obj, MAPPER)
-            raise AttributeError(msg) from None
-    else:
-        return mapper
-
-
-def set_mapper(obj, path, attrs, auto=True, root=None):
-    """Create and attach a `Mapper` instance to an object."""
-    mapper = Mapper(obj, path, attrs, auto=auto, root=root)
-    setattr(obj, MAPPER, mapper)
-    return mapper
 
 
 def file_required(create=False):
@@ -44,15 +18,14 @@ def file_required(create=False):
     def decorator(method):
 
         @functools.wraps(method)
-        def wrapped(self, *args, **kwargs):  # pylint: disable=W0621
-            if not self.path:
-                return None
+        def wrapped(self, *args, **kwargs):
             if not self.exists and self.auto:
                 if create is True and not self.deleted:
                     self.create()
                 else:
-                    msg = "cannot access deleted: {}".format(self.path)
+                    msg = "Cannot access deleted: {}".format(self.path)
                     raise exceptions.FileDeletedError(msg)
+
             return method(self, *args, **kwargs)
 
         return wrapped
@@ -68,7 +41,7 @@ def prevent_recursion(method):
 
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
-        # pylint: disable=W0212
+        # pylint: disable=protected-access
         if self._activity:
             return
         self._activity = True
@@ -86,9 +59,8 @@ def prefix(obj):
     return fake + name
 
 
-class BaseHelper(metaclass=abc.ABCMeta):
-
-    """Utility class to map attributes to text files.
+class Mapper:
+    """Utility class to map an object's attributes to a file.
 
     To start mapping attributes to a file:
 
@@ -108,40 +80,22 @@ class BaseHelper(metaclass=abc.ABCMeta):
 
     """
 
-    def __init__(self, path, auto=True):
+    def __init__(self, obj, path, attrs, *, auto=True, strict=True):
+        self._obj = obj
         self.path = path
+        self.attrs = attrs
         self.auto = auto
-        self.auto_store = False
-        self.exists = self.path and os.path.isfile(self.path)
+        self.strict = strict
+
+        self.exists = diskutils.exists(self.path)
         self.deleted = False
+        self.store_after_fetch = False
         self._activity = False
         self._timestamp = 0
         self._fake = ""
 
     def __str__(self):
         return str(self.path)
-
-    @property
-    def text(self):
-        """Get file contents."""
-        log.info("getting contents of %s...", prefix(self))
-        if settings.fake:
-            text = self._fake
-        else:
-            text = self._read()
-        log.trace("text read: %r", text)
-        return text
-
-    @text.setter
-    def text(self, text):
-        """Set file contents."""
-        log.info("setting contents of %s...", prefix(self))
-        if settings.fake:
-            self._fake = text
-        else:
-            self._write(text)
-        log.trace("text wrote: %r", text)
-        self.modified = True
 
     @property
     def modified(self):
@@ -153,238 +107,172 @@ class BaseHelper(metaclass=abc.ABCMeta):
             return True
         else:
             was = self._timestamp
-            now = common.stamp(self.path)
+            now = diskutils.stamp(self.path)
             return was != now
 
     @modified.setter
+    @file_required(create=True)
     def modified(self, changes):
         """Mark the file as modified if there are changes."""
         if changes:
-            log.debug("marked %s as modified", prefix(self))
+            log.debug("Marked %s as modified", prefix(self))
             self._timestamp = 0
         else:
             if settings.fake or self.path is None:
                 self._timestamp = None
             else:
-                self._timestamp = common.stamp(self.path)
-            log.debug("marked %s as unmodified", prefix(self))
+                self._timestamp = diskutils.stamp(self.path)
+            log.debug("Marked %s as unmodified", prefix(self))
 
-    def create(self, obj):
+    @property
+    def text(self):
+        """Get file contents."""
+        log.info("Getting contents of %s...", prefix(self))
+        if settings.fake:
+            text = self._fake
+        else:
+            text = self._read()
+        log.trace("Text read: \n%s", text[:-1])
+        return text
+
+    @text.setter
+    def text(self, text):
+        """Set file contents."""
+        log.info("Setting contents of %s...", prefix(self))
+        if settings.fake:
+            self._fake = text
+        else:
+            self._write(text)
+        log.trace("Text wrote: \n%s", text.rstrip())
+        self.modified = True
+
+    def create(self):
         """Create a new file for the object."""
-        log.info("creating %s for %r...", prefix(self), obj)
+        log.info("Creating %s for %r...", prefix(self), self._obj)
         if self.exists:
-            log.warning("already created: %s", self)
+            log.warning("Already created: %s", self)
             return
         if not settings.fake:
-            common.create_dirname(self.path)
-            common.touch(self.path)
+            diskutils.touch(self.path)
         self.exists = True
         self.deleted = False
 
     @file_required
     @prevent_recursion
-    def fetch(self, obj, attrs):
+    def fetch(self):
         """Update the object's mapped attributes from its file."""
-        log.info("fetching %r from %s...", obj, prefix(self))
+        log.info("Fetching %r from %s...", self._obj, prefix(self))
 
         # Parse data from file
         text = self._read()
-        data = self._load(text, self.path)
-        log.trace("loaded: {}".format(data))
+        data = diskutils.load(text=text, path=self.path)
+        log.trace("Loaded data: \n%s", pformat(data))
 
         # Update all attributes
-        attrs2 = attrs.copy()
+        attrs2 = self.attrs.copy()
         for name, data in data.items():
             attrs2.pop(name, None)
 
             # Find a matching converter
             try:
-                converter = attrs[name]
+                converter = self.attrs[name]
             except KeyError:
-                # TODO: determine if runtime import is the best way to avoid
-                # cyclic import
-                from .converters import match
-                converter = match(name, data)
-                attrs[name] = converter
+                if self.strict:
+                    msg = "Ignored unknown file attribute: %s = %r"
+                    log.warning(msg, name, data)
+                    continue
+                else:
+                    converter = types.match(name, data)
+                    self.attrs[name] = converter
 
             # Convert the loaded attribute
-            attr = getattr(obj, name, None)
+            attr = getattr(self._obj, name, None)
             if all((isinstance(attr, converter),
                     issubclass(converter, Container))):
-                attr.update_value(data)
+                attr.update_value(data, strict=self.strict)
             else:
                 attr = converter.to_value(data)
-                setattr(obj, name, attr)
-            self._remap(attr)
-            log.trace("value fetched: %s = %r", name, attr)
+                setattr(self._obj, name, attr)
+            self._remap(attr, self)
+            log.trace("Value fetched: %s = %r", name, attr)
 
         # Add missing attributes
         for name, converter in attrs2.items():
-            if not hasattr(obj, name):
+            if not hasattr(self._obj, name):
                 value = converter.to_value(None)
-                msg = "fetched default value for missing attribute: %s = %r"
-                log.warn(msg, name, value)
-                setattr(obj, name, value)
+                msg = "Default value for missing object attribute: %s = %r"
+                log.warning(msg, name, value)
+                setattr(self._obj, name, value)
 
         # Set meta attributes
         self.modified = False
 
+    def _remap(self, obj, root):
+        """Restore mapping on nested attributes."""
+        if isinstance(obj, Container):
+            common.set_mapper(obj, root)
+
+            if isinstance(obj, dict):
+                for obj2 in obj.values():
+                    self._remap(obj2, root)
+            else:
+                assert isinstance(obj, list)
+                for obj2 in obj:
+                    self._remap(obj2, root)
+
     @file_required(create=True)
     @prevent_recursion
-    def store(self, obj, attrs):
+    def store(self):
         """Format and save the object's mapped attributes to its file."""
-        log.info("storing %r to %s...", obj, prefix(self))
+        log.info("Storing %r to %s...", self._obj, prefix(self))
 
         # Format the data items
         data = {}
-        for name, converter in attrs.items():
+        for name, converter in self.attrs.items():
             try:
-                value = getattr(obj, name)
+                value = getattr(self._obj, name)
             except AttributeError:
-                value = None
-                msg = "storing default data for missing attribute '%s'..."
-                log.warn(msg, name)
+                data2 = converter.to_data(None)
+                msg = "Default data for missing object attribute: %s = %r"
+                log.warning(msg, name, data2)
+            else:
+                data2 = converter.to_data(value)
 
-            data2 = converter.to_data(value)
-
-            log.trace("data to store: %s = %r", name, data2)
+            log.trace("Data to store: %s = %r", name, data2)
             data[name] = data2
 
         # Dump data to file
-        text = self._dump(data)
+        text = diskutils.dump(data=data, path=self.path)
         self._write(text)
 
         # Set meta attributes
         self.modified = True
-        self.auto_store = self.auto
+        self.store_after_fetch = self.auto
 
     def delete(self):
         """Delete the object's file from the file system."""
         if self.exists:
-            log.info("deleting %s...", prefix(self))
-            if not settings.fake:
-                common.delete(self.path)
+            log.info("Deleting %s...", prefix(self))
+            diskutils.delete(self.path)
         else:
-            log.warning("already deleted: %s", self)
+            log.warning("Already deleted: %s", self)
         self.exists = False
         self.deleted = True
 
     @file_required
     def _read(self):
-        """Read text from the object's file.
-
-        :param path: path to a text file
-
-        :return: contexts of text file
-
-        """
+        """Read text from the object's file."""
         if settings.fake:
             return self._fake
         elif not self.exists:
             return ""
         else:
-            return common.read_text(self.path)
+            return diskutils.read(self.path)
 
     @file_required
     def _write(self, text):
-        """Write text to the object's file.
-
-        :param text: text to write to a file
-        :param path: path to the file
-
-        """
+        """Write text to the object's file."""
         if settings.fake:
             self._fake = text
         else:
-            common.write_text(text, self.path)
-
-    @abc.abstractstaticmethod
-    def _load(text, path):  # pragma: no cover (abstract method)
-        """Parsed data from text.
-
-        :param text: text read from a file
-        :param path: path to the file (for displaying errors)
-
-        :return: dictionary of parsed data
-
-        """
-        raise NotImplementedError
-
-    @abc.abstractstaticmethod
-    def _dump(data):  # pragma: no cover (abstract method)
-        """Dump data to text.
-
-        :param data: dictionary of data
-
-        :return: text to write to a file
-
-        """
-        raise NotImplementedError
-
-    def _remap(self, obj):
-        """Restore mapping on nested attributes."""
-        if isinstance(obj, Container):
-            set_mapper(obj, None, common.attrs[obj.__class__], root=self)
-            if isinstance(obj, dict):
-                for obj2 in obj.values():
-                    self._remap(obj2)
-            else:
-                assert isinstance(obj, list)
-                for obj2 in obj:
-                    self._remap(obj2)
-
-
-class Helper(BaseHelper):
-
-    """Utility class to map attributes to YAML files."""
-
-    @staticmethod
-    def _load(text, path):
-        """Load YAML data from text.
-
-        :param text: text read from a file
-        :param path: path to the file (for displaying errors)
-
-        :return: dictionary of YAML data
-
-        """
-        return common.load_yaml(text, path)
-
-    @staticmethod
-    def _dump(data):
-        """Dump YAML data to text.
-
-        :param data: dictionary of YAML data
-
-        :return: text to write to a file
-
-        """
-        return yaml.dump(data, default_flow_style=False, allow_unicode=True)
-
-
-class Mapper(Helper):
-
-    """Maps an object's attribute to YAML files."""
-
-    def __init__(self, obj, path, attrs, auto=True, root=None):
-        super().__init__(path, auto=auto)
-        self.obj = obj
-        self.attrs = attrs
-        self.root = root
-
-    def create(self):  # pylint: disable=W0221
-        super().create(self.obj)
-
-    def fetch(self):  # pylint: disable=W0221
-        if self.root and self.root.auto and not self._activity:
-            self._activity = True
-            self.root.fetch()
-            self._activity = False
-        super().fetch(self.obj, self.attrs)
-
-    def store(self):  # pylint: disable=W0221
-        if self.root and self.root.auto and not self._activity:
-            self._activity = True
-            self.root.store()
-            self._activity = False
-        super().store(self.obj, self.attrs)
+            diskutils.write(text, self.path)

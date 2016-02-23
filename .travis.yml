@@ -6,7 +6,14 @@ python:
 - 3.4
 - 3.5
 
-cache: pip
+cache:
+  pip: true
+  directories:
+  - env
+
+env:
+  global:
+  - RANDOM_SEED=12345
 
 install:
 - pip install coveralls scrutinizer-ocular

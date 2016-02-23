@@ -2,16 +2,12 @@
 PROJECT := YORM
 PACKAGE := yorm
 SOURCES := Makefile setup.py $(shell find $(PACKAGE) -name '*.py')
-EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 
 # Python settings
-PYTHON_MAJOR ?= 3
-PYTHON_MINOR ?= 4
-
-# Test settings
-UNIT_TEST_COVERAGE := 97
-INTEGRATION_TEST_COVERAGE := 86
-COMBINED_TEST_COVERAGE := 100
+ifndef TRAVIS
+	PYTHON_MAJOR ?= 3
+	PYTHON_MINOR ?= 5
+endif
 
 # System paths
 PLATFORM := $(shell python -c 'import sys; print(sys.platform)')
@@ -19,7 +15,6 @@ ifneq ($(findstring win32, $(PLATFORM)), )
 	WINDOWS := 1
 	SYS_PYTHON_DIR := C:\\Python$(PYTHON_MAJOR)$(PYTHON_MINOR)
 	SYS_PYTHON := $(SYS_PYTHON_DIR)\\python.exe
-	SYS_VIRTUALENV := $(SYS_PYTHON_DIR)\\Scripts\\virtualenv.exe
 	# https://bugs.launchpad.net/virtualenv/+bug/449537
 	export TCL_LIBRARY=$(SYS_PYTHON_DIR)\\tcl\\tcl8.5
 else
@@ -32,16 +27,17 @@ else
 	ifdef PYTHON_MINOR
 		SYS_PYTHON := $(SYS_PYTHON).$(PYTHON_MINOR)
 	endif
-	SYS_VIRTUALENV := virtualenv
 endif
 
-# virtualenv paths
+# Virtual environment paths
 ENV := env
 ifneq ($(findstring win32, $(PLATFORM)), )
 	BIN := $(ENV)/Scripts
+	ACTIVATE := $(BIN)/activate.bat
 	OPEN := cmd /c start
 else
 	BIN := $(ENV)/bin
+	ACTIVATE := . $(BIN)/activate
 	ifneq ($(findstring cygwin, $(PLATFORM)), )
 		OPEN := cygstart
 	else
@@ -49,24 +45,32 @@ else
 	endif
 endif
 
-# virtualenv executables
-PYTHON := $(BIN)/python
-PIP := $(BIN)/pip
-EASY_INSTALL := $(BIN)/easy_install
-RST2HTML := $(PYTHON) $(BIN)/rst2html.py
-PDOC := $(PYTHON) $(BIN)/pdoc
-PEP8 := $(BIN)/pep8
-PEP8RADIUS := $(BIN)/pep8radius
-PEP257 := $(BIN)/pep257
-PYLINT := $(BIN)/pylint
-PYREVERSE := $(BIN)/pyreverse
-NOSE := $(BIN)/nosetests
-PYTEST := $(BIN)/py.test
-COVERAGE := $(BIN)/coverage
-SNIFFER := $(BIN)/sniffer
+# Virtual environment executables
+ifndef TRAVIS
+	BIN_ := $(BIN)/
+endif
+PYTHON := $(BIN_)python
+PIP := $(BIN_)pip
+EASY_INSTALL := $(BIN_)easy_install
+RST2HTML := $(PYTHON) $(BIN_)rst2html.py
+PDOC := $(PYTHON) $(BIN_)pdoc
+MKDOCS := $(BIN_)mkdocs
+PEP8 := $(BIN_)pep8
+PEP8RADIUS := $(BIN_)pep8radius
+PEP257 := $(BIN_)pep257
+PYLINT := $(BIN_)pylint
+PYREVERSE := $(BIN_)pyreverse
+NOSE := $(BIN_)nosetests
+PYTEST := $(BIN_)py.test
+COVERAGE := $(BIN_)coverage
+COVERAGE_SPACE := $(BIN_)coverage.space
+SNIFFER := $(BIN_)sniffer
+HONCHO := $(ACTIVATE) && honcho
 
 # Flags for PHONY targets
+INSTALLED_FLAG := $(ENV)/.installed
 DEPENDS_CI_FLAG := $(ENV)/.depends-ci
+DEPENDS_DOC_FLAG := $(ENV)/.depends-doc
 DEPENDS_DEV_FLAG := $(ENV)/.depends-dev
 DOCS_FLAG := $(ENV)/.docs
 ALL_FLAG := $(ENV)/.all
@@ -80,39 +84,54 @@ $(ALL_FLAG): $(SOURCES)
 	touch $(ALL_FLAG)  # flag to indicate all setup steps were successful
 
 .PHONY: ci
+ifdef TRAVIS
 ci: check test tests
+else
+ci: doc check test tests
+endif
+
+.PHONY: watch
+watch: depends .clean-test
+	@ rm -rf $(FAILED_FLAG)
+	$(SNIFFER)
 
 # Development Installation #####################################################
 
 .PHONY: env
-env: .virtualenv $(EGG_INFO)
-$(EGG_INFO): Makefile setup.py requirements.txt
+env: $(PIP) $(INSTALLED_FLAG)
+$(INSTALLED_FLAG): Makefile setup.py requirements.txt
 	VIRTUAL_ENV=$(ENV) $(PYTHON) setup.py develop
-	@ touch $(EGG_INFO)  # flag to indicate package is installed
+	@ touch $(INSTALLED_FLAG)  # flag to indicate package is installed
 
-.PHONY: .virtualenv
-.virtualenv: $(PIP)
 $(PIP):
-	$(SYS_VIRTUALENV) --python $(SYS_PYTHON) $(ENV)
-	$(PIP) install --upgrade pip
+	$(SYS_PYTHON) -m venv --clear $(ENV)
+	$(PIP) install --upgrade pip setuptools
+
+# Tools Installation ###########################################################
 
 .PHONY: depends
-depends: depends-ci depends-dev
+depends: depends-ci depends-doc depends-dev
 
 .PHONY: depends-ci
 depends-ci: env Makefile $(DEPENDS_CI_FLAG)
 $(DEPENDS_CI_FLAG): Makefile
-	$(PIP) install --upgrade pep8 pep257 pylint coverage pytest pytest-cov pytest-random pytest-runfailed
+	$(PIP) install --upgrade pep8 pep257 pylint coverage coverage.space pytest pytest-describe pytest-expecter pytest-cov pytest-random pytest-runfailed
 	@ touch $(DEPENDS_CI_FLAG)  # flag to indicate dependencies are installed
+
+.PHONY: depends-doc
+depends-doc: env Makefile $(DEPENDS_DOC_FLAG)
+$(DEPENDS_DOC_FLAG): Makefile
+	$(PIP) install --upgrade docutils readme pdoc mkdocs pygments
+	@ touch $(DEPENDS_DOC_FLAG)  # flag to indicate dependencies are installed
 
 .PHONY: depends-dev
 depends-dev: env Makefile $(DEPENDS_DEV_FLAG)
 $(DEPENDS_DEV_FLAG): Makefile
-	$(PIP) install --upgrade pip pep8radius pygments docutils pdoc wheel readme sniffer
+	$(PIP) install --upgrade pip pep8radius wheel sniffer
 ifdef WINDOWS
 	$(PIP) install --upgrade pywin32
 else ifdef MAC
-	$(PIP) install --upgrade pync MacFSEvents
+	$(PIP) install --upgrade pync MacFSEvents==0.4
 else ifdef LINUX
 	$(PIP) install --upgrade pyinotify
 endif
@@ -121,40 +140,51 @@ endif
 # Documentation ################################################################
 
 .PHONY: doc
-doc: readme verify-readme apidocs uml
+doc: readme verify-readme uml apidocs mkdocs
+
+.PHONY: doc-live
+doc-live: doc
+	eval "sleep 3; open http://127.0.0.1:8000" &
+	$(MKDOCS) serve
+
+.PHONY: read
+read: doc
+	$(OPEN) site/index.html
+	$(OPEN) apidocs/$(PACKAGE)/index.html
+	$(OPEN) README-pypi.html
+	$(OPEN) README-github.html
 
 .PHONY: readme
-readme: depends-dev README-github.html README-pypi.html
+readme: depends-doc README-github.html README-pypi.html
 README-github.html: README.md
 	pandoc -f markdown_github -t html -o README-github.html README.md
 README-pypi.html: README.rst
 	$(RST2HTML) README.rst README-pypi.html
-README.rst: README.md
-	pandoc -f markdown_github -t rst -o README.rst README.md
+%.rst: %.md
+	pandoc -f markdown_github -t rst -o $@ $<
 
 .PHONY: verify-readme
 verify-readme: $(DOCS_FLAG)
-$(DOCS_FLAG): README.rst
+$(DOCS_FLAG): README.rst CHANGES.rst
 	$(PYTHON) setup.py check --restructuredtext --strict --metadata
 	@ touch $(DOCS_FLAG)  # flag to indicate README has been checked
 
-.PHONY: apidocs
-apidocs: depends-dev apidocs/$(PACKAGE)/index.html
-apidocs/$(PACKAGE)/index.html: $(SOURCES)
-	$(PDOC) --html --overwrite $(PACKAGE) --html-dir apidocs
-
 .PHONY: uml
-uml: depends-dev docs/*.png
+uml: depends-doc docs/*.png
 docs/*.png: $(SOURCES)
 	$(PYREVERSE) $(PACKAGE) -p $(PACKAGE) -a 1 -f ALL -o png --ignore test
 	- mv -f classes_$(PACKAGE).png docs/classes.png
 	- mv -f packages_$(PACKAGE).png docs/packages.png
 
-.PHONY: read
-read: doc
-	$(OPEN) apidocs/$(PACKAGE)/index.html
-	$(OPEN) README-pypi.html
-	$(OPEN) README-github.html
+.PHONY: apidocs
+apidocs: depends-doc apidocs/$(PACKAGE)/index.html
+apidocs/$(PACKAGE)/index.html: $(SOURCES)
+	$(PDOC) --html --overwrite $(PACKAGE) --html-dir apidocs
+
+.PHONY: mkdocs
+mkdocs: depends-doc site/index.html
+site/index.html: mkdocs.yml docs/*.md
+	$(MKDOCS) build --clean --strict
 
 # Static Analysis ##############################################################
 
@@ -163,18 +193,16 @@ check: pep8 pep257 pylint
 
 .PHONY: pep8
 pep8: depends-ci
-	$(PEP8) $(PACKAGE) --config=.pep8rc
+	$(PEP8) $(PACKAGE) tests --config=.pep8rc
 
 .PHONY: pep257
 pep257: depends-ci
-# D102: docstring missing (checked by PyLint)
-# D202: No blank lines allowed *after* function docstring
-# D203: 1 blank line required before class (deprecated warning)
-	$(PEP257) $(PACKAGE) --ignore=D102,D202,D203
+	$(PEP257) $(PACKAGE) tests
 
 .PHONY: pylint
 pylint: depends-ci
-	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc --disable=R0912,C0111,R0913,R0401
+	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc
+	$(PYLINT) tests --rcfile=.pylintrc --disable=duplicate-code
 
 .PHONY: fix
 fix: depends-dev
@@ -182,56 +210,47 @@ fix: depends-dev
 
 # Testing ######################################################################
 
-TIMESTAMP := $(shell date +%s)
+RANDOM_SEED ?= $(shell date +%s)
 
-PYTEST_CORE_OPTS := --doctest-modules --quiet -r X --maxfail=5
-PYTEST_COV_OPTS := --cov=$(PACKAGE) --cov-report=term-missing --no-cov-on-fail
-PYTEST_RANDOM_OPTS := --random --random-seed=$(TIMESTAMP)
+PYTEST_CORE_OPTS := --doctest-modules -r xXw -vv
+PYTEST_COV_OPTS := --cov=$(PACKAGE) --no-cov-on-fail --cov-report=term-missing --cov-report=html
+PYTEST_RANDOM_OPTS := --random --random-seed=$(RANDOM_SEED)
 
 PYTEST_OPTS := $(PYTEST_CORE_OPTS) $(PYTEST_COV_OPTS)
 PYTEST_OPTS_FAILFAST := $(PYTEST_OPTS) --failed --exitfirst
 
-FAILED := .pytest/failed
+FAILED_FLAG := .pytest/failed
 
 .PHONY: test test-unit
 test: test-unit
 test-unit: depends-ci
-	@ if test -e $(FAILED); then $(MAKE) test-all; fi
-	@ $(COVERAGE) erase
 	$(PYTEST) $(PYTEST_OPTS) $(PACKAGE)
 ifndef TRAVIS
-	$(COVERAGE) html --directory htmlcov --fail-under=$(UNIT_TEST_COVERAGE)
+	$(COVERAGE_SPACE) jacebrowning/yorm unit
 endif
 
 .PHONY: test-int
 test-int: depends-ci
-	@ if test -e $(FAILED); then $(MAKE) test-all; fi
-	@ $(COVERAGE) erase
+	@ if test -e $(FAILED_FLAG); then $(MAKE) test-all; fi
 	$(PYTEST) $(PYTEST_OPTS_FAILFAST) tests
 ifndef TRAVIS
-	@ rm -rf $(FAILED)  # next time, don't run the previously failing test
-	$(COVERAGE) html --directory htmlcov --fail-under=$(INTEGRATION_TEST_COVERAGE)
+	@ rm -rf $(FAILED_FLAG)  # next time, don't run the previously failing test
+	$(COVERAGE_SPACE) jacebrowning/yorm integration
 endif
 
 .PHONY: tests test-all
 tests: test-all
 test-all: depends-ci
-	@ if test -e $(FAILED); then $(PYTEST) --failed $(PACKAGE) tests; fi
-	@ $(COVERAGE) erase
+	@ if test -e $(FAILED_FLAG); then $(PYTEST) --failed $(PACKAGE) tests; fi
 	$(PYTEST) $(PYTEST_OPTS_FAILFAST) $(PACKAGE) tests
 ifndef TRAVIS
-	@ rm -rf $(FAILED)  # next time, don't run the previously failing test
-	$(COVERAGE) html --directory htmlcov --fail-under=$(COMBINED_TEST_COVERAGE)
+	@ rm -rf $(FAILED_FLAG)  # next time, don't run the previously failing test
+	$(COVERAGE_SPACE) jacebrowning/yorm overall
 endif
 
 .PHONY: read-coverage
 read-coverage:
 	$(OPEN) htmlcov/index.html
-
-.PHONY: watch
-watch: depends-dev .clean-test
-	@ rm -rf $(FAILED)
-	$(SNIFFER)
 
 # Cleanup ######################################################################
 
@@ -239,18 +258,14 @@ watch: depends-dev .clean-test
 clean: .clean-dist .clean-test .clean-doc .clean-build
 	rm -rf $(ALL_FLAG)
 
-.PHONY: clean-env
-clean-env: clean
-	rm -rf $(ENV)
-
 .PHONY: clean-all
-clean-all: clean clean-env .clean-workspace
+clean-all: clean .clean-env .clean-workspace
 
 .PHONY: .clean-build
 .clean-build:
-	find $(PACKAGE) -name '*.pyc' -delete
-	find $(PACKAGE) -name '__pycache__' -delete
-	rm -rf $(EGG_INFO)
+	find $(PACKAGE) tests -name '*.pyc' -delete
+	find $(PACKAGE) tests -name '__pycache__' -delete
+	rm -rf $(INSTALLED_FLAG) *.egg-info
 
 .PHONY: .clean-doc
 .clean-doc:
@@ -264,6 +279,10 @@ clean-all: clean clean-env .clean-workspace
 .clean-dist:
 	rm -rf dist build
 
+.PHONY: .clean-env
+.clean-env: clean
+	rm -rf $(ENV)
+
 .PHONY: .clean-workspace
 .clean-workspace:
 	rm -rf *.sublime-workspace
@@ -275,7 +294,7 @@ register-test: doc
 	$(PYTHON) setup.py register --strict --repository https://testpypi.python.org/pypi
 
 .PHONY: upload-test
-upload-test: .git-no-changes register-test
+upload-test: register-test
 	$(PYTHON) setup.py sdist upload --repository https://testpypi.python.org/pypi
 	$(PYTHON) setup.py bdist_wheel upload --repository https://testpypi.python.org/pypi
 	$(OPEN) https://testpypi.python.org/pypi/$(PROJECT)
@@ -292,7 +311,7 @@ upload: .git-no-changes register
 
 .PHONY: .git-no-changes
 .git-no-changes:
-	@if git diff --name-only --exit-code;         \
+	@ if git diff --name-only --exit-code;        \
 	then                                          \
 		echo Git working copy is clean...;        \
 	else                                          \
@@ -313,4 +332,4 @@ install:
 
 .PHONY: download
 download:
-	pip install $(PROJECT)
+	$(SYS_PYTHON) -m pip install $(PROJECT)

@@ -1,8 +1,6 @@
-#!/usr/bin/env python
-# pylint:disable=R0201,C0111,R0901
+# pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
 
-"""Unit tests for the `container` module."""
-
+import logging
 from unittest.mock import patch, Mock
 
 import pytest
@@ -10,10 +8,15 @@ import pytest
 import yorm
 from yorm import common
 from yorm.utilities import attr
-from yorm.converters import Dictionary, List
-from yorm.converters import String, Integer
+from yorm.types import Dictionary, List
+from yorm.types import String, Integer
 
 from . import strip
+
+log = logging.getLogger(__name__)
+
+
+# CLASSES ######################################################################
 
 
 @attr(abc=Integer)
@@ -43,6 +46,9 @@ class StringList(List):
 class UnknownList(List):
 
     """Sample list container."""
+
+
+# TESTS ########################################################################
 
 
 class TestDictionary:
@@ -106,6 +112,11 @@ class TestDictionary:
         assert not hasattr(value2, 'var2')
         assert not hasattr(value2, 'var3')
 
+    def test_strict_update(self):
+        obj = SampleDictionary.create_default()
+        obj.update_value({'key': "value", 'abc': 7}, strict=True)
+        assert {'abc': 7} == obj
+
 
 class TestList:
 
@@ -165,11 +176,11 @@ class TestExtensions:
                     return value2
             return None
 
-    @yorm.attr(a=yorm.converters.String)
+    @yorm.attr(a=yorm.types.String)
     class MyDictionary(Dictionary, FindMixin):
         pass
 
-    @yorm.attr(all=yorm.converters.String)
+    @yorm.attr(all=yorm.types.String)
     class MyList(List, FindMixin):
         pass
 
@@ -196,22 +207,27 @@ class TestReservedNames:
         def __init__(self, items=None):
             self.items = items or []
 
-    def test_list_named_items(self):
-        obj = self.MyObject()
-        yorm.sync_object(obj, "fake/path", {'items': StringList})
+        def __repr__(self):
+            return "<my_object>"
 
-        obj.items.append('foo')
+    def test_list_named_items(self):
+        my_object = self.MyObject()
+        yorm.sync_object(my_object, "fake/path", {'items': StringList})
+
+        log.info("Appending value to list of items...")
+        my_object.items.append('foo')
+
+        log.info("Checking object contents...")
         assert strip("""
         items:
         - foo
-        """) == obj.yorm_mapper.text
+        """) == my_object.__mapper__.text
 
-        obj.yorm_mapper.text = strip("""
+        log.info("Writting new file contents...")
+        my_object.__mapper__.text = strip("""
         items:
         - bar
         """)
-        assert ['bar'] == obj.items
 
-
-if __name__ == '__main__':
-    pytest.main()
+        log.info("Checking file contents...")
+        assert ['bar'] == my_object.items

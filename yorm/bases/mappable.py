@@ -4,86 +4,86 @@ import abc
 import functools
 
 from .. import common
-from ..mapper import MAPPER, get_mapper
 
 
 log = common.logger(__name__)
 
+TAG = '_modified_by_yorm'
+
 
 def fetch_before(method):
     """Decorator for methods that should fetch before call."""
+
+    if getattr(method, TAG, False):
+        return method
+
     @functools.wraps(method)
-    def fetch_before(self, *args, **kwargs):  # pylint: disable=W0621
+    def wrapped(self, *args, **kwargs):
         """Decorated method."""
-        mapper = get_mapper(self)
-        if mapper and mapper.modified:
-            log.debug("fetch before call: %s", method.__name__)
-            mapper.fetch()
-            if mapper.auto_store:
-                mapper.store()
-                mapper.modified = False
+        if not _private_call(method, args):
+            mapper = common.get_mapper(self)
+            if mapper and mapper.modified:
+                log.debug("Fetching before call: %s", method.__name__)
+                mapper.fetch()
+                if mapper.store_after_fetch:
+                    mapper.store()
+                    mapper.modified = False
+
         return method(self, *args, **kwargs)
-    return fetch_before
+
+    setattr(wrapped, TAG, True)
+
+    return wrapped
 
 
 def store_after(method):
     """Decorator for methods that should store after call."""
+
+    if getattr(method, TAG, False):
+        return method
+
     @functools.wraps(method)
-    def store_after(self, *args, **kwargs):  # pylint: disable=W0621
+    def wrapped(self, *args, **kwargs):
         """Decorated method."""
         result = method(self, *args, **kwargs)
-        mapper = get_mapper(self)
-        if mapper and mapper.auto:
-            log.debug("store after call: %s", method.__name__)
-            mapper.store()
+
+        if not _private_call(method, args):
+            mapper = common.get_mapper(self)
+            if mapper and mapper.auto:
+                log.debug("Storing after call: %s", method.__name__)
+                mapper.store()
+
         return result
-    return store_after
+
+    setattr(wrapped, TAG, True)
+
+    return wrapped
 
 
-class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
+def _private_call(method, args, prefix='_'):
+    """Determine if a call's first argument is a private variable name."""
+    if method.__name__ in ('__getattribute__', '__setattr__'):
+        assert isinstance(args[0], str)
+        return args[0].startswith(prefix)
+    else:
+        return False
 
+
+# TODO: move these methods inside of `Container`
+class Mappable(metaclass=abc.ABCMeta):
     """Base class for objects with attributes mapped to file."""
 
+    # pylint: disable=no-member
+
+    @fetch_before
     def __getattribute__(self, name):
         """Trigger object update when reading attributes."""
-        # TODO: remove MAPPER once renamed to '__mapper__'
-        if name.startswith('__') or name == MAPPER:
-            # avoid infinite recursion (attribute requested in this function)
-            return object.__getattribute__(self, name)
+        return object.__getattribute__(self, name)
 
-        mapper = get_mapper(self)
-
-        # Get the attribute's current value
-        try:
-            value = object.__getattribute__(self, name)
-        except AttributeError as exc:
-            missing = True
-            if not mapper:
-                raise exc from None
-        else:
-            missing = False
-
-        # Fetch a new value from disk if the attribute is mapped or missing
-        if mapper and (missing or (name in mapper.attrs and mapper.modified)):
-            mapper.fetch()
-            value = object.__getattribute__(self, name)
-
-            # Store back to disk if this has been done before
-            if mapper.auto_store:
-                mapper.store()
-                mapper.modified = False
-
-        return value
-
+    @store_after
     def __setattr__(self, name, value):
         """Trigger file update when setting attributes."""
         super().__setattr__(name, value)
-        if name.startswith('__'):
-            return
-
-        mapper = get_mapper(self)
-        if mapper and mapper.auto and name in mapper.attrs:
-            mapper.store()
 
     @fetch_before
     def __iter__(self):
@@ -109,3 +109,29 @@ class Mappable(metaclass=abc.ABCMeta):  # pylint: disable=R0201
     def append(self, value):
         """Trigger file update when appending items."""
         super().append(value)
+
+
+def patch_methods(instance):
+    log.debug("Patching methods on: %r", instance)
+    cls = instance.__class__
+
+    # TODO: determine a way to share the lists of methods to patch
+    for name in ['__getattribute__', '__iter__', '__getitem__']:
+        try:
+            method = getattr(cls, name)
+        except AttributeError:
+            log.trace("No method: %s", name)
+        else:
+            modified_method = fetch_before(method)
+            setattr(cls, name, modified_method)
+            log.trace("Patched to fetch before call: %s", name)
+
+    for name in ['__setattr__', '__setitem__', '__delitem__', 'append']:
+        try:
+            method = getattr(cls, name)
+        except AttributeError:
+            log.trace("No method: %s", name)
+        else:
+            modified_method = store_after(method)
+            setattr(cls, name, modified_method)
+            log.trace("Patched to store after call: %s", name)

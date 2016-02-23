@@ -1,3 +1,5 @@
+"""Configuration file for sniffer."""
+
 import os
 import time
 import subprocess
@@ -11,46 +13,84 @@ else:
     notify = Notifier.notify
 
 
-watch_paths = ['yorm/', 'tests/']
-show_coverage = True
+watch_paths = ["yorm", "tests"]
 
 
-@select_runnable('python_tests')
+@select_runnable('python')
 @file_validator
-def py_files(filename):
-    return all((filename.endswith('.py'),
-                not os.path.basename(filename).startswith('.')))
+def python_files(filename):
+    """Match Python source files."""
+
+    return all(
+        (filename.endswith('.py'),
+        not os.path.basename(filename).startswith('.')),
+    )
 
 
 @runnable
-def python_tests(*_):
+def python(*_):
+    """Run targets for Python."""
 
-    group = int(time.time())  # unique per run
-
-    for count, (command, title) in enumerate((
-        (('make', 'test'), "Unit Tests"),
-        (('make', 'tests'), "Integration Tests"),
-        (('make', 'check'), "Static Analysis"),
-        (('make', 'doc'), None),
+    for count, (command, title, retry) in enumerate((
+        (('make', 'test'), "Unit Tests", True),
+        (('make', 'tests'), "Integration Tests", False),
+        (('make', 'check'), "Static Analysis", True),
+        (('make', 'doc'), None, True),
     ), start=1):
 
-        print("")
-        print("$ %s" % ' '.join(command))
-        failure = subprocess.call(command)
-
-        if failure:
-            if notify and title:
-                mark = "❌" * count
-                notify(mark + " [FAIL] " + mark, title=title, group=group)
+        if not run(command, title, count, retry):
             return False
-        else:
-            if notify and title:
-                mark = "✅" * count
-                notify(mark + " [PASS] " + mark, title=title, group=group)
-
-    global show_coverage
-    if show_coverage:
-        subprocess.call(['make', 'read-coverage'])
-    show_coverage = False
 
     return True
+
+
+GROUP = int(time.time())  # unique per run
+
+_show_coverage = False
+_rerun_args = None
+
+
+def run(command, title, count, retry):
+    """Run a command-line program and display the result."""
+    global _rerun_args
+
+    if _rerun_args:
+        args = _rerun_args
+        _rerun_args = None
+        if not run(*args):
+            return False
+
+    print("")
+    print("$ %s" % ' '.join(command))
+    failure = subprocess.call(command)
+
+    if failure:
+        mark = "❌" * count
+        message = mark + " [FAIL] " + mark
+    else:
+        mark = "✅" * count
+        message = mark + " [PASS] " + mark
+    show_notification(message, title)
+
+    show_coverage()
+
+    if failure and retry:
+        _rerun_args = command, title, count, retry
+
+    return not failure
+
+
+def show_notification(message, title):
+    """Show a user notification."""
+    if notify and title:
+        notify(message, title=title, group=GROUP)
+
+
+def show_coverage():
+    """Launch the coverage report."""
+    global _show_coverage
+
+    if _show_coverage:
+        subprocess.call(['make', 'read-coverage'])
+
+    _show_coverage = False

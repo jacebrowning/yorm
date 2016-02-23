@@ -1,5 +1,13 @@
 # Revision History
 
+## 0.6 (2015/02/23)
+
+- Added preliminary support for JSON serialization (@pr0xmeh).
+- Renamed `yorm.converters` to `yorm.types`.
+- Now maintaining the signature on mapped objects.
+- Disabled attribute inference unless `strict=False`.
+- Fixed formatting of `String` to only use quotes if absolutely necessary.
+
 ## 0.5 (2015/09/25)
 
 - Renamed `yorm.base` to `yorm.bases`.
@@ -35,7 +43,7 @@
 - Renamed `store_instances` to `sync_instances`.
 - Renamed `map_attr` to `attr`.
 - Added `sync` to call `sync_object` or `sync_instances` as needed.
-- Added `update_object` and `update_file` to force syncrhonization.
+- Added `update_object` and `update_file` to force synchronization.
 - Added `update` to call `update_object` and/or `update_file` as needed.
 
 ## 0.2.1 (2015/02/12)

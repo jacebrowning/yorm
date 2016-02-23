@@ -8,19 +8,18 @@
     * Windows: http://cygwin.com/install.html
     * Mac: https://developer.apple.com/xcode
     * Linux: http://www.gnu.org/software/make (likely already installed)
-* virtualenv: https://pypi.python.org/pypi/virtualenv#installation
 * Pandoc: http://johnmacfarlane.net/pandoc/installing.html
 * Graphviz: http://www.graphviz.org/Download.php
 
 ### Installation
 
-Create a virtualenv:
+Create a virtual environment:
 
 ```
 $ make env
 ```
 
-## Development
+## Development Tasks
 
 ### Testing
 
@@ -58,7 +57,15 @@ $ make pylint
 $ make check  # includes all checks
 ```
 
-## Release
+## Continuous Integration
+
+The CI server will report overall build status:
+
+```
+$ make ci
+```
+
+## Release Tasks
 
 Release to PyPI:
 

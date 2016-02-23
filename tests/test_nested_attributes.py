@@ -1,34 +1,31 @@
-#!/usr/bin/env python
-# pylint:disable=W0201,W0613,R0201,C0111
-
 """Integration tests for nested attributes."""
+# pylint: disable=missing-docstring,no-self-use,attribute-defined-outside-init,no-member,misplaced-comparison-constant
+
 
 from unittest.mock import patch
 import logging
-
-import pytest
 
 import yorm
 
 from . import strip
 
 
-@yorm.attr(status=yorm.converters.Boolean)
-class StatusDictionary(yorm.converters.Dictionary):
+@yorm.attr(status=yorm.types.Boolean)
+class StatusDictionary(yorm.types.Dictionary):
 
     pass
 
 
-@yorm.attr(all=yorm.converters.Float)
-class NestedList3(yorm.converters.List):
+@yorm.attr(all=yorm.types.Float)
+class NestedList3(yorm.types.List):
 
     def __repr__(self):
         return "<nested-list-3 {}>".format((id(self)))
 
 
-@yorm.attr(number=yorm.converters.Float)
+@yorm.attr(number=yorm.types.Float)
 @yorm.attr(nested_list_3=NestedList3)
-class NestedDictionary3(yorm.converters.AttributeDictionary):
+class NestedDictionary3(yorm.types.AttributeDictionary):
 
     def __init__(self):
         super().__init__()
@@ -40,16 +37,16 @@ class NestedDictionary3(yorm.converters.AttributeDictionary):
         return "<nested-dictionary-3 {}>".format((id(self)))
 
 
-@yorm.attr(all=yorm.converters.Float)
-class NestedList2(yorm.converters.List):
+@yorm.attr(all=yorm.types.Float)
+class NestedList2(yorm.types.List):
 
     def __repr__(self):
         return "<nested-list-2 {}>".format((id(self)))
 
 
 @yorm.attr(nested_dict_3=NestedDictionary3)
-@yorm.attr(number=yorm.converters.Float)
-class NestedDictionary2(yorm.converters.AttributeDictionary):
+@yorm.attr(number=yorm.types.Float)
+class NestedDictionary2(yorm.types.AttributeDictionary):
 
     def __init__(self):
         super().__init__()
@@ -60,9 +57,9 @@ class NestedDictionary2(yorm.converters.AttributeDictionary):
         return "<nested-dictionary-2 {}>".format((id(self)))
 
 
-@yorm.attr(number=yorm.converters.Float)
+@yorm.attr(number=yorm.types.Float)
 @yorm.attr(nested_list_2=NestedList2)
-class NestedDictionary(yorm.converters.AttributeDictionary):
+class NestedDictionary(yorm.types.AttributeDictionary):
 
     def __init__(self):
         super().__init__()
@@ -74,7 +71,7 @@ class NestedDictionary(yorm.converters.AttributeDictionary):
 
 
 @yorm.attr(all=NestedDictionary2)
-class NestedList(yorm.converters.List):
+class NestedList(yorm.types.List):
 
     def __repr__(self):
         return "<nested-list {}>".format((id(self)))
@@ -97,7 +94,7 @@ class TestNestedOnce:
 
     def test_append_triggers_store(self):
         top = Top()
-        logging.info("appending dictionary to list...")
+        logging.info("Appending dictionary to list...")
         top.nested_list.append({'number': 1})
         assert strip("""
         nested_dict:
@@ -108,7 +105,7 @@ class TestNestedOnce:
             nested_list_3: []
             number: 0.0
           number: 1.0
-        """) == top.yorm_mapper.text
+        """) == top.__mapper__.text
 
     def test_set_by_index_triggers_store(self):
         top = Top()
@@ -122,7 +119,7 @@ class TestNestedOnce:
             nested_list_3: []
             number: 0.0
           number: 1.5
-        """) == top.yorm_mapper.text
+        """) == top.__mapper__.text
         top.nested_list[0] = {'number': 1.6}
         assert strip("""
         nested_dict:
@@ -133,11 +130,11 @@ class TestNestedOnce:
             nested_list_3: []
             number: 0.0
           number: 1.6
-        """) == top.yorm_mapper.text
+        """) == top.__mapper__.text
 
     def test_get_by_index_triggers_fetch(self):
         top = Top()
-        top.yorm_mapper.text = strip("""
+        top.__mapper__.text = strip("""
         nested_list:
         - number: 1.7
         """)
@@ -159,7 +156,7 @@ class TestNestedOnce:
             nested_list_3: []
             number: 0.0
           number: 1.9
-        """) == top.yorm_mapper.text
+        """) == top.__mapper__.text
         del top.nested_list[0]
         assert strip("""
         nested_dict:
@@ -170,7 +167,7 @@ class TestNestedOnce:
             nested_list_3: []
             number: 0.0
           number: 1.9
-        """) == top.yorm_mapper.text
+        """) == top.__mapper__.text
 
     def test_set_dict_as_attribute_triggers_store(self):
         top = Top()
@@ -180,7 +177,7 @@ class TestNestedOnce:
           nested_list_2: []
           number: 2.0
         nested_list: []
-        """) == top.yorm_mapper.text
+        """) == top.__mapper__.text
 
 
 @patch('yorm.settings.fake', True)
@@ -198,7 +195,7 @@ class TestNestedTwice:
             nested_list_3: []
             number: 0.0
           number: 3.0
-        """) == top.yorm_mapper.text
+        """) == top.__mapper__.text
         top.nested_list[0].number = 4
         assert strip("""
         nested_dict:
@@ -209,7 +206,7 @@ class TestNestedTwice:
             nested_list_3: []
             number: 0.0
           number: 4.0
-        """) == top.yorm_mapper.text
+        """) == top.__mapper__.text
 
     def test_nested_dict_item_value_change_triggers_store(self):
         top = Top()
@@ -220,7 +217,7 @@ class TestNestedTwice:
           - 5.0
           number: 0.0
         nested_list: []
-        """) == top.yorm_mapper.text
+        """) == top.__mapper__.text
         top.nested_dict.nested_list_2.append(6)
         assert strip("""
         nested_dict:
@@ -229,7 +226,7 @@ class TestNestedTwice:
           - 6.0
           number: 0.0
         nested_list: []
-        """) == top.yorm_mapper.text
+        """) == top.__mapper__.text
 
     def test_dict_in_list_value_change_triggers_store(self):
         top = Top()
@@ -244,7 +241,7 @@ class TestNestedTwice:
             nested_list_3: []
             number: 8.0
           number: 0.0
-        """) == top.yorm_mapper.text
+        """) == top.__mapper__.text
 
     def test_list_in_dict_append_triggers_store(self):
         top = Top()
@@ -268,7 +265,7 @@ class TestNestedTwice:
             - 10.0
             number: 0.0
           number: 9.0
-        """) == top.yorm_mapper.text
+        """) == top.__mapper__.text
 
 
 @patch('yorm.settings.fake', True)
@@ -282,7 +279,7 @@ class TestAliases:
         def __repr__(self):
             return "<sample {}>".format(id(self))
 
-    def setup_method(self, method):
+    def setup_method(self, _):
         self.sample = self.Sample()
 
     @staticmethod
@@ -300,12 +297,12 @@ class TestAliases:
         self._log_ref('var4', self.sample.var4, var4_ref)
         assert [] == self.sample.var4
 
-        logging.info("appending 42 to var4_ref...")
+        logging.info("Appending 42 to var4_ref...")
         var4_ref.append(42)
         self._log_ref('var4', self.sample.var4, var4_ref)
         assert [42] == self.sample.var4
 
-        logging.info("appending 2015 to var4_ref...")
+        logging.info("Appending 2015 to var4_ref...")
         var4_ref.append(2015)
         assert [42, 2015] == self.sample.var4
 
@@ -315,12 +312,12 @@ class TestAliases:
         self._log_ref('var5', self.sample.var5, var5_ref)
         assert {'status': False} == self.sample.var5
 
-        logging.info("setting status=True in var5_ref...")
+        logging.info("Setting status=True in var5_ref...")
         var5_ref['status'] = True
         self._log_ref('var5', self.sample.var5, var5_ref)
         assert {'status': True} == self.sample.var5
 
-        logging.info("setting status=False in var5_ref...")
+        logging.info("Setting status=False in var5_ref...")
         var5_ref['status'] = False
         self._log_ref('var5', self.sample.var5, var5_ref)
         assert {'status': False} == self.sample.var5
@@ -338,15 +335,11 @@ class TestAliases:
 
     def test_alias_list_in_dict(self):
         top = Top()
-        logging.info("updating nested attribute...")
+        logging.info("Updating nested attribute...")
         top.nested_dict.number = 1
-        logging.info("storing refs...")
+        logging.info("Storing refs...")
         ref1 = top.nested_dict
         ref2 = top.nested_dict.nested_list_2
         yorm.update(top)
         assert id(ref1) == id(top.nested_dict)
         assert id(ref2) == id(top.nested_dict.nested_list_2)
-
-
-if __name__ == '__main__':
-    pytest.main()

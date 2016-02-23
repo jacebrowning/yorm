@@ -15,6 +15,8 @@ Uses beyond typical object serialization and relational mapping include:
 * storage of content in text files optimized for version control
 * extensible converters to customize formatting on complex classes
 
+View the talk from [PyOhio 2015](https://www.youtube.com/watch?v=0woNEKf-wAo).
+
 # Getting Started
 
 ## Requirements
@@ -26,7 +28,7 @@ Uses beyond typical object serialization and relational mapping include:
 YORM can be installed with pip:
 
 ```
-$ pip3 install YORM
+$ pip install YORM
 ```
 
 or directly from the source code:
@@ -34,7 +36,7 @@ or directly from the source code:
 ```
 $ git clone https://github.com/jacebrowning/yorm.git
 $ cd yorm
-$ python3 setup.py install
+$ python setup.py install
 ```
 
 # Basic Usage
@@ -55,7 +57,7 @@ and define an attribute mapping:
 
 ```python
 import yorm
-from yorm.converters import String, Integer, Float
+from yorm.types import String, Integer, Float
 
 @yorm.attr(name=String, year=Integer, gpa=Float)
 @yorm.sync("students/{self.school}/{self.number}.yml")
@@ -87,7 +89,6 @@ Modifications and new content in each mapped file:
 $ echo "name: John Doe
 > gpa: 1.8
 > year: 2010
-> expelled: true
 " > students/GVSU/123.yml
 ```
 
@@ -96,6 +97,4 @@ are automatically reflected in their corresponding object:
 ```python
 >>> s1.gpa
 1.8
->>> s1.expelled
-True
 ```

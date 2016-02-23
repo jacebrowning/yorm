@@ -1,11 +1,13 @@
-#!/usr/bin/env python
-# pylint:disable=R,C
-
 """Integration tests using YORM as a persistence model."""
+# pylint: disable=missing-docstring,no-self-use,misplaced-comparison-constant
+
 
 import os
 
 import yorm
+
+
+# CLASSES ######################################################################
 
 
 class Config:
@@ -16,8 +18,8 @@ class Config:
         self.root = root or ""
 
 
-@yorm.attr(key=yorm.converters.String)
-@yorm.attr(name=yorm.converters.String)
+@yorm.attr(key=yorm.types.String)
+@yorm.attr(name=yorm.types.String)
 @yorm.sync("{self.root}/{self.key}/config.yml")
 class ConfigModel:
 
@@ -40,8 +42,8 @@ class ConfigStore:
     def __init__(self, root):
         self.root = root
         self.path = self.root + "/{}/config.yml"
-        self.attrs = dict(key=yorm.converters.String,
-                          name=yorm.converters.String)
+        self.attrs = dict(key=yorm.types.String,
+                          name=yorm.types.String)
 
     def read(self, key):
         instance = Config(key)
@@ -56,7 +58,10 @@ class ConfigStore:
             return instance
 
 
-class TestPersistanceMapping:
+# TESTS ########################################################################
+
+
+class TestPersistanceMapping:  # pylint: disable=no-member
 
     root = os.path.join(os.path.dirname(__file__), 'files')
 

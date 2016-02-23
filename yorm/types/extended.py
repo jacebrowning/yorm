@@ -8,42 +8,37 @@ from .standard import String, Integer, Float, Boolean
 from .containers import Dictionary, List
 
 
-# standard types with None as a default #######################################
+# standard types with None as a default ########################################
 
 
-class NoneString(String):
-
+class NullableString(String):
     """Converter for the `str` type with `None` as default."""
 
     DEFAULT = None
 
 
-class NoneInteger(Integer):
-
+class NullableInteger(Integer):
     """Converter for the `int` type with `None` as default."""
 
     DEFAULT = None
 
 
-class NoneFloat(Float):
-
+class NullableFloat(Float):
     """Converter for the `float` type with `None` as default."""
 
     DEFAULT = None
 
 
-class NoneBoolean(Boolean):
-
+class NullableBoolean(Boolean):
     """Converter for the `bool` type with `None` as default."""
 
     DEFAULT = None
 
 
-# standard types with additional behavior #####################################
+# standard types with additional behavior ######################################
 
 
 class _Literal(str):
-
     """Custom type for strings which should be dumped in the literal style."""
 
     @staticmethod
@@ -56,7 +51,6 @@ yaml.add_representer(_Literal, _Literal.representer)
 
 
 class Markdown(String):
-
     """Converter for a `str` type that contains Markdown."""
 
     REGEX_MARKDOWN_SPACES = re.compile(r"""
@@ -100,10 +94,10 @@ class Markdown(String):
     def to_value(cls, obj):
         """Join non-meaningful line breaks."""
         value = String.to_value(obj)
-        return Markdown.join(value)
+        return cls.join(value)
 
-    @staticmethod
-    def join(text):
+    @classmethod
+    def join(cls, text):
         r"""Convert single newlines (ignored by Markdown) to spaces.
 
         >>> Markdown.join("abc\n123")
@@ -116,18 +110,18 @@ class Markdown(String):
         'abc 123'
 
         """
-        return Markdown.REGEX_MARKDOWN_SPACES.sub(r'\1 \3', text).strip()
+        return cls.REGEX_MARKDOWN_SPACES.sub(r'\1 \3', text).strip()
 
     @classmethod
     def to_data(cls, obj):
         """Break a string at sentences and dump as a literal string."""
         value = String.to_value(obj)
         data = String.to_data(value)
-        split = Markdown.split(data)
+        split = cls.split(data)
         return _Literal(split)
 
-    @staticmethod
-    def split(text, end='\n'):
+    @classmethod
+    def split(cls, text, end='\n'):
         r"""Replace sentence boundaries with newlines and append a newline.
 
         :param text: string to line break at sentences
@@ -142,15 +136,14 @@ class Markdown(String):
         """
         stripped = text.strip()
         if stripped:
-            return Markdown.REGEX_SENTENCE_BOUNDARIES.sub('\n', stripped) + end
+            return cls.REGEX_SENTENCE_BOUNDARIES.sub('\n', stripped) + end
         else:
             return ''
 
-# container types with additional behavior ####################################
+# container types with additional behavior #####################################
 
 
 class AttributeDictionary(Dictionary):
-
     """Dictionary converter with keys available as attributes."""
 
     def __init__(self, *args, **kwargs):
@@ -170,7 +163,6 @@ class AttributeDictionary(Dictionary):
 
 
 class SortedList(List):
-
     """List converter that is sorted on disk."""
 
     @classmethod
@@ -193,6 +185,6 @@ class SortedList(List):
         data = []
 
         for item in sorted(value):
-            data.append(cls.item_type.to_data(item))
+            data.append(cls.item_type.to_data(item))  # pylint: disable=no-member
 
         return data

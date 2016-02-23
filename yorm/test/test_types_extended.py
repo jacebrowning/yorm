@@ -1,13 +1,13 @@
-#!/usr/bin/env python
-# pylint:disable=R0201,R0901
-
-"""Unit tests for the `extended` module."""
+# pylint: disable=missing-docstring,no-self-use,misplaced-comparison-constant
 
 import pytest
 
 from yorm.utilities import attr
-from yorm.converters.standard import Integer, String, Float
-from yorm.converters.extended import Markdown, AttributeDictionary, SortedList
+from yorm.types import Integer, String, Float
+from yorm.types.extended import Markdown, AttributeDictionary, SortedList
+
+
+# CLASSES ######################################################################
 
 
 @attr(var1=Integer, var2=String)
@@ -17,6 +17,7 @@ class SampleAttributeDictionary(AttributeDictionary):
 
     def __init__(self, var1, var2, var3):
         super().__init__()
+        # pylint: disable=duplicate-code
         self.var1 = var1
         self.var2 = var2
         self.var3 = var3
@@ -31,6 +32,9 @@ class SampleSortedList(SortedList):
 class UnknownSortedList(SortedList):
 
     """Sample list container."""
+
+
+# TESTS ########################################################################
 
 
 class TestMarkdown:
@@ -108,7 +112,3 @@ class TestSortedList:
         data = [0.0, 1.0, 2.0, 3.0, 4.0]
         data2 = obj.to_data(obj)
         assert data == data2
-
-
-if __name__ == '__main__':
-    pytest.main()

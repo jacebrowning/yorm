@@ -1,181 +1,181 @@
-#!/usr/bin/env python
-# pylint: disable=R,C
+# pylint: disable=missing-docstring,redefined-outer-name,unused-variable,expression-not-assigned
 
-"""Unit tests for the `mapper` module."""
-
-import os
 import pytest
-from unittest.mock import patch, Mock
+from expecter import expect
 
+import yorm
 from yorm import exceptions
-from yorm.mapper import Helper, Mapper
-from yorm.converters import Integer
+from yorm.mapper import Mapper
+from yorm.types import Integer
 
 
-@patch('yorm.settings.fake', True)
-class TestHelperFake:
-
-    """Unit tests for fake mappings using the `Helper` class."""
-
-    def test_create(self):
-        """Verify fake files can be created."""
-        mapper = Helper("fake/path/to/file")
-        mapper.create(Mock())
-
-        assert False is os.path.exists(mapper.path)
-
-    def test_delete(self):
-        """Verify fake files can be deleted."""
-        mapper = Helper("fake/path/to/file")
-        mapper.create(None)
-        mapper.delete()
-
-        assert False is os.path.exists(mapper.path)
-
-    def test_create_after_delete(self):
-        mapper = Helper("fake/path/to/file")
-        mapper.create(None)
-        mapper.delete()
-
-        assert False is mapper.exists
-        assert True is mapper.deleted
-
-        mapper.create(None)
-
-        assert True is mapper.exists
-        assert False is mapper.deleted
-
-    def test_modified(self):
-        """Verify fake files can be modified."""
-        mapper = Helper("fake/path/to/file")
-
-        assert True is mapper.modified
-
-        mapper.create(None)
-
-        assert True is mapper.modified
-
-        mapper.modified = False
-
-        assert False is mapper.modified
-
-        mapper.modified = True
-
-        assert True is mapper.modified
+class MyObject:
+    var1 = 1
 
 
-class TestHelperReal:
+@pytest.fixture
+def obj():
+    return MyObject()
 
-    """Unit tests for real mappings using the `Helper` class."""
 
-    def test_create(self, tmpdir):
-        """Verify files can be created."""
+@pytest.fixture
+def attrs():
+    return {'var2': Integer, 'var3': Integer}
+
+
+@pytest.yield_fixture(params=("real", "fake"))
+def mapper(tmpdir, obj, attrs, request):
+    path = request.param + "/path/to/file"
+    backup = yorm.settings.fake
+    if "fake" in path:
+        yorm.settings.fake = True
+    elif "real" in path:
         tmpdir.chdir()
-        mapper = Helper("real/path/to/file")
-        mapper.create(None)
-
-        assert True is os.path.isfile(mapper.path)
-        assert True is mapper.exists
-        assert False is mapper.deleted
-
-    def test_create_twice(self, tmpdir):
-        """Verify the second creation is ignored."""
-        tmpdir.chdir()
-        mapper = Helper("real/path/to/file")
-        mapper.create(None)
-        mapper.create(None)
-
-        assert True is os.path.isfile(mapper.path)
-        assert True is mapper.exists
-        assert False is mapper.deleted
-
-    def test_delete(self, tmpdir):
-        """Verify files can be deleted."""
-        tmpdir.chdir()
-        mapper = Helper("real/path/to/file")
-        mapper.create(None)
-        mapper.delete()
-
-        assert False is os.path.exists(mapper.path)
-        assert False is mapper.exists
-        assert True is mapper.deleted
-        with pytest.raises(exceptions.FileDeletedError):
-            mapper.fetch(None, None)
-
-    def test_delete_twice(self, tmpdir):
-        """Verify the second deletion is ignored."""
-        tmpdir.chdir()
-        mapper = Helper("real/path/to/file")
-        mapper.delete()
-
-        assert False is os.path.exists(mapper.path)
-        assert False is mapper.exists
-        assert True is mapper.deleted
-
-    def test_modified(self, tmpdir):
-        """Verify files track modifications."""
-        tmpdir.chdir()
-        mapper = Helper("real/path/to/file")
-
-        assert True is mapper.modified
-
-        mapper.create(None)
-
-        assert True is mapper.modified
-
-        mapper.modified = False
-
-        assert False is mapper.modified
-
-        mapper.modified = True
-
-        assert True is mapper.modified
-
-    def test_modified_deleted(self):
-        """Verify a deleted file is always modified."""
-        mapper = Helper("fake/path/to/file")
-
-        assert True is mapper.modified
+    yield Mapper(obj, path, attrs, strict=True)
+    yorm.settings.fake = backup
 
 
-class TestMapper:
-
-    """Unit tests for the `Mapper` class."""
-
-    class MyObject:
-        foo = 1
-
-    def test_store_ignores_auto_off(self, tmpdir):
-        tmpdir.chdir()
-        obj = self.MyObject()
-        attrs = {'number': Integer}
-        mapper = Mapper(obj, "real/path/to/file", attrs, auto=False)
-
-        assert "" == mapper.text
-        assert False is mapper.auto
-
-        mapper.create()
-
-        assert "" == mapper.text
-        assert False is mapper.auto
-
-        mapper.store()
-
-        assert "number: 0\n" == mapper.text
-        assert False is mapper.auto
-
-    def test_missing_attributes_added(self):
-        obj = self.MyObject()
-        path = "mock/path"
-        attrs = {'bar': Integer, 'qux': Integer}
-        mapper = Mapper(obj, path, attrs)
-        mapper.create()
-        mapper.fetch()
-
-        assert 1 == obj.foo
-        assert 0 == obj.bar
-        assert 0 == obj.qux
+@pytest.fixture
+def mapper_real(tmpdir, obj, attrs):
+    tmpdir.chdir()
+    return Mapper(obj, "real/path/to/file", attrs)
 
 
-if __name__ == '__main__':
-    pytest.main()
+@pytest.yield_fixture
+def mapper_fake(obj, attrs):
+    backup = yorm.settings.fake
+    yorm.settings.fake = True
+    yield Mapper(obj, "fake/path/to/file", attrs)
+    yorm.settings.fake = backup
+
+
+def describe_mapper():
+
+    def describe_create():
+
+        def it_creates_the_file(mapper_real):
+            mapper_real.create()
+
+            expect(mapper_real.path).exists()
+            expect(mapper_real.exists).is_true()
+            expect(mapper_real.deleted).is_false()
+
+        def it_pretends_when_fake(mapper_fake):
+            mapper_fake.create()
+
+            expect(mapper_fake.path).missing()
+            expect(mapper_fake.exists).is_true()
+            expect(mapper_fake.deleted).is_false()
+
+        def it_can_be_called_twice(mapper_real):
+            mapper_real.create()
+            mapper_real.create()  # should be ignored
+
+            expect(mapper_real.path).exists()
+
+    def describe_delete():
+
+        def it_deletes_the_file(mapper):
+            mapper.create()
+            mapper.delete()
+
+            expect(mapper.path).missing()
+            expect(mapper.exists).is_false()
+            expect(mapper.deleted).is_true()
+
+        def it_can_be_called_twice(mapper):
+            mapper.delete()
+            mapper.delete()  # should be ignored
+
+            expect(mapper.path).missing()
+
+    def describe_fetch():
+
+        def it_adds_missing_attributes(obj, mapper):
+            mapper.create()
+            mapper.fetch()
+
+            expect(obj.var1) == 1
+            expect(obj.var2) == 0
+            expect(obj.var3) == 0
+
+        def it_ignores_new_attributes(obj, mapper):
+            mapper.create()
+            mapper.text = "var4: foo"
+
+            mapper.fetch()
+            with expect.raises(AttributeError):
+                print(obj.var4)
+
+        def it_infers_types_on_new_attributes_when_not_strict(obj, mapper):
+            mapper.strict = False
+            mapper.create()
+            mapper.text = "var4: foo"
+
+            mapper.fetch()
+            expect(obj.var4) == "foo"
+
+            obj.var4 = 42
+            mapper.store()
+
+            mapper.fetch()
+            expect(obj.var4) == "42"
+
+        def it_raises_an_exception_after_delete(mapper):
+            mapper.delete()
+
+            with expect.raises(exceptions.FileDeletedError):
+                mapper.fetch()
+
+    def describe_store():
+
+        def it_creates_the_file_automatically(mapper_real):
+            mapper_real.store()
+
+            expect(mapper_real.path).exists()
+
+    def describe_modified():
+
+        def is_true_initially(mapper):
+            expect(mapper.modified).is_true()
+
+        def is_true_after_create(mapper):
+            mapper.create()
+
+            expect(mapper.modified).is_true()
+
+        def is_true_after_delete(mapper):
+            mapper.delete()
+
+            expect(mapper.modified).is_true()
+
+        def is_false_after_fetch(mapper):
+            mapper.create()
+            mapper.fetch()
+
+            expect(mapper.modified).is_false()
+
+        def can_be_set_false(mapper):
+            mapper.modified = False
+
+            expect(mapper.modified).is_false()
+
+        def can_be_set_true(mapper):
+            mapper.modified = True
+
+            expect(mapper.modified).is_true()
+
+    def describe_text():
+
+        def can_get_the_file_contents(obj, mapper):
+            obj.var3 = 42
+            mapper.store()
+
+            expect(mapper.text) == "var2: 0\nvar3: 42\n"
+
+        def can_set_the_file_contents(obj, mapper):
+            mapper.create()
+            mapper.text = "var2: 42\n"
+            mapper.fetch()
+
+            expect(obj.var2) == 42

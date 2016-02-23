@@ -6,11 +6,10 @@ from ..bases import Converter
 log = common.logger(__name__)
 
 
-class Object(Converter):  # pylint: disable=W0223
-
+class Object(Converter):
     """Base class for immutable types."""
 
-    TYPE = None  # type for inferred converters (set in subclasses)
+    TYPE = None  # type for inferred types (set in subclasses)
     DEFAULT = None  # default value for conversion (set in subclasses)
 
     @classmethod
@@ -27,7 +26,6 @@ class Object(Converter):  # pylint: disable=W0223
 
 
 class String(Object):
-
     """Convertible for the `str` type."""
 
     TYPE = str
@@ -45,9 +43,22 @@ class String(Object):
         else:
             return cls.DEFAULT
 
+    @classmethod
+    def to_data(cls, obj):
+        value = cls.to_value(obj)
+        return cls._optimize_for_quoting(value)
+
+    @staticmethod
+    def _optimize_for_quoting(value):
+        for num in (int, float):
+            try:
+                return num(value)
+            except ValueError:
+                continue
+        return value
+
 
 class Integer(Object):
-
     """Convertible for the `int` type."""
 
     TYPE = int
@@ -69,7 +80,6 @@ class Integer(Object):
 
 
 class Float(Object):
-
     """Convertible for the `float` type."""
 
     TYPE = float
@@ -86,7 +96,6 @@ class Float(Object):
 
 
 class Boolean(Object):
-
     """Convertible for the `bool` type."""
 
     TYPE = bool
@@ -107,22 +116,22 @@ class Boolean(Object):
 def match(name, data, nested=False):
     """Determine the appropriate converter for new data."""
     nested = " nested" if nested else ""
-    msg = "determining converter for new%s: '%s' = %r"
+    msg = "Determining converter for new%s: '%s' = %r"
     log.debug(msg, nested, name, repr(data))
 
-    converters = Object.__subclasses__()
-    log.trace("converter options: {}".format(converters))
+    types = Object.__subclasses__()  # pylint: disable=no-member
+    log.trace("Converter options: {}".format(types))
 
-    for converter in converters:
-        if converter.TYPE and type(data) == converter.TYPE:  # pylint: disable=W1504
-            log.debug("matched converter: %s", converter)
-            log.info("new%s attribute: %s", nested, name)
+    for converter in types:
+        if converter.TYPE and type(data) == converter.TYPE:  # pylint: disable=unidiomatic-typecheck
+            log.debug("Matched converter: %s", converter)
+            log.info("New%s attribute: %s", nested, name)
             return converter
 
     if data is None or isinstance(data, (dict, list)):
-        log.info("default converter: %s", Object)
-        log.warn("new%s attribute with unknown type: %s", nested, name)
+        log.info("Default converter: %s", Object)
+        log.warning("New%s attribute with unknown type: %s", nested, name)
         return Object
 
-    msg = "no converter available for: {}".format(data)
+    msg = "No converter available for: {}".format(data)
     raise exceptions.ConversionError(msg)

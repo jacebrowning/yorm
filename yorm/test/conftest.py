@@ -1,8 +1,15 @@
-"""Unit test configuration file."""
+"""Unit tests configuration file."""
+
+import logging
 
 
 def pytest_configure(config):
-    """Disable verbose output when running tests."""
+    """Conigure logging and silence verbose test runner output."""
+    logging.basicConfig(
+        level=logging.DEBUG - 1,
+        format="[%(levelname)-8s] (%(name)s @%(lineno)4d) %(message)s",
+    )
+
     terminal = config.pluginmanager.getplugin('terminal')
     base = terminal.TerminalReporter
 
