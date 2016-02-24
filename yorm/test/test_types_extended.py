@@ -9,26 +9,6 @@ from yorm.types.extended import (NullableString, Markdown,
                                  AttributeDictionary, SortedList)
 
 
-# CLASSES ######################################################################
-
-
-@attr(var1=Integer, var2=String)
-class SampleAttributeDictionary(AttributeDictionary):
-    """Sample attribute dictionary."""
-
-
-@attr(all=Float)
-class SampleSortedList(SortedList):
-    """Sample sorted list."""
-
-
-class UnknownSortedList(SortedList):
-    """Sample list."""
-
-
-# TESTS ########################################################################
-
-
 def describe_nullable_string():
 
     def describe_to_value():
@@ -45,14 +25,14 @@ def describe_nullable_string():
 def describe_markdown():
 
     obj = "This is **the** sentence."
-    pairs_to_value = [
+    data_value = [
         (obj, obj),
         (None, ""),
         (['a', 'b', 'c'], "a, b, c"),
         ("This is\na sentence.", "This is a sentence."),
         ("Sentence one.\nSentence two.", "Sentence one. Sentence two."),
     ]
-    pairs_to_data = [
+    value_data = [
         (obj, obj + '\n'),
         ("Sentence one. Sentence two.", "Sentence one.\nSentence two.\n"),
         ("", ""),
@@ -61,18 +41,22 @@ def describe_markdown():
 
     def describe_to_value():
 
-        @pytest.mark.parametrize("first,second", pairs_to_value)
-        def it_converts_correctly(first, second):
-            expect(Markdown.to_value(first)) == second
+        @pytest.mark.parametrize("data,value", data_value)
+        def it_converts_correctly(data, value):
+            expect(Markdown.to_value(data)) == value
 
     def describe_to_data():
 
-        @pytest.mark.parametrize("first,second", pairs_to_data)
-        def it_converts_correctly(first, second):
-            expect(Markdown.to_data(first)) == second
+        @pytest.mark.parametrize("value,data", value_data)
+        def it_converts_correctly(value, data):
+            expect(Markdown.to_data(value)) == data
 
 
 def describe_attribute_dictionary():
+
+    @attr(var1=Integer, var2=String)
+    class SampleAttributeDictionary(AttributeDictionary):
+        """Sample attribute dictionary."""
 
     @pytest.fixture
     def converter():
@@ -91,6 +75,13 @@ def describe_attribute_dictionary():
 
 
 def describe_sorted_list():
+
+    @attr(all=Float)
+    class SampleSortedList(SortedList):
+        """Sample sorted list."""
+
+    class UnknownSortedList(SortedList):
+        """Sample list without a type."""
 
     @pytest.fixture
     def converter():

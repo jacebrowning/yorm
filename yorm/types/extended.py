@@ -8,7 +8,7 @@ from .standard import String, Integer, Float, Boolean
 from .containers import Dictionary, List
 
 
-# standard types with None as a default ########################################
+# NULLABLE BUILTINS ############################################################
 
 
 class NullableString(String):
@@ -35,7 +35,7 @@ class NullableBoolean(Boolean):
     DEFAULT = None
 
 
-# standard types with additional behavior ######################################
+# CUSTOM TYPES #################################################################
 
 
 class _Literal(str):
@@ -94,43 +94,43 @@ class Markdown(String):
     def to_value(cls, obj):
         """Join non-meaningful line breaks."""
         value = String.to_value(obj)
-        return cls.join(value)
-
-    @classmethod
-    def join(cls, text):
-        r"""Convert single newlines (ignored by Markdown) to spaces.
-
-        >>> Markdown.join("abc\n123")
-        'abc 123'
-
-        >>> Markdown.join("abc\n\n123")
-        'abc\n\n123'
-
-        >>> Markdown.join("abc \n123")
-        'abc 123'
-
-        """
-        return cls.REGEX_MARKDOWN_SPACES.sub(r'\1 \3', text).strip()
+        return cls._join(value)
 
     @classmethod
     def to_data(cls, obj):
         """Break a string at sentences and dump as a literal string."""
         value = String.to_value(obj)
         data = String.to_data(value)
-        split = cls.split(data)
+        split = cls._split(data)
         return _Literal(split)
 
     @classmethod
-    def split(cls, text, end='\n'):
+    def _join(cls, text):
+        r"""Convert single newlines (ignored by Markdown) to spaces.
+
+        >>> Markdown._join("abc\n123")
+        'abc 123'
+
+        >>> Markdown._join("abc\n\n123")
+        'abc\n\n123'
+
+        >>> Markdown._join("abc \n123")
+        'abc 123'
+
+        """
+        return cls.REGEX_MARKDOWN_SPACES.sub(r'\1 \3', text).strip()
+
+    @classmethod
+    def _split(cls, text, end='\n'):
         r"""Replace sentence boundaries with newlines and append a newline.
 
         :param text: string to line break at sentences
         :param end: appended to the end of the update text
 
-        >>> Markdown.split("Hello, world!", end='')
+        >>> Markdown._split("Hello, world!", end='')
         'Hello, world!'
 
-        >>> Markdown.split("Hello, world! How are you? I'm fine. Good.")
+        >>> Markdown._split("Hello, world! How are you? I'm fine. Good.")
         "Hello, world!\nHow are you?\nI'm fine.\nGood.\n"
 
         """
@@ -140,7 +140,8 @@ class Markdown(String):
         else:
             return ''
 
-# container types with additional behavior #####################################
+
+# CUSTOM CONTAINERS ############################################################
 
 
 class AttributeDictionary(Dictionary):
