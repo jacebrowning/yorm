@@ -20,7 +20,7 @@ OVERRIDE_MESSAGE = "Method must be implemented in subclasses"
 
 verbosity = 0  # global verbosity setting for controlling string formatting
 
-attrs = collections.defaultdict(dict)
+attrs = collections.defaultdict(collections.OrderedDict)
 
 
 # LOGGING ######################################################################

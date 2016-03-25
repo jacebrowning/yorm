@@ -34,17 +34,21 @@ class SampleStandard:
         self.string = ""
         self.number_int = 0
         self.number_real = 0.0
-        self.true = True
-        self.false = False
+        self.truthy = True
+        self.falsey = False
         self.null = None
 
     def __repr__(self):
         return "<standard {}>".format(id(self))
 
 
-@yorm.attr(object=EmptyDictionary, array=IntegerList, string=String)
-@yorm.attr(number_int=Integer, number_real=Float)
-@yorm.attr(true=Boolean, false=Boolean)
+@yorm.attr(array=IntegerList)
+@yorm.attr(falsey=Boolean)
+@yorm.attr(number_int=Integer)
+@yorm.attr(number_real=Float)
+@yorm.attr(object=EmptyDictionary)
+@yorm.attr(string=String)
+@yorm.attr(truthy=Boolean)
 @yorm.sync("path/to/{self.category}/{self.name}.yml")
 class SampleStandardDecorated:
     """Sample class using standard attribute types."""
@@ -58,8 +62,8 @@ class SampleStandardDecorated:
         self.string = ""
         self.number_int = 0
         self.number_real = 0.0
-        self.true = True
-        self.false = False
+        self.truthy = True
+        self.falsey = False
         self.null = None
 
     def __repr__(self):
@@ -165,8 +169,8 @@ class TestStandard:
         assert "" == sample.string
         assert 0 == sample.number_int
         assert 0.0 == sample.number_real
-        assert True is sample.true
-        assert False is sample.false
+        assert True is sample.truthy
+        assert False is sample.falsey
         assert None is sample.null
 
         log.info("Changing object values...")
@@ -175,8 +179,8 @@ class TestStandard:
         sample.string = "Hello, world!"
         sample.number_int = 42
         sample.number_real = 4.2
-        sample.true = False
-        sample.false = True
+        sample.truthy = False
+        sample.falsey = True
 
         log.info("Checking file contents...")
         assert strip("""
@@ -184,24 +188,24 @@ class TestStandard:
         - 0
         - 1
         - 2
-        'false': true
+        falsey: true
         number_int: 42
         number_real: 4.2
         object: {}
         string: Hello, world!
-        'true': false
+        truthy: false
         """) == sample.__mapper__.text
 
         log.info("Changing file contents...")
         refresh_file_modification_times()
         sample.__mapper__.text = strip("""
         array: [4, 5, 6]
-        'false': null
+        falsey: null
         number_int: 42
         number_real: '4.2'
         object: {'status': false}
         string: "abc"
-        'true': null
+        truthy: null
         """)
 
         log.info("Checking object values...")
@@ -210,8 +214,8 @@ class TestStandard:
         assert "abc" == sample.string
         assert 42 == sample.number_int
         assert 4.2 == sample.number_real
-        assert False is sample.true
-        assert False is sample.false
+        assert False is sample.truthy
+        assert False is sample.falsey
 
     def test_function(self, tmpdir):
         """Verify standard attribute types dump/load correctly (function)."""
@@ -222,8 +226,8 @@ class TestStandard:
                  'string': String,
                  'number_int': Integer,
                  'number_real': Float,
-                 'true': Boolean,
-                 'false': Boolean}
+                 'truthy': Boolean,
+                 'falsey': Boolean}
         sample = yorm.sync(_sample, "path/to/directory/sample.yml", attrs)
         assert "path/to/directory/sample.yml" == sample.__mapper__.path
 
@@ -233,8 +237,8 @@ class TestStandard:
         assert "" == sample.string
         assert 0 == sample.number_int
         assert 0.0 == sample.number_real
-        assert True is sample.true
-        assert False is sample.false
+        assert True is sample.truthy
+        assert False is sample.falsey
         assert None is sample.null
 
         # change object values
@@ -243,8 +247,8 @@ class TestStandard:
         sample.string = "Hello, world!"
         sample.number_int = 42
         sample.number_real = 4.2
-        sample.true = None
-        sample.false = 1
+        sample.truthy = None
+        sample.falsey = 1
 
         # check file values
         assert strip("""
@@ -252,13 +256,13 @@ class TestStandard:
         - 1
         - 2
         - 3
-        'false': true
+        falsey: true
         number_int: 42
         number_real: 4.2
         object:
           status: false
         string: Hello, world!
-        'true': false
+        truthy: false
         """) == sample.__mapper__.text
 
     def test_function_to_json(self, tmpdir):
@@ -270,8 +274,8 @@ class TestStandard:
                  'string': String,
                  'number_int': Integer,
                  'number_real': Float,
-                 'true': Boolean,
-                 'false': Boolean}
+                 'truthy': Boolean,
+                 'falsey': Boolean}
         sample = yorm.sync(_sample, "path/to/directory/sample.json", attrs)
         assert "path/to/directory/sample.json" == sample.__mapper__.path
 
@@ -281,8 +285,8 @@ class TestStandard:
         assert "" == sample.string
         assert 0 == sample.number_int
         assert 0.0 == sample.number_real
-        assert True is sample.true
-        assert False is sample.false
+        assert True is sample.truthy
+        assert False is sample.falsey
         assert None is sample.null
 
         # change object values
@@ -291,8 +295,8 @@ class TestStandard:
         sample.string = "Hello, world!"
         sample.number_int = 42
         sample.number_real = 4.2
-        sample.true = None
-        sample.false = 1
+        sample.truthy = None
+        sample.falsey = 1
 
         # check file values
         assert strip("""
@@ -302,14 +306,14 @@ class TestStandard:
                 2,
                 3
             ],
-            "false": true,
+            "falsey": true,
             "number_int": 42,
             "number_real": 4.2,
             "object": {
                 "status": false
             },
             "string": "Hello, world!",
-            "true": false
+            "truthy": false
         }
         """, tabs=2, end='') == sample.__mapper__.text
 
@@ -419,16 +423,6 @@ class TestContainers:
         # check object types
         assert Object == sample.__mapper__.attrs['object']
         assert Object == sample.__mapper__.attrs['array']
-
-        # change object values
-        sample.object = None
-        sample.array = "abc"
-
-        # check file values
-        assert strip("""
-        array: abc
-        object: null
-        """) == sample.__mapper__.text
 
 
 class TestExtended:
