@@ -54,7 +54,8 @@ def describe_markdown():
 
 def describe_attribute_dictionary():
 
-    @attr(var1=Integer, var2=String)
+    @attr(var1=Integer)
+    @attr(var2=String)
     class SampleAttributeDictionary(AttributeDictionary):
         """Sample attribute dictionary."""
 

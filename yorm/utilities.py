@@ -110,6 +110,9 @@ def attr(**kwargs):
     :param kwargs: keyword arguments mapping attribute name to converter class
 
     """
+    if len(kwargs) != 1:
+        raise ValueError("Single attribute required: {}".format(kwargs))
+
     def decorator(cls):
         """Class decorator."""
         previous = common.attrs[cls]

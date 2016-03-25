@@ -1,5 +1,10 @@
 # Revision History
 
+## 0.7 (unreleased)
+
+- Now preserving order of `attr` decorators.
+- Now limiting `attr` decorator to a single argument.
+
 ## 0.6.1 (2015/02/23)
 
 - Fixed handling of `None` in `NullableString`.

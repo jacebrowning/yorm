@@ -25,7 +25,8 @@ class SampleDictionary(Dictionary):
     """Sample dictionary container."""
 
 
-@attr(var1=Integer, var2=String)
+@attr(var1=Integer)
+@attr(var2=String)
 class SampleDictionaryWithInitialization(Dictionary):
 
     """Sample dictionary container with initialization."""

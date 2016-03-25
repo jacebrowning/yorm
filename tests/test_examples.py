@@ -70,7 +70,8 @@ class SampleStandardDecorated:
         return "<decorated {}>".format(id(self))
 
 
-@yorm.attr(status=Boolean, label=String)
+@yorm.attr(label=String)
+@yorm.attr(status=Boolean)
 class StatusDictionary(Dictionary):
     """Sample dictionary container."""
 
