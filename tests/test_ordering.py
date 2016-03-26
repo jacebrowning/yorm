@@ -1,6 +1,6 @@
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name,expression-not-assigned,attribute-defined-outside-init,no-member
 
-import pytest
+from expecter import expect
 
 import yorm
 
@@ -17,23 +17,41 @@ class Sample:
     """Sample class with ordered attributes."""
 
 
-@pytest.fixture
-def sample(tmpdir):
+def test_attribute_order_is_maintained(tmpdir):
     tmpdir.chdir()
-    return Sample()
-
-
-def test_attribute_order_is_maintained(sample):
+    sample = Sample()
     sample.string = "Hello, world!"
     sample.number_int = 42
     sample.number_real = 4.2
     sample.truthy = False
     sample.falsey = True
 
-    assert strip("""
+    expect(sample.__mapper__.text) == strip("""
     string: Hello, world!
     number_int: 42
     number_real: 4.2
     truthy: false
     falsey: true
-    """) == sample.__mapper__.text
+    """)
+
+
+def test_existing_files_are_reorderd(tmpdir):
+    tmpdir.chdir()
+    with open("sample.yml", 'w') as stream:
+        stream.write(strip("""
+        falsey: 1
+        number_int: 2
+        number_real: 3
+        string: 4
+        truthy: 5
+        """))
+    sample = Sample()
+    sample.falsey = 0
+
+    expect(sample.__mapper__.text) == strip("""
+    string: 4
+    number_int: 2
+    number_real: 3.0
+    truthy: true
+    falsey: false
+    """)
