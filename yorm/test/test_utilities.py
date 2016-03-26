@@ -1,9 +1,11 @@
+# pylint: disable=unused-variable,expression-not-assigned
 # pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
 
 import logging
 from unittest.mock import patch, Mock
 
 import pytest
+from expecter import expect
 
 from yorm import exceptions
 from yorm import utilities
@@ -15,7 +17,6 @@ log = logging.getLogger(__name__)
 
 
 class MockConverter(Converter):
-
     """Sample converter class."""
 
     @classmethod
@@ -32,32 +33,26 @@ class MockConverter(Converter):
 
 
 class MockConverter0(MockConverter):
-
     """Sample converter class."""
 
 
 class MockConverter1(MockConverter):
-
     """Sample converter class."""
 
 
 class MockConverter2(MockConverter):
-
     """Sample converter class."""
 
 
 class MockConverter3(MockConverter):
-
     """Sample converter class."""
 
 
 class MockConverter4(MockConverter):
-
     """Sample converter class."""
 
 
 class MockMappable(Mappable):
-
     """Sample mappable class."""
 
     __mapper__ = Mock()
@@ -71,11 +66,9 @@ class MockMappable(Mappable):
 @patch('yorm.diskutils.stamp', Mock())
 @patch('yorm.diskutils.read', Mock(return_value=""))
 class TestSyncObject:
-
     """Unit tests for the `sync_object` function."""
 
     class Sample:
-
         """Sample class."""
 
     def test_no_attrs(self):
@@ -121,12 +114,10 @@ class TestSyncObject:
 @patch('yorm.diskutils.stamp', Mock())
 @patch('yorm.diskutils.read', Mock(return_value=""))
 class TestSyncInstances:
-
     """Unit tests for the `sync_instances` decorator."""
 
     @utilities.sync("sample.yml", strict=False)
     class SampleDecorated:
-
         """Sample decorated class using a single path."""
 
         def __repr__(self):
@@ -134,7 +125,6 @@ class TestSyncInstances:
 
     @utilities.sync("{UUID}.yml")
     class SampleDecoratedIdentifiers:
-
         """Sample decorated class using UUIDs for paths."""
 
         def __repr__(self):
@@ -142,7 +132,6 @@ class TestSyncInstances:
 
     @utilities.sync("path/to/{n}.yml", {'n': 'name'})
     class SampleDecoratedAttributes:
-
         """Sample decorated class using an attribute value for paths."""
 
         def __init__(self, name):
@@ -153,7 +142,6 @@ class TestSyncInstances:
 
     @utilities.sync("path/to/{self.name}.yml")
     class SampleDecoratedAttributesAutomatic:
-
         """Sample decorated class using an attribute value for paths."""
 
         def __init__(self, name):
@@ -164,7 +152,6 @@ class TestSyncInstances:
 
     @utilities.sync("{self.a}/{self.b}/{c}.yml", {'self.b': 'b', 'c': 'c'})
     class SampleDecoratedAttributesCombination:
-
         """Sample decorated class using an attribute value for paths."""
 
         def __init__(self, a, b, c):
@@ -177,12 +164,10 @@ class TestSyncInstances:
 
     @utilities.sync("sample.yml", attrs={'var1': MockConverter})
     class SampleDecoratedWithAttributes:
-
         """Sample decorated class using a single path."""
 
     @utilities.sync("sample.yml", attrs={'var1': MockConverter}, auto=False)
     class SampleDecoratedWithAttributesAutoOff:
-
         """Sample decorated class using a single path."""
 
     def test_no_attrs(self):
@@ -235,75 +220,60 @@ class TestSyncInstances:
         assert "1/2/3.yml" == sample2.__mapper__.path
 
 
-@patch('yorm.diskutils.write', Mock())
-@patch('yorm.diskutils.stamp', Mock())
-@patch('yorm.diskutils.read', Mock(return_value=""))
-class TestAttr:
+def describe_attr():
 
-    """Unit tests for the `attr` decorator."""
+    path = "mock/path"
 
-    @utilities.attr(var1=MockConverter1, var2=MockConverter2)
-    @utilities.sync("sample.yml")
+    @utilities.attr(var1=MockConverter1)
+    @utilities.sync(path)
     class SampleDecoratedSingle:
+        """Class using single `attr` decorator."""
 
-        """Sample decorated class using one `attr` decorator."""
-
-    @utilities.attr()
     @utilities.attr(var1=MockConverter1)
-    @utilities.attr(var2=MockConverter2, var3=MockConverter3)
-    @utilities.sync("sample.yml")
+    @utilities.attr(var2=MockConverter2)
+    @utilities.sync(path)
     class SampleDecoratedMultiple:
+        """Class using multiple `attr` decorators."""
 
-        """Sample decorated class using many `attr` decorators."""
-
-    @utilities.attr()
-    @utilities.attr(var1=MockConverter1)
-    @utilities.attr(var2=MockConverter2, var3=MockConverter3)
-    @utilities.sync("sample.yml", attrs={'var0': MockConverter0})
+    @utilities.attr(var2=MockConverter2)
+    @utilities.sync(path, attrs={'var1': MockConverter1})
     class SampleDecoratedCombo:
+        """Class using `attr` decorator and providing a mapping."""
 
-        """Sample decorated class using `attr` and providing a mapping."""
-
-    @utilities.sync("sample.yml", attrs={'var0': MockConverter0})
-    @utilities.attr(var1=MockConverter1)
+    @utilities.sync(path, attrs={'var1': MockConverter1})
+    @utilities.attr(var2=MockConverter2)
     class SampleDecoratedBackwards:
+        """Class using `attr` decorator after `sync` decorator."""
 
-        """Sample decorated class using one `attr` decorator."""
+    def it_accepts_one_argument():
+        sample = SampleDecoratedSingle()
+        expect(sample.__mapper__.attrs) == {'var1': MockConverter1}
 
-    def test_single(self):
-        """Verify `attr` can be applied once."""
-        sample = self.SampleDecoratedSingle()
-        expected = {'var1': MockConverter1,
-                    'var2': MockConverter2}
-        assert expected == sample.__mapper__.attrs
+    def it_rejects_zero_arguments():
+        with expect.raises(ValueError):
+            utilities.attr()
 
-    def test_multiple(self):
-        """Verify `attr` can be applied many times."""
-        sample = self.SampleDecoratedMultiple()
-        expected = {'var1': MockConverter1,
-                    'var2': MockConverter2,
-                    'var3': MockConverter3}
-        assert expected == sample.__mapper__.attrs
+    def it_rejects_more_than_one_argument():
+        with expect.raises(ValueError):
+            utilities.attr(foo=1, bar=2)
 
-    def test_combo(self):
-        """Verify `attr` can be applied an existing mapping."""
-        sample = self.SampleDecoratedCombo()
-        expected = {'var0': MockConverter0,
-                    'var1': MockConverter1,
-                    'var2': MockConverter2,
-                    'var3': MockConverter3}
-        assert expected == sample.__mapper__.attrs
+    def it_can_be_applied_multiple_times():
+        sample = SampleDecoratedMultiple()
+        expect(sample.__mapper__.attrs) == {'var1': MockConverter1,
+                                            'var2': MockConverter2}
 
-    def test_backwards(self):
-        """Verify `attr` can be applied before `sync`."""
-        sample = self.SampleDecoratedBackwards()
-        expected = {'var0': MockConverter0,
-                    'var1': MockConverter1}
-        assert expected == sample.__mapper__.attrs
+    def it_can_be_applied_before_sync():
+        sample = SampleDecoratedCombo()
+        expect(sample.__mapper__.attrs) == {'var1': MockConverter1,
+                                            'var2': MockConverter2}
+
+    def it_can_be_applied_after_sync():
+        sample = SampleDecoratedBackwards()
+        expect(sample.__mapper__.attrs) == {'var1': MockConverter1,
+                                            'var2': MockConverter2}
 
 
 class TestUpdate:
-
     """Unit tests for the `update` function."""
 
     def test_update(self):
@@ -345,7 +315,6 @@ class TestUpdate:
 
 
 class TestUpdateObject:
-
     """Unit tests for the `update_object` function."""
 
     def test_update(self):
@@ -367,7 +336,6 @@ class TestUpdateObject:
 
 
 class TestUpdateFile:
-
     """Unit tests for the `update_file` function."""
 
     def test_update(self):

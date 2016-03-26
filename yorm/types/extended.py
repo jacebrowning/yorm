@@ -2,10 +2,9 @@
 
 import re
 
-import yaml
-
 from .standard import String, Integer, Float, Boolean
 from .containers import Dictionary, List
+from ._representers import LiteralString
 
 
 # NULLABLE BUILTINS ############################################################
@@ -36,18 +35,6 @@ class NullableBoolean(Boolean):
 
 
 # CUSTOM TYPES #################################################################
-
-
-class _Literal(str):
-    """Custom type for strings which should be dumped in the literal style."""
-
-    @staticmethod
-    def representer(dumper, data):
-        """Return a custom dumper that formats `str` in the literal style."""
-        return dumper.represent_scalar('tag:yaml.org,2002:str', data,
-                                       style='|' if data else '')
-
-yaml.add_representer(_Literal, _Literal.representer)
 
 
 class Markdown(String):
@@ -102,7 +89,7 @@ class Markdown(String):
         value = String.to_value(obj)
         data = String.to_data(value)
         split = cls._split(data)
-        return _Literal(split)
+        return LiteralString(split)
 
     @classmethod
     def _join(cls, text):

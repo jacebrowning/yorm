@@ -24,9 +24,13 @@ class IntegerList(List):
     """Sample list container."""
 
 
-@yorm.attr(object=EmptyDictionary, array=IntegerList, string=String)
-@yorm.attr(number_int=Integer, number_real=Float)
-@yorm.attr(true=Boolean, false=Boolean)
+@yorm.attr(array=IntegerList)
+@yorm.attr(false=Boolean)
+@yorm.attr(number_int=Integer)
+@yorm.attr(number_real=Float)
+@yorm.attr(object=EmptyDictionary)
+@yorm.attr(string=String)
+@yorm.attr(true=Boolean)
 @yorm.sync("path/to/{self.category}/{self.name}.yml")
 class SampleStandardDecorated:
     """Sample class using standard attribute types."""
