@@ -9,8 +9,6 @@ from .mapper import Mapper
 
 log = common.logger(__name__)
 
-UUID = 'UUID'
-
 
 def sync(*args, **kwargs):
     """Convenience function to forward calls based on arguments.
@@ -87,8 +85,8 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
             format_values = {}
             for key, value in format_spec.items():
                 format_values[key] = getattr(self, value)
-            if '{' + UUID + '}' in path_format:
-                format_values[UUID] = uuid.uuid4().hex
+            if '{' + common.UUID + '}' in path_format:
+                format_values[common.UUID] = uuid.uuid4().hex
             format_values['self'] = self
 
             common.attrs[cls].update(attrs)
