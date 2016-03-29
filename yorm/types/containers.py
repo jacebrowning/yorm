@@ -95,6 +95,13 @@ class List(Container, list):
             raise NotImplementedError("List subclass must specify item type")
         return super().__new__(cls, *args, **kwargs)
 
+    @classmethod
+    def of_type(cls, sub_class):
+        name = sub_class.__name__ + cls.__name__
+        new_class = type(name, (cls,), {})
+        common.attrs[new_class][cls.ALL] = sub_class
+        return new_class
+
     @common.classproperty
     def item_type(cls):  # pylint: disable=no-self-argument
         """Get the converter class for all items."""

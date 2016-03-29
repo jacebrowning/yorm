@@ -1,9 +1,10 @@
-# pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
+# pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant,expression-not-assigned
 
 import logging
 from unittest.mock import patch, Mock
 
 import pytest
+from expecter import expect
 
 import yorm
 from yorm import common
@@ -21,14 +22,12 @@ log = logging.getLogger(__name__)
 
 @attr(abc=Integer)
 class SampleDictionary(Dictionary):
-
     """Sample dictionary container."""
 
 
 @attr(var1=Integer)
 @attr(var2=String)
 class SampleDictionaryWithInitialization(Dictionary):
-
     """Sample dictionary container with initialization."""
 
     def __init__(self, var1, var2, var3):
@@ -40,12 +39,10 @@ class SampleDictionaryWithInitialization(Dictionary):
 
 @attr(all=String)
 class StringList(List):
-
     """Sample list container."""
 
 
 class UnknownList(List):
-
     """Sample list container."""
 
 
@@ -53,7 +50,6 @@ class UnknownList(List):
 
 
 class TestDictionary:
-
     """Unit tests for the `Dictionary` container."""
 
     obj = {'abc': 123}
@@ -120,7 +116,6 @@ class TestDictionary:
 
 
 class TestList:
-
     """Unit tests for the `List` container."""
 
     obj = ["a", "b", "c"]
@@ -164,9 +159,13 @@ class TestList:
         with pytest.raises(NotImplementedError):
             UnknownList()
 
+    def test_shortened_syntax(self):
+        cls = List.of_type(Integer)
+        expect(cls.__name__) == "IntegerList"
+        expect(common.attrs[cls]) == {'all': Integer}
+
 
 class TestExtensions:
-
     """Unit tests for extensions to the container classes."""
 
     class FindMixin:

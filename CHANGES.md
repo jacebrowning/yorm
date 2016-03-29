@@ -4,6 +4,7 @@
 
 - Now preserving order of `attr` decorators.
 - Now limiting `attr` decorator to a single argument.
+- Added `List.of_type()` factory to create lists with less boilerplate.
 
 ## 0.6.1 (2015/02/23)
 
