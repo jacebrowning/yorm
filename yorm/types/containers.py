@@ -86,8 +86,6 @@ class Dictionary(Container, dict):
 class List(Container, list):
     """Base class for a homogeneous list of attribute types."""
 
-    ALL = 'all'
-
     def __new__(cls, *args, **kwargs):
         if cls is List:
             raise NotImplementedError("List class must be subclassed to use")
@@ -95,10 +93,17 @@ class List(Container, list):
             raise NotImplementedError("List subclass must specify item type")
         return super().__new__(cls, *args, **kwargs)
 
+    @classmethod
+    def of_type(cls, sub_class):
+        name = sub_class.__name__ + cls.__name__
+        new_class = type(name, (cls,), {})
+        common.attrs[new_class][common.ALL] = sub_class
+        return new_class
+
     @common.classproperty
     def item_type(cls):  # pylint: disable=no-self-argument
         """Get the converter class for all items."""
-        return common.attrs[cls].get(cls.ALL)
+        return common.attrs[cls].get(common.ALL)
 
     @classmethod
     def to_data(cls, value):

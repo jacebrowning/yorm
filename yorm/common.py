@@ -7,6 +7,8 @@ import logging
 # CONSTANTS ####################################################################
 
 MAPPER = '__mapper__'
+ALL = 'all'
+UUID = 'UUID'
 
 PRINT_VERBOSITY = 0  # minimum verbosity to using `print`
 STR_VERBOSITY = 3  # minimum verbosity to use verbose `__str__`
