@@ -35,6 +35,10 @@ class String(Object):
     def to_value(cls, obj):
         if isinstance(obj, cls.TYPE):
             return obj
+        elif obj is True:
+            return "true"
+        elif obj is False:
+            return "false"
         elif obj:
             try:
                 return ', '.join(str(item) for item in obj)
@@ -50,9 +54,13 @@ class String(Object):
 
     @staticmethod
     def _optimize_for_quoting(value):
-        for num in (int, float):
+        if value == "true":
+            return True
+        if value == "false":
+            return False
+        for number_type in (int, float):
             try:
-                return num(value)
+                return number_type(value)
             except (TypeError, ValueError):
                 continue
         return value
