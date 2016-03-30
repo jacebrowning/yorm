@@ -1,6 +1,6 @@
 # Revision History
 
-## 0.7 (unreleased)
+## 0.7 (2016/03/29)
 
 - Now preserving order of `attr` decorators.
 - Now limiting `attr` decorator to a single argument.
