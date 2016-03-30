@@ -14,7 +14,6 @@ cache:
 env:
   global:
   - RANDOM_SEED=12345
-  - secure: "izqyDikyycK6J7+Rwe3qE5HiqbVdX90uvp2B/HQLv2fXCAPwQd/l5yFJYD+kcnC0o0yZCwmHrXMao3QvJGysNTRw1Ut8hGXm4IFgrKEX3b3ROqjuoBdNQefmbw1oLuR7O8T+FrcXyeTNIfHJ3OOJcnCltv4a5P5TsUS9uD6LgyE="
 
 install:
 - pip install coveralls scrutinizer-ocular
@@ -29,24 +28,6 @@ script:
 after_success:
 - coveralls
 - ocular
-
-after_script: >
-  echo $TRAVIS_BRANCH; echo $TRAVIS_PULL_REQUEST;
-  if [[ $TRAVIS_BRANCH == 'develop' && $TRAVIS_PULL_REQUEST == 'false' ]]; then
-    # Generate site
-    make mkdocs ;
-    # Configure Git with Travis CI information
-    git config --global user.email "travis@travis-ci.org" ;
-    git config --global user.name "travis-ci" ;
-    # Delete the current repository
-    rm -rf .git ;
-    # Rebuild the repository from the generated files and push to GitHub pages
-    cd site ;
-    git init ;
-    git add . ;
-    git commit -m "Deploy Travis CI build $TRAVIS_BUILD_NUMBER to GitHub pages" ;
-    git push -f https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG} master:gh-pages ;
-  fi
 
 notifications:
   email:
