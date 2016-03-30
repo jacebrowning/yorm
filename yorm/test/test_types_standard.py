@@ -42,10 +42,14 @@ def describe_string():
     pairs_to_value = pairs + [
         (1, "1"),
         (4.2, "4.2"),
+        (False, "false"),
+        (True, "true"),
     ]
     pairs_to_data = pairs + [
         (42, 42),
         (4.2, 4.2),
+        ("true", True),
+        ("false", False),
     ]
 
     def describe_to_value():

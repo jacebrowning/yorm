@@ -1,5 +1,9 @@
 # Revision History
 
+## 0.7.1 (2016/03/30)
+
+- Updated `String` to fetch `true` and `false` as strings.
+
 ## 0.7 (2016/03/29)
 
 - Now preserving order of `attr` decorators.
