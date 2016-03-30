@@ -23,8 +23,8 @@ class NestedList3(yorm.types.List):
         return "<nested-list-3 {}>".format((id(self)))
 
 
-@yorm.attr(number=yorm.types.Float)
 @yorm.attr(nested_list_3=NestedList3)
+@yorm.attr(number=yorm.types.Float)
 class NestedDictionary3(yorm.types.AttributeDictionary):
 
     def __init__(self):
@@ -57,8 +57,8 @@ class NestedDictionary2(yorm.types.AttributeDictionary):
         return "<nested-dictionary-2 {}>".format((id(self)))
 
 
-@yorm.attr(number=yorm.types.Float)
 @yorm.attr(nested_list_2=NestedList2)
+@yorm.attr(number=yorm.types.Float)
 class NestedDictionary(yorm.types.AttributeDictionary):
 
     def __init__(self):
@@ -77,7 +77,8 @@ class NestedList(yorm.types.List):
         return "<nested-list {}>".format((id(self)))
 
 
-@yorm.attr(nested_list=NestedList, nested_dict=NestedDictionary)
+@yorm.attr(nested_dict=NestedDictionary)
+@yorm.attr(nested_list=NestedList)
 @yorm.sync("sample.yml")
 class Top:
 

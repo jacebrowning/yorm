@@ -3,7 +3,7 @@
 import sys
 
 __project__ = 'YORM'
-__version__ = '0.6.1'
+__version__ = '0.7'
 
 VERSION = __project__ + '-' + __version__
 
@@ -15,7 +15,7 @@ if sys.version_info < PYTHON_VERSION:  # pragma: no cover (manual test)
 try:
     # pylint: disable=wrong-import-position
     from . import bases, types
-    from .utilities import UUID
+    from .common import UUID
     from .utilities import sync, sync_object, sync_instances, attr
     from .utilities import update, update_object, update_file
     from .bases import Container, Converter, Mappable, Convertible

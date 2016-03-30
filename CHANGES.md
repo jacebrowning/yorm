@@ -1,5 +1,11 @@
 # Revision History
 
+## 0.7 (2016/03/29)
+
+- Now preserving order of `attr` decorators.
+- Now limiting `attr` decorator to a single argument.
+- Added `List.of_type()` factory to create lists with less boilerplate.
+
 ## 0.6.1 (2015/02/23)
 
 - Fixed handling of `None` in `NullableString`.

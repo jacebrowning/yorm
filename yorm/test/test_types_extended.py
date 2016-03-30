@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring,unused-variable,misplaced-comparison-constant,no-self-use
+# pylint: disable=missing-docstring,unused-variable,expression-not-assigned
 
 import pytest
 from expecter import expect
@@ -7,36 +7,6 @@ from yorm.utilities import attr
 from yorm.types.standard import Integer, String, Float
 from yorm.types.extended import (NullableString, Markdown,
                                  AttributeDictionary, SortedList)
-
-
-# CLASSES ######################################################################
-
-
-@attr(var1=Integer, var2=String)
-class SampleAttributeDictionary(AttributeDictionary):
-
-    """Sample dictionary container with initialization."""
-
-    def __init__(self, var1, var2, var3):
-        super().__init__()
-        # pylint: disable=duplicate-code
-        self.var1 = var1
-        self.var2 = var2
-        self.var3 = var3
-
-
-@attr(all=Float)
-class SampleSortedList(SortedList):
-
-    """Sample sorted list container."""
-
-
-class UnknownSortedList(SortedList):
-
-    """Sample list container."""
-
-
-# TESTS ########################################################################
 
 
 def describe_nullable_string():
@@ -52,13 +22,9 @@ def describe_nullable_string():
             expect(NullableString.to_data(None)).is_none()
 
 
-# TODO: make these tests look like `test_types_standard.py`
-class TestMarkdown:
-
-    """Unit tests for the `Markdown` converter."""
+def describe_markdown():
 
     obj = "This is **the** sentence."
-
     data_value = [
         (obj, obj),
         (None, ""),
@@ -66,7 +32,6 @@ class TestMarkdown:
         ("This is\na sentence.", "This is a sentence."),
         ("Sentence one.\nSentence two.", "Sentence one. Sentence two."),
     ]
-
     value_data = [
         (obj, obj + '\n'),
         ("Sentence one. Sentence two.", "Sentence one.\nSentence two.\n"),
@@ -74,57 +39,69 @@ class TestMarkdown:
         (" \t ", ""),
     ]
 
-    @pytest.mark.parametrize("data,value", data_value)
-    def test_to_value(self, data, value):
-        """Verify input data is converted to values."""
-        assert value == Markdown.to_value(data)
+    def describe_to_value():
 
-    @pytest.mark.parametrize("value,data", value_data)
-    def test_to_data(self, value, data):
-        """Verify values are converted to output data."""
-        assert data == Markdown.to_data(value)
+        @pytest.mark.parametrize("data,value", data_value)
+        def it_converts_correctly(data, value):
+            expect(Markdown.to_value(data)) == value
+
+    def describe_to_data():
+
+        @pytest.mark.parametrize("value,data", value_data)
+        def it_converts_correctly(value, data):
+            expect(Markdown.to_data(value)) == data
 
 
-class TestAttributeDictionary:
+def describe_attribute_dictionary():
 
-    """Unit tests for the `AttributeDictionary` container."""
+    @attr(var1=Integer)
+    @attr(var2=String)
+    class SampleAttributeDictionary(AttributeDictionary):
+        """Sample attribute dictionary."""
 
-    def test_not_implemented(self):
-        """Verify `AttributeDictionary` cannot be used directly."""
-        with pytest.raises(NotImplementedError):
+    @pytest.fixture
+    def converter():
+        return SampleAttributeDictionary()
+
+    def it_cannot_be_used_directly():
+        with expect.raises(NotImplementedError):
             AttributeDictionary.to_value(None)
-        with pytest.raises(NotImplementedError):
+        with expect.raises(NotImplementedError):
             AttributeDictionary.to_data(None)
 
-    def test_attribute_access(self):
-        """Verify `AttributeDictionary` keys are available as attributes."""
-        obj = SampleAttributeDictionary(1, 2, 3.0)
-        value = {'var1': 1, 'var2': '2'}
-        value2 = obj.to_value(obj)
-        assert value == value2
-        assert 1 == value2.var1
-        assert '2' == value2.var2
-        assert not hasattr(value2, 'var3')  # lost in conversion
+    def it_has_keys_available_as_attributes(converter):
+        value = converter.to_value({'var1': 1, 'var2': "2"})
+        expect(value.var1) == 1
+        expect(value.var2) == "2"
 
 
-class TestSortedList:
+def describe_sorted_list():
 
-    """Unit tests for the `SortedList` container."""
+    @attr(all=Float)
+    class SampleSortedList(SortedList):
+        """Sample sorted list."""
 
-    def test_not_implemented(self):
-        """Verify `SortedList` cannot be used directly."""
-        with pytest.raises(NotImplementedError):
+    class UnknownSortedList(SortedList):
+        """Sample list without a type."""
+
+    @pytest.fixture
+    def converter():
+        return SampleSortedList()
+
+    def it_cannot_be_used_directly():
+        with expect.raises(NotImplementedError):
             SortedList.to_value(None)
-        with pytest.raises(NotImplementedError):
+        with expect.raises(NotImplementedError):
             SortedList.to_data(None)
-        with pytest.raises(NotImplementedError):
+
+    def it_cannot_be_subclassed_without_a_type():
+        with expect.raises(NotImplementedError):
             UnknownSortedList.to_value(None)
-        with pytest.raises(NotImplementedError):
+        with expect.raises(NotImplementedError):
             UnknownSortedList.to_data(None)
 
-    def test_sorted_result(self):
-        """Verify `SortedList` sorts the resulting data."""
-        obj = SampleSortedList([4, 2, 0, 1, 3])
-        data = [0.0, 1.0, 2.0, 3.0, 4.0]
-        data2 = obj.to_data(obj)
-        assert data == data2
+    def describe_to_data():
+
+        def it_sorts(converter):
+            data = converter.to_data([4, 2, 0, 1, 3])
+            expect(data) == [0.0, 1.0, 2.0, 3.0, 4.0]

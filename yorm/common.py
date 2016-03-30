@@ -7,6 +7,8 @@ import logging
 # CONSTANTS ####################################################################
 
 MAPPER = '__mapper__'
+ALL = 'all'
+UUID = 'UUID'
 
 PRINT_VERBOSITY = 0  # minimum verbosity to using `print`
 STR_VERBOSITY = 3  # minimum verbosity to use verbose `__str__`
@@ -20,7 +22,7 @@ OVERRIDE_MESSAGE = "Method must be implemented in subclasses"
 
 verbosity = 0  # global verbosity setting for controlling string formatting
 
-attrs = collections.defaultdict(dict)
+attrs = collections.defaultdict(collections.OrderedDict)
 
 
 # LOGGING ######################################################################

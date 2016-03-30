@@ -1,13 +1,17 @@
 site_name: YORM
-site_description: Automatic object YAML mapping for Python.
+site_description: Automatic object-YAML mapping for Python.
 site_author: Jace Browning
 repo_url: https://github.com/jacebrowning/yorm
-# google_analytics: ['XX-XXXXXXXX-XX', 'jacebrowning.github.io/template-python-demo']
 
-theme: mkdocs
+theme: readthedocs
 
 pages:
 - Home: index.md
+- API:
+  - 'Class Mapping': api/class-mapping.md
+  - 'Instance Mapping': api/instance-mapping.md
+  - 'Builtin Types': api/builtin-types.md
+  - 'Custom Types': api/custom-types.md
 - About:
   - 'Release Notes': about/changes.md
   - Contributing: about/contributing.md

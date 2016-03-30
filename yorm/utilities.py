@@ -1,14 +1,13 @@
 """Functions and decorators."""
 
 import uuid
+from collections import OrderedDict
 
 from . import common, exceptions
 from .bases.mappable import patch_methods
 from .mapper import Mapper
 
 log = common.logger(__name__)
-
-UUID = 'UUID'
 
 
 def sync(*args, **kwargs):
@@ -44,7 +43,7 @@ def sync_object(instance, path, attrs=None, existing=None, **kwargs):
 
     patch_methods(instance)
 
-    attrs = attrs or common.attrs[instance.__class__]
+    attrs = _ordered(attrs) or common.attrs[instance.__class__]
     mapper = Mapper(instance, path, attrs, **kwargs)
     common.set_mapper(instance, mapper)
     _check_existance(mapper, existing)
@@ -70,7 +69,7 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
 
     """
     format_spec = format_spec or {}
-    attrs = attrs or {}
+    attrs = attrs or OrderedDict()
 
     def decorator(cls):
         """Class decorator to map instances to files.."""
@@ -86,15 +85,14 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
             format_values = {}
             for key, value in format_spec.items():
                 format_values[key] = getattr(self, value)
-            if '{' + UUID + '}' in path_format:
-                format_values[UUID] = uuid.uuid4().hex
+            if '{' + common.UUID + '}' in path_format:
+                format_values[common.UUID] = uuid.uuid4().hex
             format_values['self'] = self
 
+            common.attrs[cls].update(attrs)
+            common.attrs[cls].update(common.attrs[self.__class__])
             path = path_format.format(**format_values)
-            attrs.update(common.attrs[self.__class__])
-            attrs.update(common.attrs[cls])
-
-            sync_object(self, path, attrs, **kwargs)
+            sync_object(self, path, **kwargs)
 
         modified_init.__doc__ = init.__doc__
         cls.__init__ = modified_init
@@ -110,9 +108,16 @@ def attr(**kwargs):
     :param kwargs: keyword arguments mapping attribute name to converter class
 
     """
+    if len(kwargs) != 1:
+        raise ValueError("Single attribute required: {}".format(kwargs))
+
     def decorator(cls):
         """Class decorator."""
+        previous = common.attrs[cls]
+        common.attrs[cls] = OrderedDict()
         for name, converter in kwargs.items():
+            common.attrs[cls][name] = converter
+        for name, converter in previous.items():
             common.attrs[cls][name] = converter
 
         return cls
@@ -180,6 +185,13 @@ def update_file(instance, existing=None, force=True):
 def synced(obj):
     """Determine if an object is already mapped to a file."""
     return bool(common.get_mapper(obj))
+
+
+def _ordered(data):
+    """Sort a dictionary-like object by key."""
+    if data is None:
+        return None
+    return OrderedDict(sorted(data.items(), key=lambda pair: pair[0]))
 
 
 def _check_base(obj, mappable=True):

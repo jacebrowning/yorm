@@ -227,7 +227,7 @@ class Mapper:
         log.info("Storing %r to %s...", self._obj, prefix(self))
 
         # Format the data items
-        data = {}
+        data = self.attrs.__class__()
         for name, converter in self.attrs.items():
             try:
                 value = getattr(self._obj, name)
