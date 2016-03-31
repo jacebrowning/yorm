@@ -1,5 +1,9 @@
 # Revision History
 
+## 0.7.2 (2016/03/30)
+
+- Now preserving order of `attr` decorators on `Dictionary` converters.
+
 ## 0.7.1 (2016/03/30)
 
 - Updated `String` to fetch `true` and `false` as strings.
