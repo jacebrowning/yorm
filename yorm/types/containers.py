@@ -21,8 +21,7 @@ class Dictionary(Container, dict):
         value2 = cls.create_default()
         value2.update_value(value, strict=True)
 
-        data = {}
-
+        data = common.attrs[cls].__class__()
         for name, converter in common.attrs[cls].items():
             data[name] = converter.to_data(value2.get(name, None))
 
