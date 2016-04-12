@@ -49,12 +49,8 @@ class ConfigStore:
         instance = Config(key)
         path = self.path.format(key)
         attrs = self.attrs
-        try:
-            yorm.sync(instance, path, attrs, existing=True, auto=False)
-        except yorm.exceptions.FileMissingError:
-            return None
-        else:
-            return instance
+        mapped = yorm.sync(instance, path, attrs, auto=False)
+        return yorm.find(mapped)
 
 
 # TESTS ########################################################################

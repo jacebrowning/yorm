@@ -65,18 +65,6 @@ class TestSyncObject:
             sample = decorators.sync(self.Sample(), "sample.yml", strict=False)
         assert 123 == sample.abc
 
-    @patch('yorm.diskutils.exists', Mock(return_value=False))
-    def test_exception_when_file_expected_but_missing(self):
-        decorators.sync(self.Sample(), "sample.yml", existing=False)
-        with pytest.raises(exceptions.FileMissingError):
-            decorators.sync(self.Sample(), "sample.yml", existing=True)
-
-    @patch('yorm.diskutils.exists', Mock(return_value=True))
-    def test_exception_when_file_not_expected_but_found(self):
-        decorators.sync(self.Sample(), "sample.yml", existing=True)
-        with pytest.raises(exceptions.FileAlreadyExistsError):
-            decorators.sync(self.Sample(), "sample.yml", existing=False)
-
 
 @patch('yorm.diskutils.write', Mock())
 @patch('yorm.diskutils.stamp', Mock())

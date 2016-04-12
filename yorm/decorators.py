@@ -28,13 +28,13 @@ def sync(*args, **kwargs):
         return sync_object(*args, **kwargs)
 
 
-def sync_object(instance, path, attrs=None, existing=None, **kwargs):
+def sync_object(instance, path, attrs=None, **kwargs):
     """Enable YAML mapping on an object.
 
     :param instance: object to patch with YAML mapping behavior
     :param path: file path for dump/load
     :param attrs: dictionary of attribute names mapped to converter classes
-    :param existing: indicate if file is expected to exist or not
+
     :param auto: automatically store attributes to file
     :param strict: ignore new attributes in files
 
@@ -47,7 +47,6 @@ def sync_object(instance, path, attrs=None, existing=None, **kwargs):
     attrs = _ordered(attrs) or common.attrs[instance.__class__]
     mapper = Mapper(instance, path, attrs, **kwargs)
     common.set_mapper(instance, mapper)
-    _check_existance(mapper, existing)
 
     if mapper.auto:
         if not mapper.exists:
@@ -65,8 +64,9 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
     :param path_format: formatting string to create file paths for dump/load
     :param format_spec: dictionary to use for string formatting
     :param attrs: dictionary of attribute names mapped to converter classes
-    :param existing: indicate if file is expected to exist or not
+
     :param auto: automatically store attributes to file
+    :param strict: ignore new attributes in files
 
     """
     format_spec = format_spec or {}
@@ -124,22 +124,6 @@ def attr(**kwargs):
         return cls
 
     return decorator
-
-
-# TODO: delete this
-def _check_existance(mapper, existing=None):
-    """Confirm the expected state of the file.
-
-    :param existing: indicate if file is expected to exist or not
-
-    """
-    from . import exceptions
-    if existing is True:
-        if not mapper.exists:
-            raise exceptions.FileMissingError
-    elif existing is False:
-        if mapper.exists:
-            raise exceptions.FileAlreadyExistsError
 
 
 def _ordered(data):
