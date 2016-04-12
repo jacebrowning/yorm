@@ -293,7 +293,6 @@ class TestAliases:
         assert ref == var
 
     def test_alias_list(self):
-        yorm.update_object(self.sample)
         var4_ref = self.sample.var4
         self._log_ref('var4', self.sample.var4, var4_ref)
         assert [] == self.sample.var4
@@ -308,7 +307,6 @@ class TestAliases:
         assert [42, 2015] == self.sample.var4
 
     def test_alias_dict(self):
-        yorm.update_object(self.sample)
         var5_ref = self.sample.var5
         self._log_ref('var5', self.sample.var5, var5_ref)
         assert {'status': False} == self.sample.var5
@@ -329,7 +327,6 @@ class TestAliases:
         ref1 = top.nested_list[0]
         ref2 = top.nested_list[0].nested_dict_3
         ref3 = top.nested_list[0].nested_dict_3.nested_list_3
-        yorm.update(top)
         assert id(ref1) == id(top.nested_list[0])
         assert id(ref2) == id(top.nested_list[0].nested_dict_3)
         assert id(ref3) == id(top.nested_list[0].nested_dict_3.nested_list_3)
@@ -341,6 +338,5 @@ class TestAliases:
         logging.info("Storing refs...")
         ref1 = top.nested_dict
         ref2 = top.nested_dict.nested_list_2
-        yorm.update(top)
         assert id(ref1) == id(top.nested_dict)
         assert id(ref2) == id(top.nested_dict.nested_list_2)

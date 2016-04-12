@@ -54,7 +54,6 @@ class ConfigStore:
         except yorm.exceptions.FileMissingError:
             return None
         else:
-            yorm.update_object(instance)
             return instance
 
 
@@ -85,7 +84,6 @@ class TestPersistanceMapping:  # pylint: disable=no-member
     def test_nonmapped_attribute_is_kept(self):
         model = ConfigModel('my_key', self.root)
         model.unmapped = 42
-        yorm.update(model, force=True)
         assert 42 == model.unmapped
 
 

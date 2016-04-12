@@ -6,9 +6,7 @@ from collections import OrderedDict
 from . import common
 from .bases.mappable import patch_methods
 from .mapper import Mapper
-
-# TODO: remove this after refactor
-from .utilities import _check_base, _check_existance
+from .utilities import _ensure_mapped
 
 log = common.logger(__name__)
 
@@ -42,7 +40,7 @@ def sync_object(instance, path, attrs=None, existing=None, **kwargs):
 
     """
     log.info("Mapping %r to %s...", instance, path)
-    _check_base(instance, mappable=False)
+    _ensure_mapped(instance, expected=False)
 
     patch_methods(instance)
 
@@ -126,6 +124,22 @@ def attr(**kwargs):
         return cls
 
     return decorator
+
+
+# TODO: delete this
+def _check_existance(mapper, existing=None):
+    """Confirm the expected state of the file.
+
+    :param existing: indicate if file is expected to exist or not
+
+    """
+    from . import exceptions
+    if existing is True:
+        if not mapper.exists:
+            raise exceptions.FileMissingError
+    elif existing is False:
+        if mapper.exists:
+            raise exceptions.FileAlreadyExistsError
 
 
 def _ordered(data):
