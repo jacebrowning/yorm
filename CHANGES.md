@@ -1,5 +1,11 @@
 # Revision History
 
+## 0.8 (unreleased)
+
+- Replaced all utility functions with ORM-like tools.
+- Removed the ability to check for existing files in `sync()`.
+- Renamed and consolidated custom exceptions.
+
 ## 0.7.2 (2016/03/30)
 
 - Now preserving order of `attr` decorators on `Dictionary` converters.

@@ -24,7 +24,7 @@ def file_required(create=False):
                     self.create()
                 else:
                     msg = "Cannot access deleted: {}".format(self.path)
-                    raise exceptions.FileDeletedError(msg)
+                    raise exceptions.DeletedFileError(msg)
 
             return method(self, *args, **kwargs)
 

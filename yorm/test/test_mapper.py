@@ -124,7 +124,7 @@ def describe_mapper():
         def it_raises_an_exception_after_delete(mapper):
             mapper.delete()
 
-            with expect.raises(exceptions.FileDeletedError):
+            with expect.raises(exceptions.DeletedFileError):
                 mapper.fetch()
 
     def describe_store():

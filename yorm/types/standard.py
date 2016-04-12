@@ -142,4 +142,4 @@ def match(name, data, nested=False):
         return Object
 
     msg = "No converter available for: {}".format(data)
-    raise exceptions.ConversionError(msg)
+    raise exceptions.FileContentError(msg)

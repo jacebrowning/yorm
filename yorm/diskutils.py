@@ -104,7 +104,7 @@ def load(text, path):
 
     if not isinstance(data, dict):
         msg = "Invalid file contents: {}".format(path)
-        raise exceptions.ContentError(msg)
+        raise exceptions.FileContentError(msg)
 
     return data
 
@@ -114,7 +114,7 @@ def _load_json(text, path):
         return json.loads(text) or {}
     except json.JSONDecodeError as exc:
         msg = "Invalid JSON contents: {}:\n{}".format(path, exc)
-        raise exceptions.ContentError(msg) from None
+        raise exceptions.FileContentError(msg) from None
 
 
 def _load_yaml(text, path):
@@ -122,7 +122,7 @@ def _load_yaml(text, path):
         return yaml.load(text) or {}
     except yaml.error.YAMLError as exc:
         msg = "Invalid YAML contents: {}:\n{}".format(path, exc)
-        raise exceptions.ContentError(msg) from None
+        raise exceptions.FileContentError(msg) from None
 
 
 def dump(data, path):

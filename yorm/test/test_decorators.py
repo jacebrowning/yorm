@@ -7,7 +7,6 @@ from unittest.mock import patch, Mock
 import pytest
 from expecter import expect
 
-from yorm import exceptions
 from yorm import decorators
 from yorm.bases import Converter
 
@@ -55,7 +54,7 @@ class TestSyncObject:
     def test_multiple(self):
         """Verify mapping cannot be enabled twice."""
         sample = decorators.sync(self.Sample(), "sample.yml")
-        with pytest.raises(exceptions.MappingError):
+        with pytest.raises(TypeError):
             decorators.sync(sample, "sample.yml")
 
     @patch('yorm.diskutils.exists', Mock(return_value=True))

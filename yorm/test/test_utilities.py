@@ -45,11 +45,11 @@ def describe_new():
     def it_requires_files_to_not_yet_exist(model_class, instance):
         instance.__mapper__.create()
 
-        with expect.raises(exceptions.FileAlreadyExistsError):
+        with expect.raises(exceptions.DuplicateMappingError):
             utilities.new(model_class, 'foo', 'bar')
 
     def it_requires_a_mapped_object():
-        with expect.raises(exceptions.MappingError):
+        with expect.raises(TypeError):
             utilities.new(Mock)
 
 
@@ -68,7 +68,7 @@ def describe_find():
             model_class('new', 'one')
 
     def it_requires_a_mapped_object():
-        with expect.raises(exceptions.MappingError):
+        with expect.raises(TypeError):
             utilities.find(Mock)
 
 
@@ -97,11 +97,11 @@ def describe_save():
     def it_expects_the_file_to_not_be_deleted(instance):
         instance.__mapper__.delete()
 
-        with expect.raises(exceptions.FileDeletedError):
+        with expect.raises(exceptions.DeletedFileError):
             utilities.save(instance)
 
     def it_requires_a_mapped_object():
-        with expect.raises(exceptions.MappingError):
+        with expect.raises(TypeError):
             utilities.save(Mock)
 
 
@@ -114,5 +114,5 @@ def describe_delete():
         expect(instance.__mapper__.deleted) == True
 
     def it_requires_a_mapped_object():
-        with expect.raises(exceptions.MappingError):
+        with expect.raises(TypeError):
             utilities.delete(Mock)

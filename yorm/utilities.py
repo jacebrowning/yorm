@@ -11,7 +11,8 @@ def new(cls, *args):
     mapper = _ensure_mapped(instance)
 
     if mapper.exists:
-        raise exceptions.FileAlreadyExistsError
+        msg = "{!r} already exists".format(mapper.path)
+        raise exceptions.DuplicateMappingError(msg)
 
     return save(instance)
 
@@ -40,8 +41,8 @@ def save(instance):
     mapper = _ensure_mapped(instance)
 
     if mapper.deleted:
-        msg = "{!r} already deleted".format(instance)
-        raise exceptions.FileDeletedError(msg)
+        msg = "{!r} was deleted".format(mapper.path)
+        raise exceptions.DeletedFileError(msg)
 
     if not mapper.exists:
         mapper.create()
@@ -65,10 +66,10 @@ def _ensure_mapped(obj, *, expected=True):
 
     if mapper and not expected:
         msg = "{!r} is already mapped".format(obj)
-        raise exceptions.MappingError(msg)
+        raise TypeError(msg)
 
     if not mapper and expected:
         msg = "{!r} is not mapped".format(obj)
-        raise exceptions.MappingError(msg)
+        raise TypeError(msg)
 
     return mapper
