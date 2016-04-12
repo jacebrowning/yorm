@@ -4,7 +4,7 @@
 import pytest
 from expecter import expect
 
-from yorm import utilities
+from yorm import decorators
 
 
 class SampleWithMagicMethods:
@@ -22,7 +22,7 @@ class SampleWithMagicMethods:
 def mapped():
     import yorm
     yorm.settings.fake = True
-    yield utilities.sync(SampleWithMagicMethods(), "sample.yml")
+    yield decorators.sync(SampleWithMagicMethods(), "sample.yml")
     yorm.settings.fake = False
 
 

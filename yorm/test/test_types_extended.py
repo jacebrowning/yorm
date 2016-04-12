@@ -3,7 +3,7 @@
 import pytest
 from expecter import expect
 
-from yorm.utilities import attr
+from yorm.decorators import attr
 from yorm.types.standard import Integer, String, Float
 from yorm.types.extended import (NullableString, Markdown,
                                  AttributeDictionary, SortedList)

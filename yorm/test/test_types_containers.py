@@ -8,7 +8,7 @@ from expecter import expect
 
 import yorm
 from yorm import common
-from yorm.utilities import attr
+from yorm.decorators import attr
 from yorm.types import Dictionary, List
 from yorm.types import String, Integer
 

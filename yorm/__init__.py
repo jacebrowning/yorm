@@ -16,7 +16,7 @@ try:
     # pylint: disable=wrong-import-position
     from . import bases, types
     from .common import UUID
-    from .utilities import sync, sync_object, sync_instances, attr
+    from .decorators import sync, sync_object, sync_instances, attr
     from .utilities import update, update_object, update_file
     from .bases import Container, Converter, Mappable, Convertible
 except ImportError:  # pragma: no cover (manual test)
