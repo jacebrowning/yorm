@@ -1,6 +1,7 @@
 # pylint: disable=unused-variable,redefined-outer-name,expression-not-assigned,singleton-comparison
 
 import logging
+from unittest.mock import Mock
 
 import pytest
 from expecter import expect
@@ -36,42 +37,46 @@ def instance(model_class):
 
 def describe_new():
 
-    def it_creates_files(instance):
-        utilities.new(instance)
+    def it_creates_files(model_class):
+        instance = utilities.new(model_class, 'foo', 'bar')
 
         expect(instance.__mapper__.exists) == True
 
-    def it_requires_files_to_not_yet_exist(instance):
+    def it_requires_files_to_not_yet_exist(model_class, instance):
         instance.__mapper__.create()
 
         with expect.raises(exceptions.FileAlreadyExistsError):
-            utilities.new(instance)
+            utilities.new(model_class, 'foo', 'bar')
 
     def it_requires_a_mapped_object():
         with expect.raises(exceptions.MappingError):
-            utilities.new(42)
+            utilities.new(Mock)
 
 
 def describe_find():
 
-    def it_returns_object_when_found(instance):
+    def it_returns_object_when_found(model_class, instance):
         instance.__mapper__.create()
 
-        expect(utilities.find(instance)) == instance
+        expect(utilities.find(model_class, 'foo', 'bar')) == instance
 
-    def it_returns_none_when_no_match(instance):
-        expect(utilities.find(instance)) == None
+    def it_returns_none_when_no_match(model_class):
+        expect(utilities.find(model_class, 'not', 'here')) == None
+
+    def it_allows_objects_to_be_created(model_class):
+        expect(utilities.find(model_class, 'new', 'one', create=True)) == \
+            model_class('new', 'one')
 
     def it_requires_a_mapped_object():
         with expect.raises(exceptions.MappingError):
-            utilities.find(42)
+            utilities.find(Mock)
 
 
 def describe_load():
 
     def it_is_not_yet_implemented():
         with expect.raises(NotImplementedError):
-            utilities.load(None)
+            utilities.load(Mock)
 
 
 def describe_save():
@@ -81,6 +86,14 @@ def describe_save():
 
         expect(instance.__mapper__.exists) == True
 
+    def it_marks_files_as_modified(instance):
+        instance.__mapper__.create()
+        instance.__mapper__.modified = False
+
+        utilities.save(instance)
+
+        expect(instance.__mapper__.modified) == True
+
     def it_expects_the_file_to_not_be_deleted(instance):
         instance.__mapper__.delete()
 
@@ -89,7 +102,7 @@ def describe_save():
 
     def it_requires_a_mapped_object():
         with expect.raises(exceptions.MappingError):
-            utilities.save(42)
+            utilities.save(Mock)
 
 
 def describe_delete():
@@ -102,4 +115,4 @@ def describe_delete():
 
     def it_requires_a_mapped_object():
         with expect.raises(exceptions.MappingError):
-            utilities.delete(42)
+            utilities.delete(Mock)

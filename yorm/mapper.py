@@ -98,6 +98,10 @@ class Mapper:
         return str(self.path)
 
     @property
+    def missing(self):
+        return not self.exists
+
+    @property
     def modified(self):
         """Determine if the file has been modified."""
         if settings.fake:

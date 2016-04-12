@@ -5,8 +5,9 @@ from . import common, exceptions
 log = common.logger(__name__)
 
 
-def new(instance):
+def new(cls, *args):
     """Create a new mapped object."""
+    instance = cls(*args)
     mapper = _ensure_mapped(instance)
 
     if mapper.exists:
@@ -15,12 +16,15 @@ def new(instance):
     return save(instance)
 
 
-def find(instance):
+def find(cls, *args, create=False):
     """Find a matching mapped object or return None."""
+    instance = cls(*args)
     mapper = _ensure_mapped(instance)
 
     if mapper.exists:
         return instance
+    elif create:
+        return save(instance)
     else:
         return None
 

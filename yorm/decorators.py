@@ -46,15 +46,15 @@ def sync_object(instance, path, attrs=None, **kwargs):
 
     attrs = _ordered(attrs) or common.attrs[instance.__class__]
     mapper = Mapper(instance, path, attrs, **kwargs)
-    common.set_mapper(instance, mapper)
-
     if mapper.auto:
-        if not mapper.exists:
+        if mapper.missing:
             mapper.create()
             mapper.store()
         mapper.fetch()
 
+    common.set_mapper(instance, mapper)
     log.info("Mapped %r to %s", instance, path)
+
     return instance
 
 
@@ -73,7 +73,7 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
     attrs = attrs or OrderedDict()
 
     def decorator(cls):
-        """Class decorator to map instances to files.."""
+        """Class decorator to map instances to files."""
 
         init = cls.__init__
 
