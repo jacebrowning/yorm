@@ -29,5 +29,5 @@ class ConversionError(Error, ValueError):
     """Value could not be converted to the specified type."""
 
 
-class MappingError(Error):
+class MappingError(Error, TypeError):
     """The API was called incorrectly."""

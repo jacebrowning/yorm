@@ -17,7 +17,9 @@ try:
     from . import bases, types
     from .common import UUID
     from .decorators import sync, sync_object, sync_instances, attr
-    from .utilities import update, update_object, update_file
+    from .utilities import new, find, load, save, delete
+    # TODO: delete this when no longer used:
+    from .utilities import update, update_object
     from .bases import Container, Converter, Mappable, Convertible
 except ImportError:  # pragma: no cover (manual test)
     pass
