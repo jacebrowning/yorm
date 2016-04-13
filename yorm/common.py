@@ -54,12 +54,22 @@ class classproperty(object):
 # FUNCTIONS ####################################################################
 
 
-def get_mapper(obj):
+def get_mapper(obj, *, expected=None):
     """Get the `Mapper` instance attached to an object."""
     try:
-        return object.__getattribute__(obj, MAPPER)
+        mapper = object.__getattribute__(obj, MAPPER)
     except AttributeError:
-        return None
+        mapper = None
+
+    if mapper and expected is False:
+        msg = "{!r} is already mapped".format(obj)
+        raise TypeError(msg)
+
+    if not mapper and expected is True:
+        msg = "{!r} is not mapped".format(obj)
+        raise TypeError(msg)
+
+    return mapper
 
 
 def set_mapper(obj, mapper):

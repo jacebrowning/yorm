@@ -48,7 +48,15 @@ def describe_create():
         with expect.raises(exceptions.DuplicateMappingError):
             utilities.create(model_class, 'foo', 'bar')
 
-    def it_requires_a_mapped_object():
+    def it_can_overwrite_files(model_class, instance):
+        instance.__mapper__.create()
+
+        utilities.create(model_class, 'foo', 'bar', overwrite=True)
+
+    def it_can_also_be_called_with_an_instance(instance):
+        expect(yorm.create(instance)) == instance
+
+    def it_requires_a_mapped_class_or_instance():
         with expect.raises(TypeError):
             utilities.create(Mock)
 
@@ -67,7 +75,10 @@ def describe_find():
         expect(utilities.find(model_class, 'new', 'one', create=True)) == \
             model_class('new', 'one')
 
-    def it_requires_a_mapped_object():
+    def it_can_also_be_called_with_an_instance(instance):
+        expect(yorm.find(instance, create=True)) == instance
+
+    def it_requires_a_mapped_class_or_instance():
         with expect.raises(TypeError):
             utilities.find(Mock)
 
@@ -89,7 +100,7 @@ def describe_load():
 
         expect(instance.__mapper__.modified) == False
 
-    def it_requires_a_mapped_object():
+    def it_requires_a_mapped_instance():
         with expect.raises(TypeError):
             utilities.load(Mock)
 
@@ -115,7 +126,7 @@ def describe_save():
         with expect.raises(exceptions.DeletedFileError):
             utilities.save(instance)
 
-    def it_requires_a_mapped_object():
+    def it_requires_a_mapped_instance():
         with expect.raises(TypeError):
             utilities.save(Mock)
 
@@ -128,6 +139,6 @@ def describe_delete():
         expect(instance.__mapper__.exists) == False
         expect(instance.__mapper__.deleted) == True
 
-    def it_requires_a_mapped_object():
+    def it_requires_a_mapped_instance():
         with expect.raises(TypeError):
             utilities.delete(Mock)

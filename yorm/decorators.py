@@ -7,7 +7,6 @@ import logging
 from . import common
 from .bases.mappable import patch_methods
 from .mapper import Mapper
-from .utilities import _ensure_mapped
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +42,7 @@ def sync_object(instance, path, attrs=None, **kwargs):
     """
     log.info("Mapping %r to %s...", instance, path)
 
-    _ensure_mapped(instance, expected=False)
+    common.get_mapper(instance, expected=False)
     patch_methods(instance)
 
     attrs = _ordered(attrs) or common.attrs[instance.__class__]
@@ -56,8 +55,7 @@ def sync_object(instance, path, attrs=None, **kwargs):
                 mapper.save()
                 mapper.load()
     else:
-        if mapper.auto_save:
-            mapper.load()
+        mapper.load()
 
     common.set_mapper(instance, mapper)
     log.info("Mapped %r to %s", instance, path)

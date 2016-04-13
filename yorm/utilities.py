@@ -1,5 +1,6 @@
 """Functions to interact with mapped classes and instances."""
 
+import inspect
 import logging
 import warnings
 
@@ -8,26 +9,26 @@ from . import common, exceptions
 log = logging.getLogger(__name__)
 
 
-def create(cls, *args):
+def create(class_or_instance, *args, overwrite=False):
     """Create a new mapped object."""
-    instance = cls(*args)
-    mapper = _ensure_mapped(instance)
+    instance = _instantiate(class_or_instance, *args)
+    mapper = common.get_mapper(instance, expected=True)
 
     if mapper.auto_create:
         msg = "'create' is called automatically with 'auto_create' enabled"
         warnings.warn(msg)
 
-    if mapper.exists:
+    if mapper.exists and not overwrite:
         msg = "{!r} already exists".format(mapper.path)
         raise exceptions.DuplicateMappingError(msg)
 
     return save(instance)
 
 
-def find(cls, *args, create=False):  # pylint: disable=redefined-outer-name
+def find(class_or_instance, *args, create=False):  # pylint: disable=redefined-outer-name
     """Find a matching mapped object or return None."""
-    instance = cls(*args)
-    mapper = _ensure_mapped(instance)
+    instance = _instantiate(class_or_instance, *args)
+    mapper = common.get_mapper(instance, expected=True)
 
     if mapper.exists:
         return instance
@@ -45,7 +46,7 @@ def find_all(cls, **kwargs):
 
 def load(instance):
     """Force the loading of a mapped object's file."""
-    mapper = _ensure_mapped(instance)
+    mapper = common.get_mapper(instance, expected=True)
 
     warnings.warn("'load' is called automatically")
 
@@ -56,7 +57,7 @@ def load(instance):
 
 def save(instance):
     """Save a mapped object to file."""
-    mapper = _ensure_mapped(instance)
+    mapper = common.get_mapper(instance, expected=True)
 
     if mapper.auto_save:
         msg = "'save' is called automatically with 'auto_save' enabled"
@@ -76,22 +77,18 @@ def save(instance):
 
 def delete(instance):
     """Delete a mapped object's file."""
-    mapper = _ensure_mapped(instance)
+    mapper = common.get_mapper(instance, expected=True)
 
     mapper.delete()
 
     return None
 
 
-def _ensure_mapped(obj, *, expected=True):
-    mapper = common.get_mapper(obj)
+def _instantiate(class_or_instance, *args):
+    if inspect.isclass(class_or_instance):
+        instance = class_or_instance(*args)
+    else:
+        assert not args
+        instance = class_or_instance
 
-    if mapper and not expected:
-        msg = "{!r} is already mapped".format(obj)
-        raise TypeError(msg)
-
-    if not mapper and expected:
-        msg = "{!r} is not mapped".format(obj)
-        raise TypeError(msg)
-
-    return mapper
+    return instance
