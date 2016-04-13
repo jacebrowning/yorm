@@ -35,10 +35,10 @@ def instance(model_class):
     return model_class('foo', 'bar')
 
 
-def describe_new():
+def describe_create():
 
     def it_creates_files(model_class):
-        instance = utilities.new(model_class, 'foo', 'bar')
+        instance = utilities.create(model_class, 'foo', 'bar')
 
         expect(instance.__mapper__.exists) == True
 
@@ -46,11 +46,11 @@ def describe_new():
         instance.__mapper__.create()
 
         with expect.raises(exceptions.DuplicateMappingError):
-            utilities.new(model_class, 'foo', 'bar')
+            utilities.create(model_class, 'foo', 'bar')
 
     def it_requires_a_mapped_object():
         with expect.raises(TypeError):
-            utilities.new(Mock)
+            utilities.create(Mock)
 
 
 def describe_find():
@@ -72,10 +72,25 @@ def describe_find():
             utilities.find(Mock)
 
 
-def describe_load():
+def describe_find_all():
 
     def it_is_not_yet_implemented():
         with expect.raises(NotImplementedError):
+            utilities.find_all(Mock)
+
+
+def describe_load():
+
+    def it_marks_files_as_unmodified(instance):
+        instance.__mapper__.create()
+        instance.__mapper__.modified = True
+
+        utilities.load(instance)
+
+        expect(instance.__mapper__.modified) == False
+
+    def it_requires_a_mapped_object():
+        with expect.raises(TypeError):
             utilities.load(Mock)
 
 

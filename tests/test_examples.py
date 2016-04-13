@@ -120,7 +120,7 @@ class SampleDecoratedAutoOff:
         return "<auto save off {}>".format(id(self))
 
 
-@yorm.sync("sample.yml", auto_attr=True)
+@yorm.sync("sample.yml", auto_track=True)
 class SampleEmptyDecorated:
     """Sample class using standard attribute types."""
 
@@ -326,7 +326,7 @@ class TestStandard:
         sample.string = "hello"
         assert "" == sample.__mapper__.text
 
-        sample.__mapper__.auto_store = True
+        sample.__mapper__.auto_save = True
         sample.string = "world"
 
         assert strip("""
@@ -343,7 +343,7 @@ class TestContainers:
         _sample = SampleNested()
         attrs = {'count': Integer,
                  'results': StatusDictionaryList}
-        sample = yorm.sync(_sample, "sample.yml", attrs, auto_attr=True)
+        sample = yorm.sync(_sample, "sample.yml", attrs, auto_track=True)
 
         # check defaults
         assert 0 == sample.count
@@ -405,7 +405,7 @@ class TestContainers:
         """)
 
         # (a mapped attribute must be read first to trigger retrieving)
-        sample.__mapper__.fetch()
+        sample.__mapper__.load()
 
         # check object values
         assert {'key': 'value'} == sample.object

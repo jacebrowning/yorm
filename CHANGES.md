@@ -6,7 +6,7 @@
 - Removed the ability to check for existing files in `sync()`.
 - Renamed and consolidated custom exceptions.
 - Renamed sync parameter `auto=True` to `auto_save=True`.
-- Renamed sync parameter `strict=True` to `auto_attr=False`.
+- Renamed sync parameter `strict=True` to `auto_track=False`.
 - Added sync parameter `auto_create` to defer file creation to ORM functions.
 
 ## 0.7.2 (2016/03/30)

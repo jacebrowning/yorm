@@ -58,7 +58,7 @@ class SampleStandardDecorated:
 class TestCreate:
     """Integration tests for creating mapped classes."""
 
-    def test_fetch_from_existing(self, tmpdir):
+    def test_load_from_existing(self, tmpdir):
         """Verify attributes are updated from an existing file."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
@@ -119,7 +119,7 @@ class TestDelete:
 class TestUpdate:
     """Integration tests for updating files/object."""
 
-    def test_automatic_store_after_first_modification(self, tmpdir):
+    def test_automatic_save_after_first_modification(self, tmpdir):
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
         assert "number_int: 0\n" in sample.__mapper__.text
@@ -131,7 +131,7 @@ class TestUpdate:
         assert 1 is sample.number_int
         assert "number_int: 1\n" in sample.__mapper__.text
 
-    def test_automatic_store_after_first_modification_on_list(self, tmpdir):
+    def test_automatic_save_after_first_modification_on_list(self, tmpdir):
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
         assert "array: []\n" in sample.__mapper__.text
