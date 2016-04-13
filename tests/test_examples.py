@@ -159,7 +159,7 @@ class TestStandard:
         pass
 
     def test_decorator(self, tmpdir):
-        """Verify standard attribute types dump/load correctly (decorator)."""
+        """Verify standard attribute types dump/parse correctly (decorator)."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
         assert "path/to/default/sample.yml" == sample.__mapper__.path
@@ -219,7 +219,7 @@ class TestStandard:
         assert False is sample.falsey
 
     def test_function(self, tmpdir):
-        """Verify standard attribute types dump/load correctly (function)."""
+        """Verify standard attribute types dump/parse correctly (function)."""
         tmpdir.chdir()
         _sample = SampleStandard()
         attrs = {'object': self.StatusDictionary,
@@ -267,7 +267,7 @@ class TestStandard:
         """) == sample.__mapper__.text
 
     def test_function_to_json(self, tmpdir):
-        """Verify standard attribute types dump/load correctly (function)."""
+        """Verify standard attribute types dump/parse correctly (function)."""
         tmpdir.chdir()
         _sample = SampleStandard()
         attrs = {'object': self.StatusDictionary,
@@ -420,7 +420,7 @@ class TestExtended:
     """Integration tests for extended attribute types."""
 
     def test_function(self, tmpdir):
-        """Verify extended attribute types dump/load correctly."""
+        """Verify extended attribute types dump/parse correctly."""
         tmpdir.chdir()
         _sample = SampleExtended()
         attrs = {'text': Markdown}
@@ -460,7 +460,7 @@ class TestCustom:
     """Integration tests for custom attribute types."""
 
     def test_decorator(self, tmpdir):
-        """Verify custom attribute types dump/load correctly."""
+        """Verify custom attribute types dump/parse correctly."""
         tmpdir.chdir()
         sample = SampleCustomDecorated('sample')
 

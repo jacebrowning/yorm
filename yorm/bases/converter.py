@@ -19,7 +19,7 @@ class Converter(metaclass=ABCMeta):
 
     @abstractclassmethod
     def to_value(cls, data):
-        """Convert loaded data to an attribute's value."""
+        """Convert parsed data to an attribute's value."""
         raise NotImplementedError(common.OVERRIDE_MESSAGE)
 
     @abstractclassmethod
@@ -43,7 +43,7 @@ class Container(Mappable, Converter, metaclass=ABCMeta):
 
     @abstractmethod
     def update_value(self, data, *, auto_attr):  # pragma: no cover (abstract method)
-        """Update the attribute's value from loaded data."""
+        """Update the attribute's value from parsed data."""
         raise NotImplementedError(common.OVERRIDE_MESSAGE)
 
     def format_data(self):

@@ -124,7 +124,7 @@ class List(Container, list):
         # Get the converter for all items
         converter = cls.item_type
 
-        # Convert the loaded data
+        # Convert the parsed data
         for item in to_list(data):
 
             try:

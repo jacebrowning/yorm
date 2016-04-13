@@ -58,7 +58,7 @@ class Mapper:
 
     When getting an attribute:
 
-        FILE -> read -> [text] -> load -> [dict] -> fetch -> ATTRIBUTES
+        FILE -> read -> [text] -> parse -> [dict] -> fetch -> ATTRIBUTES
 
     When setting an attribute:
 
@@ -163,8 +163,8 @@ class Mapper:
 
         # Parse data from file
         text = self._read()
-        data = diskutils.load(text=text, path=self.path)
-        log.trace("Loaded data: \n%s", pformat(data))
+        data = diskutils.parse(text=text, path=self.path)
+        log.trace("Parsed data: \n%s", pformat(data))
 
         # Update all attributes
         attrs2 = self.attrs.copy()
@@ -183,7 +183,7 @@ class Mapper:
                     log.warning(msg, name, data)
                     continue
 
-            # Convert the loaded attribute
+            # Convert the parsed value to the attribute's final type
             attr = getattr(self._obj, name, None)
             if all((isinstance(attr, converter),
                     issubclass(converter, Container))):

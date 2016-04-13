@@ -32,7 +32,7 @@ def sync_object(instance, path, attrs=None, **kwargs):
     """Enable YAML mapping on an object.
 
     :param instance: object to patch with YAML mapping behavior
-    :param path: file path for dump/load
+    :param path: file path for dump/parse
     :param attrs: dictionary of attribute names mapped to converter classes
 
     :param auto_create: automatically create the file to save attributes
@@ -68,7 +68,7 @@ def sync_object(instance, path, attrs=None, **kwargs):
 def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
     """Class decorator to enable YAML mapping after instantiation.
 
-    :param path_format: formatting string to create file paths for dump/load
+    :param path_format: formatting string to create file paths for dump/parse
     :param format_spec: dictionary to use for string formatting
     :param attrs: dictionary of attribute names mapped to converter classes
 
