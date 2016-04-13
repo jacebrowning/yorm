@@ -84,8 +84,8 @@ def delete(path):
         os.remove(path)
 
 
-def load(text, path):
-    """Parse a dictionary a data from formatted text.
+def parse(text, path):
+    """Parse a dictionary of data from formatted text.
 
     :param text: string containing dumped data
     :param path: file path to specify formatting
@@ -95,12 +95,12 @@ def load(text, path):
     """
     ext = _get_ext(path)
     if ext in ['json']:
-        data = _load_json(text, path)
+        data = _parse_json(text, path)
     elif ext in ['yml', 'yaml']:
-        data = _load_yaml(text, path)
+        data = _parse_yaml(text, path)
     else:
         log.warning("Unrecognized file extension: %s", ext)
-        data = _load_yaml(text, path)
+        data = _parse_yaml(text, path)
 
     if not isinstance(data, dict):
         msg = "Invalid file contents: {}".format(path)
@@ -109,7 +109,7 @@ def load(text, path):
     return data
 
 
-def _load_json(text, path):
+def _parse_json(text, path):
     try:
         return json.loads(text) or {}
     except json.JSONDecodeError as exc:
@@ -117,7 +117,7 @@ def _load_json(text, path):
         raise exceptions.FileContentError(msg) from None
 
 
-def _load_yaml(text, path):
+def _parse_yaml(text, path):
     try:
         return yaml.load(text) or {}
     except yaml.error.YAMLError as exc:

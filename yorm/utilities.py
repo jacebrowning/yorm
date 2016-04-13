@@ -5,10 +5,14 @@ from . import common, exceptions
 log = common.logger(__name__)
 
 
-def new(cls, *args):
+def create(cls, *args):
     """Create a new mapped object."""
     instance = cls(*args)
     mapper = _ensure_mapped(instance)
+
+    if mapper.auto_create:
+        msg = "'create' is called automatically with 'auto_create' enabled"
+        log.warning(msg)
 
     if mapper.exists:
         msg = "{!r} already exists".format(mapper.path)
@@ -17,7 +21,7 @@ def new(cls, *args):
     return save(instance)
 
 
-def find(cls, *args, create=False):
+def find(cls, *args, create=False):  # pylint: disable=redefined-outer-name
     """Find a matching mapped object or return None."""
     instance = cls(*args)
     mapper = _ensure_mapped(instance)
@@ -30,15 +34,29 @@ def find(cls, *args, create=False):
         return None
 
 
-def load(cls, **kwargs):
+def find_all(cls, **kwargs):
     """Return a list of all matching mapped objects."""
     log.debug((cls, kwargs))
     raise NotImplementedError
 
 
+def load(instance):
+    """Force the loading of a mapped object's file."""
+    mapper = _ensure_mapped(instance)
+
+    log.warning("'load' is called automatically")
+
+    mapper.load()
+
+    return instance
+
+
 def save(instance):
     """Save a mapped object to file."""
     mapper = _ensure_mapped(instance)
+
+    if mapper.auto_save:
+        log.warning("'save' is called automatically with 'auto_save' enabled")
 
     if mapper.deleted:
         msg = "{!r} was deleted".format(mapper.path)
@@ -47,7 +65,7 @@ def save(instance):
     if not mapper.exists:
         mapper.create()
 
-    mapper.store()
+    mapper.save()
 
     return instance
 

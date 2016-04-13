@@ -58,11 +58,11 @@ class Mapper:
 
     When getting an attribute:
 
-        FILE -> read -> [text] -> load -> [dict] -> fetch -> ATTRIBUTES
+        FILE -> read -> [text] -> parse -> [dict] -> load -> ATTRIBUTES
 
     When setting an attribute:
 
-        ATTRIBUTES -> store -> [dict] -> dump -> [text] -> write -> FILE
+        ATTRIBUTES -> save -> [dict] -> dump -> [text] -> write -> FILE
 
     After the mapped file is no longer needed:
 
@@ -71,17 +71,17 @@ class Mapper:
     """
 
     def __init__(self, obj, path, attrs, *,
-                 auto_create=True, auto_store=True, auto_attr=False):
+                 auto_create=True, auto_save=True, auto_track=False):
         self._obj = obj
         self.path = path
         self.attrs = attrs
         self.auto_create = auto_create
-        self.auto_store = auto_store
-        self.auto_attr = auto_attr
+        self.auto_save = auto_save
+        self.auto_track = auto_track
 
         self.exists = diskutils.exists(self.path)
         self.deleted = False
-        self.auto_store_after_fetch = False
+        self.auto_save_after_load = False
 
         self._activity = False
         self._timestamp = 0
@@ -157,14 +157,14 @@ class Mapper:
 
     @file_required
     @prevent_recursion
-    def fetch(self):
+    def load(self):
         """Update the object's mapped attributes from its file."""
-        log.info("Fetching %r from %s...", self._obj, prefix(self))
+        log.info("Loading %r from %s...", self._obj, prefix(self))
 
         # Parse data from file
         text = self._read()
-        data = diskutils.load(text=text, path=self.path)
-        log.trace("Loaded data: \n%s", pformat(data))
+        data = diskutils.parse(text=text, path=self.path)
+        log.trace("Parsed data: \n%s", pformat(data))
 
         # Update all attributes
         attrs2 = self.attrs.copy()
@@ -175,7 +175,7 @@ class Mapper:
             try:
                 converter = self.attrs[name]
             except KeyError:
-                if self.auto_attr:
+                if self.auto_track:
                     converter = types.match(name, data)
                     self.attrs[name] = converter
                 else:
@@ -183,16 +183,16 @@ class Mapper:
                     log.warning(msg, name, data)
                     continue
 
-            # Convert the loaded attribute
+            # Convert the parsed value to the attribute's final type
             attr = getattr(self._obj, name, None)
             if all((isinstance(attr, converter),
                     issubclass(converter, Container))):
-                attr.update_value(data, auto_attr=self.auto_attr)
+                attr.update_value(data, auto_track=self.auto_track)
             else:
                 attr = converter.to_value(data)
                 setattr(self._obj, name, attr)
             self._remap(attr, self)
-            log.trace("Value fetched: %s = %r", name, attr)
+            log.trace("Value loaded: %s = %r", name, attr)
 
         # Add missing attributes
         for name, converter in attrs2.items():
@@ -206,7 +206,7 @@ class Mapper:
         self.modified = False
 
     def _remap(self, obj, root):
-        """Restore mapping on nested attributes."""
+        """Resave mapping on nested attributes."""
         if isinstance(obj, Container):
             common.set_mapper(obj, root)
 
@@ -220,9 +220,9 @@ class Mapper:
 
     @file_required
     @prevent_recursion
-    def store(self):
+    def save(self):
         """Format and save the object's mapped attributes to its file."""
-        log.info("Storing %r to %s...", self._obj, prefix(self))
+        log.info("Saving %r to %s...", self._obj, prefix(self))
 
         # Format the data items
         data = self.attrs.__class__()
@@ -236,7 +236,7 @@ class Mapper:
             else:
                 data2 = converter.to_data(value)
 
-            log.trace("Data to store: %s = %r", name, data2)
+            log.trace("Data to save: %s = %r", name, data2)
             data[name] = data2
 
         # Dump data to file
@@ -245,7 +245,7 @@ class Mapper:
 
         # Set meta attributes
         self.modified = True
-        self.auto_store_after_fetch = self.auto_store
+        self.auto_save_after_load = self.auto_save
 
     def delete(self):
         """Delete the object's file from the file system."""

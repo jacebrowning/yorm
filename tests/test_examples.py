@@ -120,7 +120,7 @@ class SampleDecoratedAutoOff:
         return "<auto save off {}>".format(id(self))
 
 
-@yorm.sync("sample.yml", auto_attr=True)
+@yorm.sync("sample.yml", auto_track=True)
 class SampleEmptyDecorated:
     """Sample class using standard attribute types."""
 
@@ -159,7 +159,7 @@ class TestStandard:
         pass
 
     def test_decorator(self, tmpdir):
-        """Verify standard attribute types dump/load correctly (decorator)."""
+        """Verify standard attribute types dump/parse correctly (decorator)."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
         assert "path/to/default/sample.yml" == sample.__mapper__.path
@@ -219,7 +219,7 @@ class TestStandard:
         assert False is sample.falsey
 
     def test_function(self, tmpdir):
-        """Verify standard attribute types dump/load correctly (function)."""
+        """Verify standard attribute types dump/parse correctly (function)."""
         tmpdir.chdir()
         _sample = SampleStandard()
         attrs = {'object': self.StatusDictionary,
@@ -267,7 +267,7 @@ class TestStandard:
         """) == sample.__mapper__.text
 
     def test_function_to_json(self, tmpdir):
-        """Verify standard attribute types dump/load correctly (function)."""
+        """Verify standard attribute types dump/parse correctly (function)."""
         tmpdir.chdir()
         _sample = SampleStandard()
         attrs = {'object': self.StatusDictionary,
@@ -326,7 +326,7 @@ class TestStandard:
         sample.string = "hello"
         assert "" == sample.__mapper__.text
 
-        sample.__mapper__.auto_store = True
+        sample.__mapper__.auto_save = True
         sample.string = "world"
 
         assert strip("""
@@ -343,7 +343,7 @@ class TestContainers:
         _sample = SampleNested()
         attrs = {'count': Integer,
                  'results': StatusDictionaryList}
-        sample = yorm.sync(_sample, "sample.yml", attrs, auto_attr=True)
+        sample = yorm.sync(_sample, "sample.yml", attrs, auto_track=True)
 
         # check defaults
         assert 0 == sample.count
@@ -405,7 +405,7 @@ class TestContainers:
         """)
 
         # (a mapped attribute must be read first to trigger retrieving)
-        sample.__mapper__.fetch()
+        sample.__mapper__.load()
 
         # check object values
         assert {'key': 'value'} == sample.object
@@ -420,7 +420,7 @@ class TestExtended:
     """Integration tests for extended attribute types."""
 
     def test_function(self, tmpdir):
-        """Verify extended attribute types dump/load correctly."""
+        """Verify extended attribute types dump/parse correctly."""
         tmpdir.chdir()
         _sample = SampleExtended()
         attrs = {'text': Markdown}
@@ -460,7 +460,7 @@ class TestCustom:
     """Integration tests for custom attribute types."""
 
     def test_decorator(self, tmpdir):
-        """Verify custom attribute types dump/load correctly."""
+        """Verify custom attribute types dump/parse correctly."""
         tmpdir.chdir()
         sample = SampleCustomDecorated('sample')
 

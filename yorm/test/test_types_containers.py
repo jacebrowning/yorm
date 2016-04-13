@@ -111,7 +111,7 @@ class TestDictionary:
 
     def test_unknown_attrributes_are_ignored(self):
         obj = SampleDictionary.create_default()
-        obj.update_value({'key': "value", 'abc': 7}, auto_attr=False)
+        obj.update_value({'key': "value", 'abc': 7}, auto_track=False)
         assert {'abc': 7} == obj
 
 

@@ -61,7 +61,7 @@ class TestSyncObject:
     def test_init_existing(self):
         """Verify an existing file is read."""
         with patch('yorm.diskutils.read', Mock(return_value="abc: 123")):
-            sample = decorators.sync(self.Sample(), "s.yml", auto_attr=True)
+            sample = decorators.sync(self.Sample(), "s.yml", auto_track=True)
         assert 123 == sample.abc
 
 
@@ -71,7 +71,7 @@ class TestSyncObject:
 class TestSyncInstances:
     """Unit tests for the `sync_instances` decorator."""
 
-    @decorators.sync("sample.yml", auto_attr=True)
+    @decorators.sync("sample.yml", auto_track=True)
     class SampleDecorated:
         """Sample decorated class using a single path."""
 

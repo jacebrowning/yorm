@@ -26,8 +26,9 @@ def test_from_top_decorators():
 
 
 def test_from_top_utilities():
-    from yorm import new
+    from yorm import create
     from yorm import find
+    from yorm import find_all
     from yorm import load
     from yorm import save
     from yorm import delete

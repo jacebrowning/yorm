@@ -32,12 +32,12 @@ def sync_object(instance, path, attrs=None, **kwargs):
     """Enable YAML mapping on an object.
 
     :param instance: object to patch with YAML mapping behavior
-    :param path: file path for dump/load
+    :param path: file path for dump/parse
     :param attrs: dictionary of attribute names mapped to converter classes
 
     :param auto_create: automatically create the file to save attributes
     :param auto_save: automatically save attribute changes to the file
-    :param auto_attr: automatically add new attributes from the file
+    :param auto_track: automatically add new attributes from the file
 
     """
     log.info("Mapping %r to %s...", instance, path)
@@ -46,18 +46,17 @@ def sync_object(instance, path, attrs=None, **kwargs):
     patch_methods(instance)
 
     attrs = _ordered(attrs) or common.attrs[instance.__class__]
-    kwargs['auto_store'] = kwargs.pop('auto_save', True)
     mapper = Mapper(instance, path, attrs, **kwargs)
 
     if mapper.missing:
         if mapper.auto_create:
             mapper.create()
-            if mapper.auto_store:
-                mapper.store()
-                mapper.fetch()
+            if mapper.auto_save:
+                mapper.save()
+                mapper.load()
     else:
-        if mapper.auto_store:
-            mapper.fetch()
+        if mapper.auto_save:
+            mapper.load()
 
     common.set_mapper(instance, mapper)
     log.info("Mapped %r to %s", instance, path)
@@ -68,13 +67,13 @@ def sync_object(instance, path, attrs=None, **kwargs):
 def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
     """Class decorator to enable YAML mapping after instantiation.
 
-    :param path_format: formatting string to create file paths for dump/load
+    :param path_format: formatting string to create file paths for dump/parse
     :param format_spec: dictionary to use for string formatting
     :param attrs: dictionary of attribute names mapped to converter classes
 
     :param auto_create: automatically create the file to save attributes
     :param auto_save: automatically save attribute changes to the file
-    :param auto_attr: automatically add new attributes from the file
+    :param auto_track: automatically add new attributes from the file
 
     """
     format_spec = format_spec or {}
