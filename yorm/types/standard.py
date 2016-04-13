@@ -1,9 +1,11 @@
 """Convertible classes for builtin immutable types."""
 
-from .. import common, exceptions
+import logging
+
+from .. import exceptions
 from ..bases import Converter
 
-log = common.logger(__name__)
+log = logging.getLogger(__name__)
 
 
 class Object(Converter):

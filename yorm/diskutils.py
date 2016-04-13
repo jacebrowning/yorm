@@ -2,13 +2,14 @@
 
 import os
 import shutil
+import logging
 
 import simplejson as json
 import yaml
 
-from . import common, exceptions
+from . import exceptions
 
-log = common.logger(__name__)
+log = logging.getLogger(__name__)
 
 
 def exists(path):

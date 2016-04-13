@@ -2,13 +2,14 @@
 
 import uuid
 from collections import OrderedDict
+import logging
 
 from . import common
 from .bases.mappable import patch_methods
 from .mapper import Mapper
 from .utilities import _ensure_mapped
 
-log = common.logger(__name__)
+log = logging.getLogger(__name__)
 
 
 def sync(*args, **kwargs):

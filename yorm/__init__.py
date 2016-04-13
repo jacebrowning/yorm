@@ -3,7 +3,7 @@
 import sys
 
 __project__ = 'YORM'
-__version__ = '0.8.dev3'
+__version__ = '0.8.dev4'
 
 VERSION = __project__ + '-' + __version__
 

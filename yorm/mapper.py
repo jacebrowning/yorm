@@ -2,11 +2,12 @@
 
 import functools
 from pprint import pformat
+import logging
 
 from . import common, diskutils, exceptions, types, settings
 from .bases import Container
 
-log = common.logger(__name__)
+log = logging.getLogger(__name__)
 
 
 def file_required(method):

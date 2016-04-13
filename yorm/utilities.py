@@ -1,8 +1,11 @@
 """Functions to interact with mapped classes and instances."""
 
+import logging
+import warnings
+
 from . import common, exceptions
 
-log = common.logger(__name__)
+log = logging.getLogger(__name__)
 
 
 def create(cls, *args):
@@ -12,7 +15,7 @@ def create(cls, *args):
 
     if mapper.auto_create:
         msg = "'create' is called automatically with 'auto_create' enabled"
-        log.warning(msg)
+        warnings.warn(msg)
 
     if mapper.exists:
         msg = "{!r} already exists".format(mapper.path)
@@ -44,7 +47,7 @@ def load(instance):
     """Force the loading of a mapped object's file."""
     mapper = _ensure_mapped(instance)
 
-    log.warning("'load' is called automatically")
+    warnings.warn("'load' is called automatically")
 
     mapper.load()
 
@@ -56,7 +59,8 @@ def save(instance):
     mapper = _ensure_mapped(instance)
 
     if mapper.auto_save:
-        log.warning("'save' is called automatically with 'auto_save' enabled")
+        msg = "'save' is called automatically with 'auto_save' enabled"
+        warnings.warn(msg)
 
     if mapper.deleted:
         msg = "{!r} was deleted".format(mapper.path)

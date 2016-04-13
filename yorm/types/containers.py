@@ -1,10 +1,12 @@
 """Converter classes for builtin container types."""
 
+import logging
+
 from .. import common
 from ..bases import Container
 from . import standard
 
-log = common.logger(__name__)
+log = logging.getLogger(__name__)
 
 
 class Dictionary(Container, dict):

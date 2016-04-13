@@ -37,9 +37,6 @@ def _trace(self, message, *args, **kwargs):  # pragma: no cover (manual test)
 logging.addLevelName(logging.DEBUG - 1, "TRACE")
 logging.Logger.trace = _trace
 
-logger = logging.getLogger
-log = logger(__name__)
-
 
 # DECORATORS ###################################################################
 

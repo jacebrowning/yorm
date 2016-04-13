@@ -1,12 +1,12 @@
 """Converter classes."""
 
 from abc import ABCMeta, abstractclassmethod, abstractmethod
+import logging
 
 from .. import common
 from . import Mappable
 
-
-log = common.logger(__name__)
+log = logging.getLogger(__name__)
 
 
 class Converter(metaclass=ABCMeta):

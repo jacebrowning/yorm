@@ -2,11 +2,11 @@
 
 import abc
 import functools
+import logging
 
 from .. import common
 
-
-log = common.logger(__name__)
+log = logging.getLogger(__name__)
 
 TAG = '_modified_by_yorm'
 
