@@ -61,7 +61,7 @@ class TestSyncObject:
     def test_init_existing(self):
         """Verify an existing file is read."""
         with patch('yorm.diskutils.read', Mock(return_value="abc: 123")):
-            sample = decorators.sync(self.Sample(), "sample.yml", strict=False)
+            sample = decorators.sync(self.Sample(), "s.yml", auto_attr=True)
         assert 123 == sample.abc
 
 
@@ -71,7 +71,7 @@ class TestSyncObject:
 class TestSyncInstances:
     """Unit tests for the `sync_instances` decorator."""
 
-    @decorators.sync("sample.yml", strict=False)
+    @decorators.sync("sample.yml", auto_attr=True)
     class SampleDecorated:
         """Sample decorated class using a single path."""
 
@@ -121,10 +121,6 @@ class TestSyncInstances:
     class SampleDecoratedWithAttributes:
         """Sample decorated class using a single path."""
 
-    @decorators.sync("sample.yml", attrs={'var1': MockConverter}, auto=False)
-    class SampleDecoratedWithAttributesAutoOff:
-        """Sample decorated class using a single path."""
-
     def test_no_attrs(self):
         """Verify mapping can be enabled with no attributes."""
         sample = self.SampleDecorated()
@@ -159,7 +155,7 @@ class TestSyncInstances:
         assert "path/to/two.yml" == sample2.__mapper__.path
 
     def test_filename_attributes_automatic(self):
-        """Verify attributes can be used to determine filename (auto)."""
+        """Verify attributes can be used to determine filename (auto save)."""
         sample1 = self.SampleDecoratedAttributesAutomatic('one')
         sample2 = self.SampleDecoratedAttributesAutomatic('two')
         assert "path/to/one.yml" == sample1.__mapper__.path

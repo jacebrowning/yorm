@@ -109,9 +109,9 @@ class TestDictionary:
         assert not hasattr(value2, 'var2')
         assert not hasattr(value2, 'var3')
 
-    def test_strict_update(self):
+    def test_unknown_attrributes_are_ignored(self):
         obj = SampleDictionary.create_default()
-        obj.update_value({'key': "value", 'abc': 7}, strict=True)
+        obj.update_value({'key': "value", 'abc': 7}, auto_attr=False)
         assert {'abc': 7} == obj
 
 

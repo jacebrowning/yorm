@@ -20,7 +20,8 @@ class Config:
 
 @yorm.attr(key=yorm.types.String)
 @yorm.attr(name=yorm.types.String)
-@yorm.sync("{self.root}/{self.key}/config.yml", auto=False)
+@yorm.sync("{self.root}/{self.key}/config.yml",
+           auto_create=False, auto_save=False)
 class ConfigModel:
 
     def __init__(self, key, root):

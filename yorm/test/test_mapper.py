@@ -31,7 +31,7 @@ def mapper(tmpdir, obj, attrs, request):
         yorm.settings.fake = True
     elif "real" in path:
         tmpdir.chdir()
-    yield Mapper(obj, path, attrs, strict=True)
+    yield Mapper(obj, path, attrs, auto_attr=False)
     yorm.settings.fake = backup
 
 
@@ -107,8 +107,8 @@ def describe_mapper():
             with expect.raises(AttributeError):
                 print(obj.var4)
 
-        def it_infers_types_on_new_attributes_when_not_strict(obj, mapper):
-            mapper.strict = False
+        def it_infers_types_on_new_attributes_with_auto_attr(obj, mapper):
+            mapper.auto_attr = True
             mapper.create()
             mapper.text = "var4: foo"
 
@@ -126,13 +126,6 @@ def describe_mapper():
 
             with expect.raises(exceptions.DeletedFileError):
                 mapper.fetch()
-
-    def describe_store():
-
-        def it_creates_the_file_automatically(mapper_real):
-            mapper_real.store()
-
-            expect(mapper_real.path).exists()
 
     def describe_modified():
 
@@ -156,11 +149,13 @@ def describe_mapper():
             expect(mapper.modified).is_false()
 
         def can_be_set_false(mapper):
+            mapper.create()
             mapper.modified = False
 
             expect(mapper.modified).is_false()
 
         def can_be_set_true(mapper):
+            mapper.create()
             mapper.modified = True
 
             expect(mapper.modified).is_true()
@@ -168,6 +163,7 @@ def describe_mapper():
     def describe_text():
 
         def can_get_the_file_contents(obj, mapper):
+            mapper.create()
             obj.var3 = 42
             mapper.store()
 

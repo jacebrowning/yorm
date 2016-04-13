@@ -10,11 +10,15 @@ class Error(Exception, metaclass=ABCMeta):
 
 
 class DuplicateMappingError(Error, FileExistsError):
-    """A file path is already in use by another mapping."""
+    """The file is already in use by another mapping."""
+
+
+class MissingFileError(Error, FileNotFoundError):
+    """An object's file has not yet been created."""
 
 
 class DeletedFileError(Error, FileNotFoundError):
-    """Text could not be read from a deleted file."""
+    """An object's file was deleted."""
 
 
 class FileContentError(Error, yaml.error.YAMLError, ValueError):

@@ -38,11 +38,11 @@ class Container(Mappable, Converter, metaclass=ABCMeta):
     @classmethod
     def to_value(cls, data):
         value = cls.create_default()
-        value.update_value(data, strict=False)
+        value.update_value(data, auto_attr=True)
         return value
 
     @abstractmethod
-    def update_value(self, data, strict):  # pragma: no cover (abstract method)
+    def update_value(self, data, *, auto_attr):  # pragma: no cover (abstract method)
         """Update the attribute's value from loaded data."""
         raise NotImplementedError(common.OVERRIDE_MESSAGE)
 

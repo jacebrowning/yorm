@@ -35,22 +35,29 @@ def sync_object(instance, path, attrs=None, **kwargs):
     :param path: file path for dump/load
     :param attrs: dictionary of attribute names mapped to converter classes
 
-    :param auto: automatically store attributes to file
-    :param strict: ignore new attributes in files
+    :param auto_create: automatically create the file to save attributes
+    :param auto_save: automatically save attribute changes to the file
+    :param auto_attr: automatically add new attributes from the file
 
     """
     log.info("Mapping %r to %s...", instance, path)
-    _ensure_mapped(instance, expected=False)
 
+    _ensure_mapped(instance, expected=False)
     patch_methods(instance)
 
     attrs = _ordered(attrs) or common.attrs[instance.__class__]
+    kwargs['auto_store'] = kwargs.pop('auto_save', True)
     mapper = Mapper(instance, path, attrs, **kwargs)
-    if mapper.auto:
-        if mapper.missing:
+
+    if mapper.missing:
+        if mapper.auto_create:
             mapper.create()
-            mapper.store()
-        mapper.fetch()
+            if mapper.auto_store:
+                mapper.store()
+                mapper.fetch()
+    else:
+        if mapper.auto_store:
+            mapper.fetch()
 
     common.set_mapper(instance, mapper)
     log.info("Mapped %r to %s", instance, path)
@@ -65,8 +72,9 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
     :param format_spec: dictionary to use for string formatting
     :param attrs: dictionary of attribute names mapped to converter classes
 
-    :param auto: automatically store attributes to file
-    :param strict: ignore new attributes in files
+    :param auto_create: automatically create the file to save attributes
+    :param auto_save: automatically save attribute changes to the file
+    :param auto_attr: automatically add new attributes from the file
 
     """
     format_spec = format_spec or {}
@@ -74,7 +82,6 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
 
     def decorator(cls):
         """Class decorator to map instances to files."""
-
         init = cls.__init__
 
         def modified_init(self, *_args, **_kwargs):

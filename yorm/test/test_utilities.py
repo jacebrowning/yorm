@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 def model_class(tmpdir):
     tmpdir.chdir()
 
-    @yorm.sync("data/{self.kind}/{self.key}.yml", auto=False)
+    @yorm.sync("data/{self.kind}/{self.key}.yml", auto_create=False)
     class Model:
 
         def __init__(self, kind, key):
