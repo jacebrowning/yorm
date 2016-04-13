@@ -1,10 +1,12 @@
-# pylint: disable=unused-variable,redefined-outer-name,expression-not-assigned
+# pylint: disable=unused-variable,redefined-outer-name,expression-not-assigned,singleton-comparison
 
 import logging
 from unittest.mock import Mock
 
 import pytest
+from expecter import expect
 
+import yorm
 from yorm import exceptions
 from yorm import utilities
 
@@ -12,83 +14,105 @@ log = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def instance():
-    obj = Mock()
-    obj.__mapper__ = Mock()
-    obj.__mapper__.attrs = {}
-    obj.__mapper__.reset_mock()
-    return obj
+def model_class(tmpdir):
+    tmpdir.chdir()
+
+    @yorm.sync("data/{self.kind}/{self.key}.yml", auto_create=False)
+    class Model:
+
+        def __init__(self, kind, key):
+            self.kind = kind
+            self.key = key
+
+        def __eq__(self, other):
+            return (self.kind, self.key) == (other.kind, other.key)
+
+    return Model
 
 
-def describe_update():
-
-    def it_fetches_and_stores(instance):
-        utilities.update(instance)
-
-        assert instance.__mapper__.fetch.called
-        assert instance.__mapper__.store.called
-
-    def it_only_stores_when_requested(instance):
-        utilities.update(instance, store=False)
-
-        assert instance.__mapper__.fetch.called
-        assert not instance.__mapper__.store.called
-
-    def it_only_fetches_when_requested(instance):
-        utilities.update(instance, fetch=False)
-
-        assert not instance.__mapper__.fetch.called
-        assert instance.__mapper__.store.called
-
-    def it_raises_an_exception_with_the_wrong_base():
-        instance = Mock()
-
-        with pytest.raises(exceptions.MappingError):
-            utilities.update(instance)
+@pytest.fixture
+def instance(model_class):
+    return model_class('foo', 'bar')
 
 
-def describe_update_object():
+def describe_new():
 
-    def it_fetches(instance):
-        utilities.update_object(instance)
+    def it_creates_files(model_class):
+        instance = utilities.new(model_class, 'foo', 'bar')
 
-        assert instance.__mapper__.fetch.called
-        assert not instance.__mapper__.store.called
+        expect(instance.__mapper__.exists) == True
 
-    def it_raises_an_exception_with_the_wrong_base():
-        instance = Mock()
+    def it_requires_files_to_not_yet_exist(model_class, instance):
+        instance.__mapper__.create()
 
-        with pytest.raises(exceptions.MappingError):
-            utilities.update_object(instance)
+        with expect.raises(exceptions.DuplicateMappingError):
+            utilities.new(model_class, 'foo', 'bar')
+
+    def it_requires_a_mapped_object():
+        with expect.raises(TypeError):
+            utilities.new(Mock)
 
 
-def describe_update_file():
+def describe_find():
 
-    def it_stores(instance):
-        utilities.update_file(instance)
+    def it_returns_object_when_found(model_class, instance):
+        instance.__mapper__.create()
 
-        assert False is instance.__mapper__.fetch.called
-        assert True is instance.__mapper__.store.called
+        expect(utilities.find(model_class, 'foo', 'bar')) == instance
 
-    def it_raises_an_exception_with_the_wrong_base():
-        instance = Mock()
+    def it_returns_none_when_no_match(model_class):
+        expect(utilities.find(model_class, 'not', 'here')) == None
 
-        with pytest.raises(exceptions.MappingError):
-            utilities.update_file(instance)
+    def it_allows_objects_to_be_created(model_class):
+        expect(utilities.find(model_class, 'new', 'one', create=True)) == \
+            model_class('new', 'one')
 
-    def it_only_stores_with_auto_on(instance):
-        instance.__mapper__.auto = False
+    def it_requires_a_mapped_object():
+        with expect.raises(TypeError):
+            utilities.find(Mock)
 
-        utilities.update_file(instance, force=False)
 
-        assert False is instance.__mapper__.fetch.called
-        assert False is instance.__mapper__.store.called
+def describe_load():
 
-    def it_creates_missing_files(instance):
-        instance.__mapper__.exists = False
+    def it_is_not_yet_implemented():
+        with expect.raises(NotImplementedError):
+            utilities.load(Mock)
 
-        utilities.update_file(instance)
 
-        assert False is instance.__mapper__.fetch.called
-        assert True is instance.__mapper__.create.called
-        assert True is instance.__mapper__.store.called
+def describe_save():
+
+    def it_creates_files(instance):
+        utilities.save(instance)
+
+        expect(instance.__mapper__.exists) == True
+
+    def it_marks_files_as_modified(instance):
+        instance.__mapper__.create()
+        instance.__mapper__.modified = False
+
+        utilities.save(instance)
+
+        expect(instance.__mapper__.modified) == True
+
+    def it_expects_the_file_to_not_be_deleted(instance):
+        instance.__mapper__.delete()
+
+        with expect.raises(exceptions.DeletedFileError):
+            utilities.save(instance)
+
+    def it_requires_a_mapped_object():
+        with expect.raises(TypeError):
+            utilities.save(Mock)
+
+
+def describe_delete():
+
+    def it_deletes_files(instance):
+        utilities.delete(instance)
+
+        expect(instance.__mapper__.exists) == False
+        expect(instance.__mapper__.deleted) == True
+
+    def it_requires_a_mapped_object():
+        with expect.raises(TypeError):
+            utilities.delete(Mock)

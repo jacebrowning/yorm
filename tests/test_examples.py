@@ -109,7 +109,7 @@ class SampleCustomDecorated:
 
 
 @yorm.attr(string=String)
-@yorm.sync("sample.yml", auto=False)
+@yorm.sync("sample.yml", auto_save=False)
 class SampleDecoratedAutoOff:
     """Sample class with automatic storage turned off."""
 
@@ -117,10 +117,10 @@ class SampleDecoratedAutoOff:
         self.string = ""
 
     def __repr__(self):
-        return "<auto off {}>".format(id(self))
+        return "<auto save off {}>".format(id(self))
 
 
-@yorm.sync("sample.yml", strict=False)
+@yorm.sync("sample.yml", auto_attr=True)
 class SampleEmptyDecorated:
     """Sample class using standard attribute types."""
 
@@ -319,26 +319,16 @@ class TestStandard:
         """, tabs=2, end='') == sample.__mapper__.text
 
     def test_auto_off(self, tmpdir):
-        """Verify file updates are disabled with auto off."""
+        """Verify file updates are disabled with auto save off."""
         tmpdir.chdir()
         sample = SampleDecoratedAutoOff()
 
-        # ensure the file does not exist
-        assert False is sample.__mapper__.exists
-        assert "" == sample.__mapper__.text
-
-        # store value
         sample.string = "hello"
-
-        # ensure the file still does not exist
-        assert False is sample.__mapper__.exists
         assert "" == sample.__mapper__.text
 
-        # enable auto and store value
-        sample.__mapper__.auto = True
+        sample.__mapper__.auto_store = True
         sample.string = "world"
 
-        # check for changed file values
         assert strip("""
         string: world
         """) == sample.__mapper__.text
@@ -353,7 +343,7 @@ class TestContainers:
         _sample = SampleNested()
         attrs = {'count': Integer,
                  'results': StatusDictionaryList}
-        sample = yorm.sync(_sample, "sample.yml", attrs, strict=False)
+        sample = yorm.sync(_sample, "sample.yml", attrs, auto_attr=True)
 
         # check defaults
         assert 0 == sample.count

@@ -25,7 +25,7 @@ def fetch_before(method):
             if mapper and mapper.modified:
                 log.debug("Fetching before call: %s", method.__name__)
                 mapper.fetch()
-                if mapper.store_after_fetch:
+                if mapper.auto_store_after_fetch:
                     mapper.store()
                     mapper.modified = False
 
@@ -49,7 +49,7 @@ def store_after(method):
 
         if not _private_call(method, args):
             mapper = common.get_mapper(self)
-            if mapper and mapper.auto:
+            if mapper and mapper.auto_store:
                 log.debug("Storing after call: %s", method.__name__)
                 mapper.store()
 

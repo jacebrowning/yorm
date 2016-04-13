@@ -1,4 +1,6 @@
 [pep8]
 
 # E501: line too long (checked by PyLint)
-ignore = E501
+# E711: comparison to None (checked by PyLint)
+# E712: comparison to True (checked by PyLint)
+ignore = E501,E711,E712

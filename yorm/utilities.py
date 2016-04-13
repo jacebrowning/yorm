@@ -5,85 +5,71 @@ from . import common, exceptions
 log = common.logger(__name__)
 
 
-def update(instance, *, fetch=True, force=True, store=True):
-    """Synchronize changes between a mapped object and its file.
+def new(cls, *args):
+    """Create a new mapped object."""
+    instance = cls(*args)
+    mapper = _ensure_mapped(instance)
 
-    :param instance: object with patched YAML mapping behavior
-    :param fetch: update the object with changes from its file
-    :param force: even if the file appears unchanged
-    :param store: update the file with changes from the object
+    if mapper.exists:
+        msg = "{!r} already exists".format(mapper.path)
+        raise exceptions.DuplicateMappingError(msg)
 
-    """
-    _check_base(instance, mappable=True)
-
-    if fetch:
-        update_object(instance, force=False)
-    if store:
-        update_file(instance)
-    if fetch:
-        update_object(instance, force=force)
+    return save(instance)
 
 
-def update_object(instance, *, existing=True, force=True):
-    """Synchronize changes into a mapped object from its file.
+def find(cls, *args, create=False):
+    """Find a matching mapped object or return None."""
+    instance = cls(*args)
+    mapper = _ensure_mapped(instance)
 
-    :param instance: object with patched YAML mapping behavior
-    :param existing: indicate if file is expected to exist or not
-    :param force: update the object even if the file appears unchanged
-
-    """
-    log.info("Manually updating %r from file...", instance)
-    _check_base(instance, mappable=True)
-
-    mapper = common.get_mapper(instance)
-    _check_existance(mapper, existing)
-
-    if mapper.modified or force:
-        mapper.fetch()
+    if mapper.exists:
+        return instance
+    elif create:
+        return save(instance)
+    else:
+        return None
 
 
-def update_file(instance, *, existing=None, force=True):
-    """Synchronize changes into a mapped object's file.
-
-    :param instance: object with patched YAML mapping behavior
-    :param existing: indicate if file is expected to exist or not
-    :param force: update the file even if automatic sync is off
-
-    """
-    log.info("Manually saving %r to file...", instance)
-    _check_base(instance, mappable=True)
-
-    mapper = common.get_mapper(instance)
-    _check_existance(mapper, existing)
-
-    if mapper.auto or force:
-        if not mapper.exists:
-            mapper.create()
-        mapper.store()
+def load(cls, **kwargs):
+    """Return a list of all matching mapped objects."""
+    log.debug((cls, kwargs))
+    raise NotImplementedError
 
 
-def _synced(obj):
-    """Determine if an object is already mapped to a file."""
-    return bool(common.get_mapper(obj))
+def save(instance):
+    """Save a mapped object to file."""
+    mapper = _ensure_mapped(instance)
+
+    if mapper.deleted:
+        msg = "{!r} was deleted".format(mapper.path)
+        raise exceptions.DeletedFileError(msg)
+
+    if not mapper.exists:
+        mapper.create()
+
+    mapper.store()
+
+    return instance
 
 
-def _check_base(obj, mappable=True):
-    """Confirm an object's base class is `Mappable` as required."""
-    if mappable and not _synced(obj):
-        raise exceptions.MappingError("{} is not mapped".format(repr(obj)))
-    if not mappable and _synced(obj):
-        raise exceptions.MappingError("{} is already mapped".format(repr(obj)))
+def delete(instance):
+    """Delete a mapped object's file."""
+    mapper = _ensure_mapped(instance)
+
+    mapper.delete()
+
+    return None
 
 
-def _check_existance(mapper, existing=None):
-    """Confirm the expected state of the file.
+def _ensure_mapped(obj, *, expected=True):
+    mapper = common.get_mapper(obj)
 
-    :param existing: indicate if file is expected to exist or not
+    if mapper and not expected:
+        msg = "{!r} is already mapped".format(obj)
+        raise TypeError(msg)
 
-    """
-    if existing is True:
-        if not mapper.exists:
-            raise exceptions.FileMissingError
-    elif existing is False:
-        if mapper.exists:
-            raise exceptions.FileAlreadyExistsError
+    if not mapper and expected:
+        msg = "{!r} is not mapped".format(obj)
+        raise TypeError(msg)
+
+    return mapper

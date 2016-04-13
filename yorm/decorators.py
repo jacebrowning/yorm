@@ -6,9 +6,7 @@ from collections import OrderedDict
 from . import common
 from .bases.mappable import patch_methods
 from .mapper import Mapper
-
-# TODO: remove this after refactor
-from .utilities import _check_base, _check_existance
+from .utilities import _ensure_mapped
 
 log = common.logger(__name__)
 
@@ -30,34 +28,40 @@ def sync(*args, **kwargs):
         return sync_object(*args, **kwargs)
 
 
-def sync_object(instance, path, attrs=None, existing=None, **kwargs):
+def sync_object(instance, path, attrs=None, **kwargs):
     """Enable YAML mapping on an object.
 
     :param instance: object to patch with YAML mapping behavior
     :param path: file path for dump/load
     :param attrs: dictionary of attribute names mapped to converter classes
-    :param existing: indicate if file is expected to exist or not
-    :param auto: automatically store attributes to file
-    :param strict: ignore new attributes in files
+
+    :param auto_create: automatically create the file to save attributes
+    :param auto_save: automatically save attribute changes to the file
+    :param auto_attr: automatically add new attributes from the file
 
     """
     log.info("Mapping %r to %s...", instance, path)
-    _check_base(instance, mappable=False)
 
+    _ensure_mapped(instance, expected=False)
     patch_methods(instance)
 
     attrs = _ordered(attrs) or common.attrs[instance.__class__]
+    kwargs['auto_store'] = kwargs.pop('auto_save', True)
     mapper = Mapper(instance, path, attrs, **kwargs)
-    common.set_mapper(instance, mapper)
-    _check_existance(mapper, existing)
 
-    if mapper.auto:
-        if not mapper.exists:
+    if mapper.missing:
+        if mapper.auto_create:
             mapper.create()
-            mapper.store()
-        mapper.fetch()
+            if mapper.auto_store:
+                mapper.store()
+                mapper.fetch()
+    else:
+        if mapper.auto_store:
+            mapper.fetch()
 
+    common.set_mapper(instance, mapper)
     log.info("Mapped %r to %s", instance, path)
+
     return instance
 
 
@@ -67,16 +71,17 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
     :param path_format: formatting string to create file paths for dump/load
     :param format_spec: dictionary to use for string formatting
     :param attrs: dictionary of attribute names mapped to converter classes
-    :param existing: indicate if file is expected to exist or not
-    :param auto: automatically store attributes to file
+
+    :param auto_create: automatically create the file to save attributes
+    :param auto_save: automatically save attribute changes to the file
+    :param auto_attr: automatically add new attributes from the file
 
     """
     format_spec = format_spec or {}
     attrs = attrs or OrderedDict()
 
     def decorator(cls):
-        """Class decorator to map instances to files.."""
-
+        """Class decorator to map instances to files."""
         init = cls.__init__
 
         def modified_init(self, *_args, **_kwargs):

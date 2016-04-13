@@ -9,31 +9,21 @@ from .bases import Container
 log = common.logger(__name__)
 
 
-def file_required(create=False):
-    """Decorator for methods that require the file to exist.
+def file_required(method):
+    """Decorator for methods that require the file to exist."""
 
-    :param create: boolean or the method to decorate
-
-    """
-    def decorator(method):
-
-        @functools.wraps(method)
-        def wrapped(self, *args, **kwargs):
-            if not self.exists and self.auto:
-                if create is True and not self.deleted:
-                    self.create()
-                else:
-                    msg = "Cannot access deleted: {}".format(self.path)
-                    raise exceptions.FileDeletedError(msg)
-
+    @functools.wraps(method)
+    def wrapped(self, *args, **kwargs):
+        if self.deleted:
+            msg = "File deleted: {}".format(self.path)
+            raise exceptions.DeletedFileError(msg)
+        elif self.missing and not settings.fake:
+            msg = "File missing: {}".format(self.path)
+            raise exceptions.MissingFileError(msg)
+        else:
             return method(self, *args, **kwargs)
 
-        return wrapped
-
-    if callable(create):
-        return decorator(create)
-    else:
-        return decorator
+    return wrapped
 
 
 def prevent_recursion(method):
@@ -80,22 +70,29 @@ class Mapper:
 
     """
 
-    def __init__(self, obj, path, attrs, *, auto=True, strict=True):
+    def __init__(self, obj, path, attrs, *,
+                 auto_create=True, auto_store=True, auto_attr=False):
         self._obj = obj
         self.path = path
         self.attrs = attrs
-        self.auto = auto
-        self.strict = strict
+        self.auto_create = auto_create
+        self.auto_store = auto_store
+        self.auto_attr = auto_attr
 
         self.exists = diskutils.exists(self.path)
         self.deleted = False
-        self.store_after_fetch = False
+        self.auto_store_after_fetch = False
+
         self._activity = False
         self._timestamp = 0
         self._fake = ""
 
     def __str__(self):
         return str(self.path)
+
+    @property
+    def missing(self):
+        return not self.exists
 
     @property
     def modified(self):
@@ -106,12 +103,13 @@ class Mapper:
         elif not self.exists:
             return True
         else:
+            # TODO: this raises an exception is the file is missing
             was = self._timestamp
             now = diskutils.stamp(self.path)
             return was != now
 
     @modified.setter
-    @file_required(create=True)
+    @file_required
     def modified(self, changes):
         """Mark the file as modified if there are changes."""
         if changes:
@@ -177,19 +175,19 @@ class Mapper:
             try:
                 converter = self.attrs[name]
             except KeyError:
-                if self.strict:
+                if self.auto_attr:
+                    converter = types.match(name, data)
+                    self.attrs[name] = converter
+                else:
                     msg = "Ignored unknown file attribute: %s = %r"
                     log.warning(msg, name, data)
                     continue
-                else:
-                    converter = types.match(name, data)
-                    self.attrs[name] = converter
 
             # Convert the loaded attribute
             attr = getattr(self._obj, name, None)
             if all((isinstance(attr, converter),
                     issubclass(converter, Container))):
-                attr.update_value(data, strict=self.strict)
+                attr.update_value(data, auto_attr=self.auto_attr)
             else:
                 attr = converter.to_value(data)
                 setattr(self._obj, name, attr)
@@ -220,7 +218,7 @@ class Mapper:
                 for obj2 in obj:
                     self._remap(obj2, root)
 
-    @file_required(create=True)
+    @file_required
     @prevent_recursion
     def store(self):
         """Format and save the object's mapped attributes to its file."""
@@ -247,7 +245,7 @@ class Mapper:
 
         # Set meta attributes
         self.modified = True
-        self.store_after_fetch = self.auto
+        self.auto_store_after_fetch = self.auto_store
 
     def delete(self):
         """Delete the object's file from the file system."""
