@@ -1,16 +1,19 @@
 """Integration tests using YORM as a persistence model."""
 # pylint: disable=missing-docstring,no-self-use,misplaced-comparison-constant
 
-
 import os
 
+from expecter import expect
+
 import yorm
+from yorm.types import String
 
 
 # CLASSES ######################################################################
 
 
 class Config:
+    """Domain model."""
 
     def __init__(self, key, name=None, root=None):
         self.key = key
@@ -18,11 +21,12 @@ class Config:
         self.root = root or ""
 
 
-@yorm.attr(key=yorm.types.String)
-@yorm.attr(name=yorm.types.String)
+@yorm.attr(key=String)
+@yorm.attr(name=String)
 @yorm.sync("{self.root}/{self.key}/config.yml",
            auto_create=False, auto_save=False)
 class ConfigModel:
+    """Persistence model."""
 
     def __init__(self, key, root):
         self.key = key
@@ -75,6 +79,12 @@ class TestPersistanceMapping:  # pylint: disable=no-member
         model = ConfigModel('my_key', self.root)
         model.unmapped = 42
         assert 42 == model.unmapped
+
+    def test_missing_files_are_handled(self):
+        model = ConfigModel('my_key_manual', self.root)
+
+        with expect.raises(yorm.exceptions.MissingFileError):
+            print(model.name)
 
 
 class TestStore:
