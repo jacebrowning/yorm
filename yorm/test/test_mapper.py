@@ -31,7 +31,7 @@ def mapper(tmpdir, obj, attrs, request):
         yorm.settings.fake = True
     elif "real" in path:
         tmpdir.chdir()
-    yield Mapper(obj, path, attrs, strict=True)
+    yield Mapper(obj, path, attrs, auto_track=False)
     yorm.settings.fake = backup
 
 
@@ -89,11 +89,11 @@ def describe_mapper():
 
             expect(mapper.path).missing()
 
-    def describe_fetch():
+    def describe_load():
 
         def it_adds_missing_attributes(obj, mapper):
             mapper.create()
-            mapper.fetch()
+            mapper.load()
 
             expect(obj.var1) == 1
             expect(obj.var2) == 0
@@ -103,36 +103,29 @@ def describe_mapper():
             mapper.create()
             mapper.text = "var4: foo"
 
-            mapper.fetch()
+            mapper.load()
             with expect.raises(AttributeError):
                 print(obj.var4)
 
-        def it_infers_types_on_new_attributes_when_not_strict(obj, mapper):
-            mapper.strict = False
+        def it_infers_types_on_new_attributes_with_auto_track(obj, mapper):
+            mapper.auto_track = True
             mapper.create()
             mapper.text = "var4: foo"
 
-            mapper.fetch()
+            mapper.load()
             expect(obj.var4) == "foo"
 
             obj.var4 = 42
-            mapper.store()
+            mapper.save()
 
-            mapper.fetch()
+            mapper.load()
             expect(obj.var4) == "42"
 
         def it_raises_an_exception_after_delete(mapper):
             mapper.delete()
 
-            with expect.raises(exceptions.FileDeletedError):
-                mapper.fetch()
-
-    def describe_store():
-
-        def it_creates_the_file_automatically(mapper_real):
-            mapper_real.store()
-
-            expect(mapper_real.path).exists()
+            with expect.raises(exceptions.DeletedFileError):
+                mapper.load()
 
     def describe_modified():
 
@@ -149,18 +142,20 @@ def describe_mapper():
 
             expect(mapper.modified).is_true()
 
-        def is_false_after_fetch(mapper):
+        def is_false_after_load(mapper):
             mapper.create()
-            mapper.fetch()
+            mapper.load()
 
             expect(mapper.modified).is_false()
 
         def can_be_set_false(mapper):
+            mapper.create()
             mapper.modified = False
 
             expect(mapper.modified).is_false()
 
         def can_be_set_true(mapper):
+            mapper.create()
             mapper.modified = True
 
             expect(mapper.modified).is_true()
@@ -168,14 +163,15 @@ def describe_mapper():
     def describe_text():
 
         def can_get_the_file_contents(obj, mapper):
+            mapper.create()
             obj.var3 = 42
-            mapper.store()
+            mapper.save()
 
             expect(mapper.text) == "var2: 0\nvar3: 42\n"
 
         def can_set_the_file_contents(obj, mapper):
             mapper.create()
             mapper.text = "var2: 42\n"
-            mapper.fetch()
+            mapper.load()
 
             expect(obj.var2) == 42

@@ -1,12 +1,12 @@
 """Converter classes."""
 
 from abc import ABCMeta, abstractclassmethod, abstractmethod
+import logging
 
 from .. import common
 from . import Mappable
 
-
-log = common.logger(__name__)
+log = logging.getLogger(__name__)
 
 
 class Converter(metaclass=ABCMeta):
@@ -19,7 +19,7 @@ class Converter(metaclass=ABCMeta):
 
     @abstractclassmethod
     def to_value(cls, data):
-        """Convert loaded data to an attribute's value."""
+        """Convert parsed data to an attribute's value."""
         raise NotImplementedError(common.OVERRIDE_MESSAGE)
 
     @abstractclassmethod
@@ -38,12 +38,12 @@ class Container(Mappable, Converter, metaclass=ABCMeta):
     @classmethod
     def to_value(cls, data):
         value = cls.create_default()
-        value.update_value(data, strict=False)
+        value.update_value(data, auto_track=True)
         return value
 
     @abstractmethod
-    def update_value(self, data, strict):  # pragma: no cover (abstract method)
-        """Update the attribute's value from loaded data."""
+    def update_value(self, data, *, auto_track):  # pragma: no cover (abstract method)
+        """Update the attribute's value from parsed data."""
         raise NotImplementedError(common.OVERRIDE_MESSAGE)
 
     def format_data(self):

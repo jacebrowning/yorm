@@ -8,7 +8,7 @@ from expecter import expect
 
 import yorm
 from yorm import common
-from yorm.utilities import attr
+from yorm.decorators import attr
 from yorm.types import Dictionary, List
 from yorm.types import String, Integer
 
@@ -109,9 +109,9 @@ class TestDictionary:
         assert not hasattr(value2, 'var2')
         assert not hasattr(value2, 'var3')
 
-    def test_strict_update(self):
+    def test_unknown_attrributes_are_ignored(self):
         obj = SampleDictionary.create_default()
-        obj.update_value({'key': "value", 'abc': 7}, strict=True)
+        obj.update_value({'key': "value", 'abc': 7}, auto_track=False)
         assert {'abc': 7} == obj
 
 

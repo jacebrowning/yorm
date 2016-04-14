@@ -1,16 +1,19 @@
 """Integration tests using YORM as a persistence model."""
 # pylint: disable=missing-docstring,no-self-use,misplaced-comparison-constant
 
-
 import os
 
+from expecter import expect
+
 import yorm
+from yorm.types import String
 
 
 # CLASSES ######################################################################
 
 
 class Config:
+    """Domain model."""
 
     def __init__(self, key, name=None, root=None):
         self.key = key
@@ -18,10 +21,12 @@ class Config:
         self.root = root or ""
 
 
-@yorm.attr(key=yorm.types.String)
-@yorm.attr(name=yorm.types.String)
-@yorm.sync("{self.root}/{self.key}/config.yml")
+@yorm.attr(key=String)
+@yorm.attr(name=String)
+@yorm.sync("{self.root}/{self.key}/config.yml",
+           auto_create=False, auto_save=False)
 class ConfigModel:
+    """Persistence model."""
 
     def __init__(self, key, root):
         self.key = key
@@ -41,21 +46,9 @@ class ConfigStore:
 
     def __init__(self, root):
         self.root = root
-        self.path = self.root + "/{}/config.yml"
-        self.attrs = dict(key=yorm.types.String,
-                          name=yorm.types.String)
 
     def read(self, key):
-        instance = Config(key)
-        path = self.path.format(key)
-        attrs = self.attrs
-        try:
-            yorm.sync(instance, path, attrs, existing=True, auto=False)
-        except yorm.exceptions.FileMissingError:
-            return None
-        else:
-            yorm.update_object(instance)
-            return instance
+        return yorm.find(ConfigModel, self.root, key)
 
 
 # TESTS ########################################################################
@@ -85,8 +78,13 @@ class TestPersistanceMapping:  # pylint: disable=no-member
     def test_nonmapped_attribute_is_kept(self):
         model = ConfigModel('my_key', self.root)
         model.unmapped = 42
-        yorm.update(model, force=True)
         assert 42 == model.unmapped
+
+    def test_missing_files_are_handled(self):
+        model = ConfigModel('my_key_manual', self.root)
+
+        with expect.raises(yorm.exceptions.MissingFileError):
+            print(model.name)
 
 
 class TestStore:

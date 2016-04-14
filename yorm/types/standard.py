@@ -1,9 +1,11 @@
 """Convertible classes for builtin immutable types."""
 
-from .. import common, exceptions
+import logging
+
+from .. import exceptions
 from ..bases import Converter
 
-log = common.logger(__name__)
+log = logging.getLogger(__name__)
 
 
 class Object(Converter):
@@ -142,4 +144,4 @@ def match(name, data, nested=False):
         return Object
 
     msg = "No converter available for: {}".format(data)
-    raise exceptions.ConversionError(msg)
+    raise exceptions.FileContentError(msg)

@@ -6,7 +6,6 @@ from yorm.bases import Container
 
 
 class TestContainer:
-
     """Unit tests for the `Container` class."""
 
     class MyContainer(Container):
@@ -24,7 +23,7 @@ class TestContainer:
         def to_data(cls, value):
             return str(value.value)
 
-        def update_value(self, data, strict=True):
+        def update_value(self, data, *, auto_track=None):  # pylint: disable=unused-variable
             self.value += int(data)
 
     def test_container_class_cannot_be_instantiated(self):

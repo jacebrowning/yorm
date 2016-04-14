@@ -74,7 +74,7 @@ class SampleMappable(Mappable):
                  'var4': IntegerList,
                  'var5': StatusDictionary}
         self.__mapper__ = MockMapper(self, path, attrs)
-        self.__mapper__.store()
+        self.__mapper__.save()
 
     def __repr__(self):
         return "<sample {}>".format(id(self))
@@ -174,7 +174,7 @@ class TestMappable:
 
     def test_new(self):
         """Verify new attributes are added to the object."""
-        self.sample.__mapper__.strict = False
+        self.sample.__mapper__.auto_track = True
         text = strip("""
         new: 42
         """)
@@ -183,7 +183,7 @@ class TestMappable:
 
     def test_new_unknown(self):
         """Verify an exception is raised on new attributes w/ unknown types"""
-        self.sample.__mapper__.strict = False
+        self.sample.__mapper__.auto_track = True
         text = strip("""
         new: !!timestamp 2001-12-15T02:59:43.1Z
         """)
@@ -206,64 +206,64 @@ class TestMappableTriggers:
 
         __mapper__ = Mock()
         __mapper__.attrs = {}
-        __mapper__.fetch = Mock()
-        __mapper__.store = Mock()
+        __mapper__.load = Mock()
+        __mapper__.save = Mock()
 
     def setup_method(self, _):
         """Create an mappable instance for tests."""
         self.sample = self.Sample()
-        self.sample.__mapper__.fetch.reset_mock()
-        self.sample.__mapper__.store.reset_mock()
-        self.sample.__mapper__.store_after_fetch = False
+        self.sample.__mapper__.load.reset_mock()
+        self.sample.__mapper__.save.reset_mock()
+        self.sample.__mapper__.auto_save_after_load = False
 
     def test_getattribute(self):
         with pytest.raises(AttributeError):
             getattr(self.sample, 'foo')
-        assert 1 == self.sample.__mapper__.fetch.call_count
-        assert 0 == self.sample.__mapper__.store.call_count
+        assert 1 == self.sample.__mapper__.load.call_count
+        assert 0 == self.sample.__mapper__.save.call_count
 
     def test_setattr(self):
         self.sample.__mapper__.attrs['foo'] = Mock()
         setattr(self.sample, 'foo', 'bar')
-        assert 0 == self.sample.__mapper__.fetch.call_count
-        assert 1 == self.sample.__mapper__.store.call_count
+        assert 0 == self.sample.__mapper__.load.call_count
+        assert 1 == self.sample.__mapper__.save.call_count
 
     def test_getitem(self):
         with pytest.raises(KeyError):
             print(self.sample['foo'])
-        assert 1 == self.sample.__mapper__.fetch.call_count
-        assert 0 == self.sample.__mapper__.store.call_count
+        assert 1 == self.sample.__mapper__.load.call_count
+        assert 0 == self.sample.__mapper__.save.call_count
 
     def test_setitem(self):
         self.sample['foo'] = 'bar'
-        assert 0 == self.sample.__mapper__.fetch.call_count
-        assert 1 == self.sample.__mapper__.store.call_count
+        assert 0 == self.sample.__mapper__.load.call_count
+        assert 1 == self.sample.__mapper__.save.call_count
 
     def test_delitem(self):
         self.sample['foo'] = 'bar'
-        self.sample.__mapper__.store.reset_mock()
+        self.sample.__mapper__.save.reset_mock()
 
         del self.sample['foo']
-        assert 0 == self.sample.__mapper__.fetch.call_count
-        assert 1 == self.sample.__mapper__.store.call_count
+        assert 0 == self.sample.__mapper__.load.call_count
+        assert 1 == self.sample.__mapper__.save.call_count
 
     def test_append(self):
         self.sample.append('foo')
-        assert 1 == self.sample.__mapper__.fetch.call_count
-        assert 1 == self.sample.__mapper__.store.call_count
+        assert 1 == self.sample.__mapper__.load.call_count
+        assert 1 == self.sample.__mapper__.save.call_count
 
     def test_iter(self):
         self.sample.append('foo')
         self.sample.append('bar')
-        self.sample.__mapper__.fetch.reset_mock()
-        self.sample.__mapper__.store.reset_mock()
-        self.sample.__mapper__.store_after_fetch = False
+        self.sample.__mapper__.load.reset_mock()
+        self.sample.__mapper__.save.reset_mock()
+        self.sample.__mapper__.auto_save_after_load = False
         self.sample.__mapper__.modified = True
 
         for item in self.sample:
             print(item)
-        assert 1 == self.sample.__mapper__.fetch.call_count
-        assert 0 == self.sample.__mapper__.store.call_count
+        assert 1 == self.sample.__mapper__.load.call_count
+        assert 0 == self.sample.__mapper__.save.call_count
 
     def test_handle_missing_mapper(self):
         sample = self.MockDict()

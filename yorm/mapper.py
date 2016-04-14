@@ -2,38 +2,29 @@
 
 import functools
 from pprint import pformat
+import logging
 
 from . import common, diskutils, exceptions, types, settings
 from .bases import Container
 
-log = common.logger(__name__)
+log = logging.getLogger(__name__)
 
 
-def file_required(create=False):
-    """Decorator for methods that require the file to exist.
+def file_required(method):
+    """Decorator for methods that require the file to exist."""
 
-    :param create: boolean or the method to decorate
-
-    """
-    def decorator(method):
-
-        @functools.wraps(method)
-        def wrapped(self, *args, **kwargs):
-            if not self.exists and self.auto:
-                if create is True and not self.deleted:
-                    self.create()
-                else:
-                    msg = "Cannot access deleted: {}".format(self.path)
-                    raise exceptions.FileDeletedError(msg)
-
+    @functools.wraps(method)
+    def wrapped(self, *args, **kwargs):
+        if self.deleted:
+            msg = "File deleted: {}".format(self.path)
+            raise exceptions.DeletedFileError(msg)
+        elif self.missing and not settings.fake:
+            msg = "File missing: {}".format(self.path)
+            raise exceptions.MissingFileError(msg)
+        else:
             return method(self, *args, **kwargs)
 
-        return wrapped
-
-    if callable(create):
-        return decorator(create)
-    else:
-        return decorator
+    return wrapped
 
 
 def prevent_recursion(method):
@@ -68,11 +59,11 @@ class Mapper:
 
     When getting an attribute:
 
-        FILE -> read -> [text] -> load -> [dict] -> fetch -> ATTRIBUTES
+        FILE -> read -> [text] -> parse -> [dict] -> load -> ATTRIBUTES
 
     When setting an attribute:
 
-        ATTRIBUTES -> store -> [dict] -> dump -> [text] -> write -> FILE
+        ATTRIBUTES -> save -> [dict] -> dump -> [text] -> write -> FILE
 
     After the mapped file is no longer needed:
 
@@ -80,22 +71,29 @@ class Mapper:
 
     """
 
-    def __init__(self, obj, path, attrs, *, auto=True, strict=True):
+    def __init__(self, obj, path, attrs, *,
+                 auto_create=True, auto_save=True, auto_track=False):
         self._obj = obj
         self.path = path
         self.attrs = attrs
-        self.auto = auto
-        self.strict = strict
+        self.auto_create = auto_create
+        self.auto_save = auto_save
+        self.auto_track = auto_track
 
         self.exists = diskutils.exists(self.path)
         self.deleted = False
-        self.store_after_fetch = False
+        self.auto_save_after_load = False
+
         self._activity = False
         self._timestamp = 0
         self._fake = ""
 
     def __str__(self):
         return str(self.path)
+
+    @property
+    def missing(self):
+        return not self.exists
 
     @property
     def modified(self):
@@ -106,12 +104,13 @@ class Mapper:
         elif not self.exists:
             return True
         else:
+            # TODO: this raises an exception is the file is missing
             was = self._timestamp
             now = diskutils.stamp(self.path)
             return was != now
 
     @modified.setter
-    @file_required(create=True)
+    @file_required
     def modified(self, changes):
         """Mark the file as modified if there are changes."""
         if changes:
@@ -159,14 +158,14 @@ class Mapper:
 
     @file_required
     @prevent_recursion
-    def fetch(self):
+    def load(self):
         """Update the object's mapped attributes from its file."""
-        log.info("Fetching %r from %s...", self._obj, prefix(self))
+        log.info("Loading %r from %s...", self._obj, prefix(self))
 
         # Parse data from file
         text = self._read()
-        data = diskutils.load(text=text, path=self.path)
-        log.trace("Loaded data: \n%s", pformat(data))
+        data = diskutils.parse(text=text, path=self.path)
+        log.trace("Parsed data: \n%s", pformat(data))
 
         # Update all attributes
         attrs2 = self.attrs.copy()
@@ -177,24 +176,24 @@ class Mapper:
             try:
                 converter = self.attrs[name]
             except KeyError:
-                if self.strict:
+                if self.auto_track:
+                    converter = types.match(name, data)
+                    self.attrs[name] = converter
+                else:
                     msg = "Ignored unknown file attribute: %s = %r"
                     log.warning(msg, name, data)
                     continue
-                else:
-                    converter = types.match(name, data)
-                    self.attrs[name] = converter
 
-            # Convert the loaded attribute
+            # Convert the parsed value to the attribute's final type
             attr = getattr(self._obj, name, None)
             if all((isinstance(attr, converter),
                     issubclass(converter, Container))):
-                attr.update_value(data, strict=self.strict)
+                attr.update_value(data, auto_track=self.auto_track)
             else:
                 attr = converter.to_value(data)
                 setattr(self._obj, name, attr)
             self._remap(attr, self)
-            log.trace("Value fetched: %s = %r", name, attr)
+            log.trace("Value loaded: %s = %r", name, attr)
 
         # Add missing attributes
         for name, converter in attrs2.items():
@@ -208,7 +207,7 @@ class Mapper:
         self.modified = False
 
     def _remap(self, obj, root):
-        """Restore mapping on nested attributes."""
+        """Resave mapping on nested attributes."""
         if isinstance(obj, Container):
             common.set_mapper(obj, root)
 
@@ -220,11 +219,11 @@ class Mapper:
                 for obj2 in obj:
                     self._remap(obj2, root)
 
-    @file_required(create=True)
+    @file_required
     @prevent_recursion
-    def store(self):
+    def save(self):
         """Format and save the object's mapped attributes to its file."""
-        log.info("Storing %r to %s...", self._obj, prefix(self))
+        log.info("Saving %r to %s...", self._obj, prefix(self))
 
         # Format the data items
         data = self.attrs.__class__()
@@ -238,7 +237,7 @@ class Mapper:
             else:
                 data2 = converter.to_data(value)
 
-            log.trace("Data to store: %s = %r", name, data2)
+            log.trace("Data to save: %s = %r", name, data2)
             data[name] = data2
 
         # Dump data to file
@@ -247,7 +246,7 @@ class Mapper:
 
         # Set meta attributes
         self.modified = True
-        self.store_after_fetch = self.auto
+        self.auto_save_after_load = self.auto_save
 
     def delete(self):
         """Delete the object's file from the file system."""

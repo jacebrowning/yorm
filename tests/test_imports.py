@@ -10,26 +10,28 @@ def test_top():
 
 
 def test_from_top_constants():
-    from yorm import UUID  # filename placeholder
+    from yorm import UUID
 
 
 def test_from_top_clases():
-    from yorm import Mappable  # base class for mapped objects
-    from yorm import Converter, Container  # base class for types
+    from yorm import Mappable
+    from yorm import Converter, Container
 
 
 def test_from_top_decorators():
-    from yorm import sync  # enables mapping on a class's instance objects
-    from yorm import sync_instances  # alias for the class decorator
-    from yorm import attr  # alternate API to identify mapped attributes
+    from yorm import sync
+    from yorm import sync_instances
+    from yorm import sync_object
+    from yorm import attr
 
 
-def test_from_top_functions():
-    from yorm import sync  # enables mapping on an instance object
-    from yorm import sync_object  # alias for the mapping function
-    from yorm import update  # fetch (if necessary) and store a mapped object
-    from yorm import update_object  # fetch (optional force) a mapped object
-    from yorm import update_file  # store a mapped object
+def test_from_top_utilities():
+    from yorm import create
+    from yorm import find
+    from yorm import find_all
+    from yorm import load
+    from yorm import save
+    from yorm import delete
 
 
 def test_from_nested():

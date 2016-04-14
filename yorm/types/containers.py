@@ -1,10 +1,12 @@
 """Converter classes for builtin container types."""
 
+import logging
+
 from .. import common
 from ..bases import Container
 from . import standard
 
-log = common.logger(__name__)
+log = logging.getLogger(__name__)
 
 
 class Dictionary(Container, dict):
@@ -19,7 +21,7 @@ class Dictionary(Container, dict):
     @classmethod
     def to_data(cls, value):
         value2 = cls.create_default()
-        value2.update_value(value, strict=True)
+        value2.update_value(value, auto_track=False)
 
         data = common.attrs[cls].__class__()
         for name, converter in common.attrs[cls].items():
@@ -27,7 +29,7 @@ class Dictionary(Container, dict):
 
         return data
 
-    def update_value(self, data, strict=False):
+    def update_value(self, data, *, auto_track=True):
         cls = self.__class__
         value = cls.create_default()
 
@@ -50,13 +52,13 @@ class Dictionary(Container, dict):
             try:
                 converter = attrs.pop(name)
             except KeyError:
-                if strict:
+                if auto_track:
+                    converter = standard.match(name, data2, nested=True)
+                    common.attrs[cls][name] = converter
+                else:
                     msg = "Ignored unknown nested file attribute: %s = %r"
                     log.warning(msg, name, data2)
                     continue
-                else:
-                    converter = standard.match(name, data2, nested=True)
-                    common.attrs[cls][name] = converter
 
             try:
                 attr = self[name]
@@ -65,7 +67,7 @@ class Dictionary(Container, dict):
 
             if all((isinstance(attr, converter),
                     issubclass(converter, Container))):
-                attr.update_value(data2, strict=strict)
+                attr.update_value(data2, auto_track=auto_track)
             else:
                 attr = converter.to_value(data2)
 
@@ -107,7 +109,7 @@ class List(Container, list):
     @classmethod
     def to_data(cls, value):
         value2 = cls.create_default()
-        value2.update_value(value, strict=True)
+        value2.update_value(value, auto_track=False)
 
         data = []
 
@@ -117,14 +119,14 @@ class List(Container, list):
 
         return data
 
-    def update_value(self, data, strict=False):
+    def update_value(self, data, *, auto_track=True):
         cls = self.__class__
         value = cls.create_default()
 
         # Get the converter for all items
         converter = cls.item_type
 
-        # Convert the loaded data
+        # Convert the parsed data
         for item in to_list(data):
 
             try:
@@ -134,7 +136,7 @@ class List(Container, list):
 
             if all((isinstance(attr, converter),
                     issubclass(converter, Container))):
-                attr.update_value(item, strict=strict)
+                attr.update_value(item, auto_track=auto_track)
             else:
                 attr = converter.to_value(item)  # pylint: disable=no-member
 
