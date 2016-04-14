@@ -1,6 +1,6 @@
 # Revision History
 
-## 0.8 (unreleased)
+## 0.8 (2016/04/14)
 
 - Replaced all utility functions with ORM-like tools.
 - Removed the ability to check for existing files in `sync()`.
