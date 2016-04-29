@@ -5,15 +5,22 @@
 from unittest.mock import patch
 import logging
 
+from expecter import expect
+
 import yorm
 
 from . import strip
 
 
 @yorm.attr(status=yorm.types.Boolean)
+@yorm.attr(checked=yorm.types.Integer)
 class StatusDictionary(yorm.types.Dictionary):
 
-    pass
+    def __init__(self, status, checked):
+        self.status = status
+        self.checked = checked
+        if self.checked == 42:
+            raise RuntimeError
 
 
 @yorm.attr(all=yorm.types.Float)
@@ -309,17 +316,17 @@ class TestAliases:
     def test_alias_dict(self):
         var5_ref = self.sample.var5
         self._log_ref('var5', self.sample.var5, var5_ref)
-        assert {'status': False} == self.sample.var5
+        assert {'status': False, 'checked': 0} == self.sample.var5
 
         logging.info("Setting status=True in var5_ref...")
         var5_ref['status'] = True
         self._log_ref('var5', self.sample.var5, var5_ref)
-        assert {'status': True} == self.sample.var5
+        assert {'status': True, 'checked': 0} == self.sample.var5
 
         logging.info("Setting status=False in var5_ref...")
         var5_ref['status'] = False
         self._log_ref('var5', self.sample.var5, var5_ref)
-        assert {'status': False} == self.sample.var5
+        assert {'status': False, 'checked': 0} == self.sample.var5
 
     def test_alias_dict_in_list(self):
         top = Top()
@@ -340,3 +347,8 @@ class TestAliases:
         ref2 = top.nested_dict.nested_list_2
         assert id(ref1) == id(top.nested_dict)
         assert id(ref2) == id(top.nested_dict.nested_list_2)
+
+    def test_custom_init_is_invoked(self):
+        self.sample.__mapper__.text = "var5:\n  checked: 42"
+        with expect.raises(RuntimeError):
+            print(self.sample.var5)

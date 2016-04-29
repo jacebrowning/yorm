@@ -1,5 +1,9 @@
 # Revision History
 
+## 0.8.1 (2016/04/28)
+
+- Now invoking `__init__` in `Dictionary` converters to run custom validations.
+
 ## 0.8 (2016/04/14)
 
 - Replaced all utility functions with ORM-like tools.
