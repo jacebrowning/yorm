@@ -83,7 +83,7 @@ class Dictionary(Container, dict):
         try:
             cls(**value)
         except TypeError as exception:
-            log.warning(exception)
+            log.warning("%s: %s", cls.__name__, exception)
 
         # Apply the new value
         self.clear()
