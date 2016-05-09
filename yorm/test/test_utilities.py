@@ -83,11 +83,11 @@ def describe_find():
             utilities.find(Mock)
 
 
-def describe_find_all():
+def describe_match():
 
     def it_is_not_yet_implemented():
         with expect.raises(NotImplementedError):
-            utilities.find_all(Mock)
+            utilities.match(Mock)
 
 
 def describe_load():
