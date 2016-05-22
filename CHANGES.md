@@ -1,5 +1,9 @@
 # Revision History
 
+## 1.0 (2016/05/22)
+
+- Initial stable release.
+
 ## 0.8.1 (2016/04/28)
 
 - Now invoking `__init__` in `Dictionary` converters to run custom validations.
