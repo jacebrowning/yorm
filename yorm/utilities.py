@@ -38,8 +38,8 @@ def find(class_or_instance, *args, create=False):  # pylint: disable=redefined-o
         return None
 
 
-def find_all(cls, **kwargs):
-    """Return a list of all matching mapped objects."""
+def match(cls, **kwargs):
+    """Yield all matching mapped objects."""
     log.debug((cls, kwargs))
     raise NotImplementedError
 

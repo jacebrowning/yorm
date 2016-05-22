@@ -3,7 +3,7 @@
 import sys
 
 __project__ = 'YORM'
-__version__ = '0.8.1.post1'
+__version__ = '1.0'
 
 VERSION = __project__ + '-' + __version__
 
@@ -17,7 +17,7 @@ try:
     from . import bases, types
     from .common import UUID
     from .decorators import sync, sync_object, sync_instances, attr
-    from .utilities import create, find, find_all, load, save, delete
+    from .utilities import create, find, match, load, save, delete
     from .bases import Container, Converter, Mappable, Convertible
 except ImportError:  # pragma: no cover (manual test)
     pass
