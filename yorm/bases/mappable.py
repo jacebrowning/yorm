@@ -8,18 +8,17 @@ from .. import common
 
 log = logging.getLogger(__name__)
 
-_TAG = '_modified_by_yorm'
-_LOAD_BEFORE_METHODS = []
-_STORE_AFTER_METHODS = []
+_LOAD_BEFORE_METHODS = set()
+_STORE_AFTER_METHODS = set()
 
 
 def load_before(method):
     """Decorator for methods that should load before call."""
 
-    if getattr(method, _TAG, False):
+    if getattr(method, '_load_before', False):
         return method
 
-    _LOAD_BEFORE_METHODS.append(method.__name__)
+    _LOAD_BEFORE_METHODS.add(method.__name__)
 
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
@@ -35,7 +34,7 @@ def load_before(method):
 
         return method(self, *args, **kwargs)
 
-    setattr(wrapped, _TAG, True)
+    setattr(wrapped, '_load_before', True)
 
     return wrapped
 
@@ -43,10 +42,10 @@ def load_before(method):
 def save_after(method):
     """Decorator for methods that should save after call."""
 
-    if getattr(method, _TAG, False):
+    if getattr(method, '_save_after', False):
         return method
 
-    _STORE_AFTER_METHODS.append(method.__name__)
+    _STORE_AFTER_METHODS.add(method.__name__)
 
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
@@ -61,7 +60,7 @@ def save_after(method):
 
         return result
 
-    setattr(wrapped, _TAG, True)
+    setattr(wrapped, '_save_after', True)
 
     return wrapped
 
@@ -104,22 +103,27 @@ class Mappable(metaclass=abc.ABCMeta):
     def __delitem__(self, key):
         super().__delitem__(key)
 
+    @load_before
     @save_after
     def append(self, *args, **kwargs):
         super().append(*args, **kwargs)
 
+    @load_before
     @save_after
     def extend(self, *args, **kwargs):
         super().extend(*args, **kwargs)
 
+    @load_before
     @save_after
     def insert(self, *args, **kwargs):
         super().insert(*args, **kwargs)
 
+    @load_before
     @save_after
     def remove(self, *args, **kwargs):
         super().remove(*args, **kwargs)
 
+    @load_before
     @save_after
     def pop(self, *args, **kwargs):
         super().pop(*args, **kwargs)
@@ -128,18 +132,22 @@ class Mappable(metaclass=abc.ABCMeta):
     def clear(self, *args, **kwargs):
         super().clear(*args, **kwargs)
 
+    @load_before
     @save_after
     def sort(self, *args, **kwargs):
         super().sort(*args, **kwargs)
 
+    @load_before
     @save_after
     def reverse(self, *args, **kwargs):
         super().reverse(*args, **kwargs)
 
+    @load_before
     @save_after
     def popitem(self, *args, **kwargs):
         super().popitem(*args, **kwargs)
 
+    @load_before
     @save_after
     def update(self, *args, **kwargs):
         super().update(*args, **kwargs)
