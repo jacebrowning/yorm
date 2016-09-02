@@ -1,5 +1,9 @@
 # Revision History
 
+## 1.0.1 (unreleased)
+
+- Fixed handling of mutation methods on `list` and `dict`.
+
 ## 1.0 (2016/05/22)
 
 - Initial stable release.

@@ -202,6 +202,9 @@ class TestMappableTriggers:
         def append(self, value):
             print(value)
 
+        def insert(self, value):
+            print(value)
+
     class Sample(MockDict, MockList):
 
         __mapper__ = Mock()
@@ -249,6 +252,11 @@ class TestMappableTriggers:
 
     def test_append(self):
         self.sample.append('foo')
+        assert 1 == self.sample.__mapper__.load.call_count
+        assert 1 == self.sample.__mapper__.save.call_count
+
+    def test_insert(self):
+        self.sample.insert('foo')
         assert 1 == self.sample.__mapper__.load.call_count
         assert 1 == self.sample.__mapper__.save.call_count
 

@@ -8,14 +8,18 @@ from .. import common
 
 log = logging.getLogger(__name__)
 
-TAG = '_modified_by_yorm'
+_TAG = '_modified_by_yorm'
+_LOAD_BEFORE_METHODS = []
+_STORE_AFTER_METHODS = []
 
 
 def load_before(method):
     """Decorator for methods that should load before call."""
 
-    if getattr(method, TAG, False):
+    if getattr(method, _TAG, False):
         return method
+
+    _LOAD_BEFORE_METHODS.append(method.__name__)
 
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
@@ -31,7 +35,7 @@ def load_before(method):
 
         return method(self, *args, **kwargs)
 
-    setattr(wrapped, TAG, True)
+    setattr(wrapped, _TAG, True)
 
     return wrapped
 
@@ -39,8 +43,10 @@ def load_before(method):
 def save_after(method):
     """Decorator for methods that should save after call."""
 
-    if getattr(method, TAG, False):
+    if getattr(method, _TAG, False):
         return method
+
+    _STORE_AFTER_METHODS.append(method.__name__)
 
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
@@ -55,7 +61,7 @@ def save_after(method):
 
         return result
 
-    setattr(wrapped, TAG, True)
+    setattr(wrapped, _TAG, True)
 
     return wrapped
 
@@ -69,7 +75,6 @@ def _private_call(method, args, prefix='_'):
         return False
 
 
-# TODO: move these methods inside of `Container`
 class Mappable(metaclass=abc.ABCMeta):
     """Base class for objects with attributes mapped to file."""
 
@@ -77,46 +82,74 @@ class Mappable(metaclass=abc.ABCMeta):
 
     @load_before
     def __getattribute__(self, name):
-        """Trigger object update when reading attributes."""
         return object.__getattribute__(self, name)
 
     @save_after
     def __setattr__(self, name, value):
-        """Trigger file update when setting attributes."""
         super().__setattr__(name, value)
 
     @load_before
     def __iter__(self):
-        """Trigger object update when iterating."""
         return super().__iter__()
 
     @load_before
     def __getitem__(self, key):
-        """Trigger object update when reading an index."""
         return super().__getitem__(key)
 
     @save_after
     def __setitem__(self, key, value):
-        """Trigger file update when setting an index."""
         super().__setitem__(key, value)
 
     @save_after
     def __delitem__(self, key):
-        """Trigger file update when deleting an index."""
         super().__delitem__(key)
 
     @save_after
-    def append(self, value):
-        """Trigger file update when appending items."""
-        super().append(value)
+    def append(self, *args, **kwargs):
+        super().append(*args, **kwargs)
+
+    @save_after
+    def extend(self, *args, **kwargs):
+        super().extend(*args, **kwargs)
+
+    @save_after
+    def insert(self, *args, **kwargs):
+        super().insert(*args, **kwargs)
+
+    @save_after
+    def remove(self, *args, **kwargs):
+        super().remove(*args, **kwargs)
+
+    @save_after
+    def pop(self, *args, **kwargs):
+        super().pop(*args, **kwargs)
+
+    @save_after
+    def clear(self, *args, **kwargs):
+        super().clear(*args, **kwargs)
+
+    @save_after
+    def sort(self, *args, **kwargs):
+        super().sort(*args, **kwargs)
+
+    @save_after
+    def reverse(self, *args, **kwargs):
+        super().reverse(*args, **kwargs)
+
+    @save_after
+    def popitem(self, *args, **kwargs):
+        super().popitem(*args, **kwargs)
+
+    @save_after
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
 
 
 def patch_methods(instance):
     log.debug("Patching methods on: %r", instance)
     cls = instance.__class__
 
-    # TODO: determine a way to share the lists of methods to patch
-    for name in ['__getattribute__', '__iter__', '__getitem__']:
+    for name in _LOAD_BEFORE_METHODS:
         try:
             method = getattr(cls, name)
         except AttributeError:
@@ -126,7 +159,7 @@ def patch_methods(instance):
             setattr(cls, name, modified_method)
             log.trace("Patched to load before call: %s", name)
 
-    for name in ['__setattr__', '__setitem__', '__delitem__', 'append']:
+    for name in _STORE_AFTER_METHODS:
         try:
             method = getattr(cls, name)
         except AttributeError:
