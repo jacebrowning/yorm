@@ -13,10 +13,10 @@
 
 ### Installation
 
-Create a virtual environment:
+Install project dependencies into a virtual environment:
 
-```
-$ make env
+```sh
+$ make install
 ```
 
 ## Development Tasks
@@ -25,14 +25,14 @@ $ make env
 
 Manually run the tests:
 
-```
+```sh
 $ make test
 $ make tests  # includes integration tests
 ```
 
 or keep them running on change:
 
-```
+```sh
 $ make watch
 ```
 
@@ -42,7 +42,7 @@ $ make watch
 
 Build the documentation:
 
-```
+```sh
 $ make doc
 ```
 
@@ -50,7 +50,7 @@ $ make doc
 
 Run linters and static analyzers:
 
-```
+```sh
 $ make pep8
 $ make pep257
 $ make pylint
@@ -61,7 +61,7 @@ $ make check  # includes all checks
 
 The CI server will report overall build status:
 
-```
+```sh
 $ make ci
 ```
 
@@ -69,7 +69,7 @@ $ make ci
 
 Release to PyPI:
 
-```
+```sh
 $ make upload-test  # dry run upload to a test server
 $ make upload
 ```

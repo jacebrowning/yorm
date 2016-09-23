@@ -1,14 +1,14 @@
-# YORM
-
-Enables automatic, bidirectional, human-friendly mappings of object attributes to YAML files.
-
 [![Build Status](http://img.shields.io/travis/jacebrowning/yorm/master.svg)](https://travis-ci.org/jacebrowning/yorm)
 [![Coverage Status](http://img.shields.io/coveralls/jacebrowning/yorm/master.svg)](https://coveralls.io/r/jacebrowning/yorm)
 [![Scrutinizer Code Quality](http://img.shields.io/scrutinizer/g/jacebrowning/yorm.svg)](https://scrutinizer-ci.com/g/jacebrowning/yorm/?branch=master)
 [![PyPI Version](http://img.shields.io/pypi/v/yorm.svg)](https://pypi.python.org/pypi/yorm)
 [![PyPI Downloads](http://img.shields.io/pypi/dm/yorm.svg)](https://pypi.python.org/pypi/yorm)
 
-Uses beyond typical object serialization and relational mapping include:
+
+# Overview
+
+YORM enables automatic, bidirectional, human-friendly mappings of object attributes to YAML files.
+ Uses beyond typical object serialization and relational mapping include:
 
 * bidirectional conversion between basic YAML and Python types
 * attribute creation and type inference for new attributes
@@ -17,15 +17,13 @@ Uses beyond typical object serialization and relational mapping include:
 
 View the talk from [PyOhio 2015](https://www.youtube.com/watch?v=0woNEKf-wAo).
 
-# Getting Started
-
 ## Requirements
 
 * Python 3.3+
 
 ## Installation
 
-YORM can be installed with pip:
+Install YORM with pip:
 
 ```
 $ pip install YORM
@@ -39,7 +37,7 @@ $ cd yorm
 $ python setup.py install
 ```
 
-# Basic Usage
+# Usage
 
 Simply take an existing class:
 

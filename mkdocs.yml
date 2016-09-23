@@ -8,11 +8,11 @@ theme: readthedocs
 pages:
 - Home: index.md
 - API:
-  - 'Class Mapping': api/class-mapping.md
-  - 'Instance Mapping': api/instance-mapping.md
-  - 'Builtin Types': api/builtin-types.md
-  - 'Custom Types': api/custom-types.md
+  - Class Mapping: api/class-mapping.md
+  - Instance Mapping: api/instance-mapping.md
+  - Builtin Types: api/builtin-types.md
+  - Custom Types: api/custom-types.md
 - About:
-  - 'Release Notes': about/changes.md
+  - Release Notes: about/changelog.md
   - Contributing: about/contributing.md
   - License: about/license.md
