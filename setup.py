@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Setup script for YORM."""
+"""Setup script for the package."""
 
 import os
 import sys

@@ -107,6 +107,7 @@ $(DEPS_BASE): setup.py requirements.txt $(PYTHON)
 
 $(PIP): $(PYTHON)
 	$(PYTHON) -m pip install --upgrade pip setuptools
+	@ touch $@
 
 $(PYTHON):
 	$(SYS_PYTHON) -m venv $(ENV)
@@ -163,31 +164,19 @@ test-unit: install ## Run the unit tests
 	@- mv $(FAILURES) $(FAILURES).bak
 	$(PYTEST) $(PYTEST_OPTS) $(PACKAGE) --junitxml=$(REPORTS)/unit.xml
 	@- mv $(FAILURES).bak $(FAILURES)
-ifndef TRAVIS
-ifndef APPVEYOR
 	$(COVERAGE_SPACE) $(REPOSITORY) unit
-endif
-endif
 
 .PHONY: test-int
 test-int: install ## Run the integration tests
 	@ if test -e $(FAILURES); then $(PYTEST) $(PYTEST_OPTS_FAILFAST) tests; fi
 	$(PYTEST) $(PYTEST_OPTS) tests --junitxml=$(REPORTS)/integration.xml
-ifndef TRAVIS
-ifndef APPVEYOR
 	$(COVERAGE_SPACE) $(REPOSITORY) integration
-endif
-endif
 
 .PHONY: test-all
 test-all: install ## Run all the tests
 	@ if test -e $(FAILURES); then $(PYTEST) $(PYTEST_OPTS_FAILFAST) $(PACKAGES); fi
 	$(PYTEST) $(PYTEST_OPTS) $(PACKAGES) --junitxml=$(REPORTS)/overall.xml
-ifndef TRAVIS
-ifndef APPVEYOR
 	$(COVERAGE_SPACE) $(REPOSITORY) overall
-endif
-endif
 
 .PHONY: read-coverage
 read-coverage:
@@ -232,40 +221,40 @@ mkdocs-live: mkdocs ## Launch and continuously rebuild the mkdocs site
 	eval "sleep 3; open http://127.0.0.1:8000" &
 	$(MKDOCS) serve
 
-%.rst: %.md
-	pandoc -f markdown_github -t rst -o $@ $<
-
 # BUILD ########################################################################
 
 PYINSTALLER := $(BIN_)pyinstaller
 PYINSTALLER_MAKESPEC := $(BIN_)pyi-makespec
 
-.PHONY: sdist
-sdist: install dist/*.tar.gz
-dist/*.tar.gz: $(MODULES) README.rst CHANGELOG.rst
+DIST_FILES := dist/*.tar.gz dist/*.whl
+EXE_FILES := dist/$(PROJECT).*
+
+.PHONY: dist
+dist: install $(DIST_FILES)
+$(DIST_FILES): $(MODULES) README.rst CHANGELOG.rst
+	rm -f $(DIST_FILES)
 	$(PYTHON) setup.py check --restructuredtext --strict --metadata
 	$(PYTHON) setup.py sdist
-
-.PHONY: bdist
-bdist: install dist/*.whl
-dist/*.whl: $(MODULES) README.rst CHANGELOG.rst
-	$(PYTHON) setup.py check --restructuredtext --strict --metadata
 	$(PYTHON) setup.py bdist_wheel
 
+%.rst: %.md
+	pandoc -f markdown_github -t rst -o $@ $<
+
 .PHONY: exe
-exe: install $(PROJECT).spec
+exe: install $(EXE_FILES)
+$(EXE_FILES): $(MODULES) $(PROJECT).spec
 	# For framework/shared support: https://github.com/yyuu/pyenv/wiki
 	$(PYINSTALLER) $(PROJECT).spec --noconfirm --clean
 
 $(PROJECT).spec:
-	$(PYINSTALLER_MAKESPEC) $(PACKAGE)/__main__.py --noupx --onefile --windowed --name=$(PROJECT)
+	$(PYINSTALLER_MAKESPEC) $(PACKAGE)/__main__.py --onefile --windowed --name=$(PROJECT)
 
 # RELEASE ######################################################################
 
 TWINE := $(BIN_)twine
 
 .PHONY: register
-register: sdist bdist ## Register the project on PyPI
+register: dist ## Register the project on PyPI
 	@ echo NOTE: your project must be registered manually
 	@ echo https://github.com/pypa/python-packaging-user-guide/issues/263
 	# TODO: switch to twine when the above issue is resolved
@@ -311,7 +300,7 @@ clean-all: clean .clean-env .clean-workspace
 
 .PHONY: .clean-dist
 .clean-dist:
-	rm -rf dist build
+	rm -rf *.spec dist build
 
 .PHONY: .clean-env
 .clean-env: clean
