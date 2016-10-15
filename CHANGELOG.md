@@ -1,5 +1,9 @@
 # Revision History
 
+## 1.1 (unreleased)
+
+- Add `data` property to `Mapper` as a hook for other serialization libraries.
+
 ## 1.0.1 (2016/09/23)
 
 - Fixed handling of mutation methods on `list` and `dict`.

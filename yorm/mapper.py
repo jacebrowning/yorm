@@ -125,7 +125,7 @@ class Mapper:
 
     @property
     def text(self):
-        """Get file contents."""
+        """Get file contents as a string."""
         log.info("Getting contents of %s...", prefix(self))
         if settings.fake:
             text = self._fake
@@ -136,7 +136,7 @@ class Mapper:
 
     @text.setter
     def text(self, text):
-        """Set file contents."""
+        """Set file contents from a string."""
         log.info("Setting contents of %s...", prefix(self))
         if settings.fake:
             self._fake = text
@@ -144,6 +144,20 @@ class Mapper:
             self._write(text)
         log.trace("Text wrote: \n%s", text.rstrip())
         self.modified = True
+
+    @property
+    def data(self):
+        """Get the file values as a dictionary."""
+        text = self._read()
+        data = diskutils.parse(text, self.path)
+        log.trace("Parsed data: \n%s", pformat(data))
+        return data
+
+    @data.setter
+    def data(self, data):
+        """Set the file values from a dictionary."""
+        text = diskutils.dump(data, self.path)
+        self._write(text)
 
     def create(self):
         """Create a new file for the object."""
@@ -162,14 +176,9 @@ class Mapper:
         """Update the object's mapped attributes from its file."""
         log.info("Loading %r from %s...", self._obj, prefix(self))
 
-        # Parse data from file
-        text = self._read()
-        data = diskutils.parse(text=text, path=self.path)
-        log.trace("Parsed data: \n%s", pformat(data))
-
         # Update all attributes
         attrs2 = self.attrs.copy()
-        for name, data in data.items():
+        for name, data in self.data.items():
             attrs2.pop(name, None)
 
             # Find a matching converter
@@ -240,9 +249,8 @@ class Mapper:
             log.trace("Data to save: %s = %r", name, data2)
             data[name] = data2
 
-        # Dump data to file
-        text = diskutils.dump(data=data, path=self.path)
-        self._write(text)
+        # Save the formatted to disk
+        self.data = data
 
         # Set meta attributes
         self.modified = True

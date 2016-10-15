@@ -175,3 +175,19 @@ def describe_mapper():
             mapper.load()
 
             expect(obj.var2) == 42
+
+    def describe_data():
+
+        def can_get_the_file_values(obj, mapper):
+            mapper.create()
+            obj.var3 = 42
+            mapper.save()
+
+            expect(mapper.data) == {'var2': 0, 'var3': 42}
+
+        def can_set_the_file_values(obj, mapper):
+            mapper.create()
+            mapper.data = {'var2': 42}
+            mapper.load()
+
+            expect(obj.var2) == 42
