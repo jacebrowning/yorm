@@ -1,10 +1,11 @@
 """Integration tests for nested attributes."""
-# pylint: disable=missing-docstring,no-self-use,attribute-defined-outside-init,no-member,misplaced-comparison-constant
-
+# pylint: disable=missing-docstring,no-self-use,attribute-defined-outside-init,no-member
+# pylint: disable=unused-variable,misplaced-comparison-constant
 
 from unittest.mock import patch
 import logging
 
+import pytest
 from expecter import expect
 
 import yorm
@@ -276,21 +277,15 @@ class TestNestedTwice:
         """) == top.__mapper__.text
 
 
-@patch('yorm.settings.fake', True)
-class TestAliases:
+def describe_aliases():
 
-    @yorm.attr(var4=NestedList3)
-    @yorm.attr(var5=StatusDictionary)
-    @yorm.sync("fake/path")
-    class Sample:
+    @pytest.fixture
+    def sample(tmpdir):
+        cls = type('Sample', (), {})
+        path = str(tmpdir.join("sample.yml"))
+        attrs = dict(var4=NestedList3, var5=StatusDictionary)
+        return yorm.sync(cls(), path, attrs)
 
-        def __repr__(self):
-            return "<sample {}>".format(id(self))
-
-    def setup_method(self, _):
-        self.sample = self.Sample()
-
-    @staticmethod
     def _log_ref(name, var, ref):
         logging.info("%s: %r", name, var)
         logging.info("%s_ref: %r", name, ref)
@@ -299,36 +294,36 @@ class TestAliases:
         assert id(ref) == id(var)
         assert ref == var
 
-    def test_alias_list(self):
-        var4_ref = self.sample.var4
-        self._log_ref('var4', self.sample.var4, var4_ref)
-        assert [] == self.sample.var4
+    def test_alias_list(sample):
+        var4_ref = sample.var4
+        _log_ref('var4', sample.var4, var4_ref)
+        assert [] == sample.var4
 
         logging.info("Appending 42 to var4_ref...")
         var4_ref.append(42)
-        self._log_ref('var4', self.sample.var4, var4_ref)
-        assert [42] == self.sample.var4
+        _log_ref('var4', sample.var4, var4_ref)
+        assert [42] == sample.var4
 
         logging.info("Appending 2015 to var4_ref...")
         var4_ref.append(2015)
-        assert [42, 2015] == self.sample.var4
+        assert [42, 2015] == sample.var4
 
-    def test_alias_dict(self):
-        var5_ref = self.sample.var5
-        self._log_ref('var5', self.sample.var5, var5_ref)
-        assert {'status': False, 'checked': 0} == self.sample.var5
+    def test_alias_dict(sample):
+        var5_ref = sample.var5
+        _log_ref('var5', sample.var5, var5_ref)
+        assert {'status': False, 'checked': 0} == sample.var5
 
         logging.info("Setting status=True in var5_ref...")
         var5_ref['status'] = True
-        self._log_ref('var5', self.sample.var5, var5_ref)
-        assert {'status': True, 'checked': 0} == self.sample.var5
+        _log_ref('var5', sample.var5, var5_ref)
+        assert {'status': True, 'checked': 0} == sample.var5
 
         logging.info("Setting status=False in var5_ref...")
         var5_ref['status'] = False
-        self._log_ref('var5', self.sample.var5, var5_ref)
-        assert {'status': False, 'checked': 0} == self.sample.var5
+        _log_ref('var5', sample.var5, var5_ref)
+        assert {'status': False, 'checked': 0} == sample.var5
 
-    def test_alias_dict_in_list(self):
+    def test_alias_dict_in_list():
         top = Top()
         top.nested_list.append(None)
         ref1 = top.nested_list[0]
@@ -338,7 +333,7 @@ class TestAliases:
         assert id(ref2) == id(top.nested_list[0].nested_dict_3)
         assert id(ref3) == id(top.nested_list[0].nested_dict_3.nested_list_3)
 
-    def test_alias_list_in_dict(self):
+    def test_alias_list_in_dict():
         top = Top()
         logging.info("Updating nested attribute...")
         top.nested_dict.number = 1
@@ -348,7 +343,7 @@ class TestAliases:
         assert id(ref1) == id(top.nested_dict)
         assert id(ref2) == id(top.nested_dict.nested_list_2)
 
-    def test_custom_init_is_invoked(self):
-        self.sample.__mapper__.text = "var5:\n  checked: 42"
+    def test_custom_init_is_invoked(sample):
+        sample.__mapper__.text = "var5:\n  checked: 42"
         with expect.raises(RuntimeError):
-            print(self.sample.var5)
+            print(sample.var5)
