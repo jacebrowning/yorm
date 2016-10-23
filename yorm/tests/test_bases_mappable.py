@@ -252,12 +252,12 @@ class TestMappableTriggers:
 
     def test_append(self):
         self.sample.append('foo')
-        assert 2 == self.sample.__mapper__.load.call_count
+        assert 1 == self.sample.__mapper__.load.call_count
         assert 1 == self.sample.__mapper__.save.call_count
 
     def test_insert(self):
         self.sample.insert('foo')
-        assert 2 == self.sample.__mapper__.load.call_count
+        assert 1 == self.sample.__mapper__.load.call_count
         assert 1 == self.sample.__mapper__.save.call_count
 
     def test_iter(self):
