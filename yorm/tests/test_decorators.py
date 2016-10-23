@@ -29,40 +29,47 @@ class MockConverter(Converter):
         return None
 
 
-@patch('yorm.diskutils.write', Mock())
-@patch('yorm.diskutils.stamp', Mock())
-@patch('yorm.diskutils.read', Mock(return_value=""))
-class TestSyncObject:
-    """Unit tests for the `sync_object` function."""
+def describe_sync():
 
-    class Sample:
-        """Sample class."""
+    def describe_object():
 
-    def test_no_attrs(self):
-        """Verify mapping can be enabled with no attributes."""
-        sample = decorators.sync(self.Sample(), "sample.yml")
-        assert "sample.yml" == sample.__mapper__.path
-        assert {} == sample.__mapper__.attrs
+        @pytest.fixture
+        def instance():
+            cls = type('Sample', (), {})
+            instance = cls()
+            return instance
 
-    def test_with_attrs(self):
-        """Verify mapping can be enabled with with attributes."""
-        attrs = {'var1': MockConverter}
-        sample = decorators.sync(self.Sample(), "sample.yml", attrs)
-        assert "sample.yml" == sample.__mapper__.path
-        assert {'var1': MockConverter} == sample.__mapper__.attrs
+        @pytest.fixture
+        def path(tmpdir):
+            tmpdir.chdir()
+            return "sample.yml"
 
-    def test_multiple(self):
-        """Verify mapping cannot be enabled twice."""
-        sample = decorators.sync(self.Sample(), "sample.yml")
-        with pytest.raises(TypeError):
-            decorators.sync(sample, "sample.yml")
+        def with_no_attrs(instance, path):
+            sample = decorators.sync(instance, path)
 
-    @patch('yorm.diskutils.exists', Mock(return_value=True))
-    def test_init_existing(self):
-        """Verify an existing file is read."""
-        with patch('yorm.diskutils.read', Mock(return_value="abc: 123")):
-            sample = decorators.sync(self.Sample(), "s.yml", auto_track=True)
-        assert 123 == sample.abc
+            expect(sample.__mapper__.path) == "sample.yml"
+            expect(sample.__mapper__.attrs) == {}
+
+        def with_attrs(instance, path):
+            attrs = {'var1': MockConverter}
+            sample = decorators.sync(instance, path, attrs)
+
+            expect(sample.__mapper__.path) == "sample.yml"
+            expect(sample.__mapper__.attrs) == {'var1': MockConverter}
+
+        def cannot_be_called_twice(instance, path):
+            sample = decorators.sync(instance, path)
+
+            with pytest.raises(TypeError):
+                decorators.sync(instance, path)
+
+        @patch('yorm.diskutils.exists', Mock(return_value=True))
+        @patch('yorm.diskutils.read', Mock(return_value="abc: 123"))
+        @patch('yorm.diskutils.stamp', Mock())
+        def reads_existing_files(instance, path):
+            sample = decorators.sync(instance, path, auto_track=True)
+
+            expect(sample.abc) == 123
 
 
 @patch('yorm.diskutils.write', Mock())
@@ -71,9 +78,16 @@ class TestSyncObject:
 class TestSyncInstances:
     """Unit tests for the `sync_instances` decorator."""
 
-    @decorators.sync("sample.yml", auto_track=True)
+    @decorators.sync("sample.yml")
     class SampleDecorated:
-        """Sample decorated class using a single path."""
+        """Sample decorated class."""
+
+        def __repr__(self):
+            return "<decorated {}>".format(id(self))
+
+    @decorators.sync("sample.yml", auto_track=True)
+    class SampleDecoratedAutoTrack:
+        """Sample decorated class with automatic attribute tracking."""
 
         def __repr__(self):
             return "<decorated {}>".format(id(self))
@@ -124,8 +138,9 @@ class TestSyncInstances:
     def test_no_attrs(self):
         """Verify mapping can be enabled with no attributes."""
         sample = self.SampleDecorated()
-        assert "sample.yml" == sample.__mapper__.path
-        assert {} == sample.__mapper__.attrs
+
+        expect(sample.__mapper__.path) == "sample.yml"
+        expect(sample.__mapper__.attrs) == {}
 
     def test_with_attrs(self):
         """Verify mapping can be enabled with with attributes."""
@@ -137,7 +152,7 @@ class TestSyncInstances:
     def test_init_existing(self):
         """Verify an existing file is read."""
         with patch('yorm.diskutils.read', Mock(return_value="abc: 123")):
-            sample = self.SampleDecorated()
+            sample = self.SampleDecoratedAutoTrack()
         assert 123 == sample.abc
 
     @patch('uuid.uuid4', Mock(return_value=Mock(hex='abc123')))
