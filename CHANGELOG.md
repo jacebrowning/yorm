@@ -1,6 +1,6 @@
 # Revision History
 
-## 1.1 (unreleased)
+## 1.1 (2016/10/22)
 
 - Add `data` property to `Mapper` as a hook for other serialization libraries.
 
