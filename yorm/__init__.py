@@ -7,4 +7,4 @@ from .utilities import create, find, match, load, save, delete
 from .bases import Container, Converter, Mappable
 
 __project__ = 'YORM'
-__version__ = '1.1'
+__version__ = '1.2b1'

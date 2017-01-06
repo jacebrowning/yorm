@@ -18,6 +18,8 @@ def load_before(method):
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
         """Decorated method."""
+        __tracebackhide__ = True  # pylint: disable=unused-variable
+
         if not _private_call(method, args):
             mapper = common.get_mapper(self)
             if mapper and mapper.modified:
@@ -43,6 +45,8 @@ def save_after(method):
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
         """Decorated method."""
+        __tracebackhide__ = True  # pylint: disable=unused-variable
+
         result = method(self, *args, **kwargs)
 
         if not _private_call(method, args):
