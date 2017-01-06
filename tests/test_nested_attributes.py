@@ -3,14 +3,13 @@
 # pylint: disable=unused-variable,misplaced-comparison-constant
 
 from unittest.mock import patch
-import logging
 
 import pytest
 from expecter import expect
 
 import yorm
 
-from . import strip
+from . import strip, log
 
 
 @yorm.attr(status=yorm.types.Boolean)
@@ -103,8 +102,9 @@ class TestNestedOnce:
 
     def test_append_triggers_save(self):
         top = Top()
-        logging.info("Appending dictionary to list...")
+        log("Appending dictionary to list...")
         top.nested_list.append({'number': 1})
+        log("Checking text...")
         assert strip("""
         nested_dict:
           nested_list_2: []
@@ -239,7 +239,9 @@ class TestNestedTwice:
 
     def test_dict_in_list_value_change_triggers_save(self):
         top = Top()
+        log("Appending to list...")
         top.nested_list.append(None)
+        log("Setting nested value...")
         top.nested_list[0].nested_dict_3.number = 8
         assert strip("""
         nested_dict:
@@ -287,10 +289,10 @@ def describe_aliases():
         return yorm.sync(cls(), path, attrs)
 
     def _log_ref(name, var, ref):
-        logging.info("%s: %r", name, var)
-        logging.info("%s_ref: %r", name, ref)
-        logging.info("%s ID: %s", name, id(var))
-        logging.info("%s_ref ID: %s", name, id(ref))
+        log("%s: %r", name, var)
+        log("%s_ref: %r", name, ref)
+        log("%s ID: %s", name, id(var))
+        log("%s_ref ID: %s", name, id(ref))
         assert id(ref) == id(var)
         assert ref == var
 
@@ -299,12 +301,12 @@ def describe_aliases():
         _log_ref('var4', sample.var4, var4_ref)
         assert [] == sample.var4
 
-        logging.info("Appending 42 to var4_ref...")
+        log("Appending 42 to var4_ref...")
         var4_ref.append(42)
         _log_ref('var4', sample.var4, var4_ref)
         assert [42] == sample.var4
 
-        logging.info("Appending 2015 to var4_ref...")
+        log("Appending 2015 to var4_ref...")
         var4_ref.append(2015)
         assert [42, 2015] == sample.var4
 
@@ -313,12 +315,12 @@ def describe_aliases():
         _log_ref('var5', sample.var5, var5_ref)
         assert {'status': False, 'checked': 0} == sample.var5
 
-        logging.info("Setting status=True in var5_ref...")
+        log("Setting status=True in var5_ref...")
         var5_ref['status'] = True
         _log_ref('var5', sample.var5, var5_ref)
         assert {'status': True, 'checked': 0} == sample.var5
 
-        logging.info("Setting status=False in var5_ref...")
+        log("Setting status=False in var5_ref...")
         var5_ref['status'] = False
         _log_ref('var5', sample.var5, var5_ref)
         assert {'status': False, 'checked': 0} == sample.var5
@@ -335,9 +337,9 @@ def describe_aliases():
 
     def test_alias_list_in_dict():
         top = Top()
-        logging.info("Updating nested attribute...")
+        log("Updating nested attribute...")
         top.nested_dict.number = 1
-        logging.info("Grabbing refs...")
+        log("Grabbing refs...")
         ref1 = top.nested_dict
         ref2 = top.nested_dict.nested_list_2
         assert id(ref1) == id(top.nested_dict)
