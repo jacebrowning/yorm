@@ -100,7 +100,7 @@ def parse(text, path):
     elif ext in ['yml', 'yaml']:
         data = _parse_yaml(text, path)
     else:
-        log.warning("Unrecognized file extension: %s", ext)
+        log.warning("Unrecognized file extension (.%s), assuming YAML", ext)
         data = _parse_yaml(text, path)
 
     if not isinstance(data, dict):
