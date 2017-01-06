@@ -207,15 +207,17 @@ class Mapper:
 
         # Add missing attributes
         for name, converter in attrs2.items():
-            if hasattr(self._obj, name):
-                existing_attr = getattr(self._obj, name)
-                if not isinstance(existing_attr, converter):
-                    log.trace("Converting attribute %r to %r", name, converter)
-                    value = converter.create_default()
-                    setattr(self._obj, name, value)
-                    self._remap(value, self)
+            existing_attr = getattr(self._obj, name, None)
+            if existing_attr:
+                if issubclass(converter, Container):
+                    if not isinstance(existing_attr, converter):
+                        msg = "Converting container attribute %r to %r"
+                        log.trace(msg, name, converter)
+                        value = converter.create_default()
+                        setattr(self._obj, name, value)
+                        self._remap(value, self)
             else:
-                value = converter.to_value(None)
+                value = converter.create_default()
                 msg = "Default value for missing object attribute: %s = %r"
                 log.warning(msg, name, value)
                 setattr(self._obj, name, value)
