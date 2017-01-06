@@ -1,6 +1,6 @@
 # Revision History
 
-## 1.2 (unreleased)
+## 1.2 (2017/01/06)
 
 - Updated base class to hide `pytest` traceback in wrapped methods.
 
