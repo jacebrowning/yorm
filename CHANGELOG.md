@@ -1,8 +1,12 @@
 # Revision History
 
+## 1.2 (2017/01/06)
+
+- Updated base class to hide `pytest` traceback in wrapped methods.
+
 ## 1.1 (2016/10/22)
 
-- Add `data` property to `Mapper` as a hook for other serialization libraries.
+- Added `data` property to `Mapper` as a hook for other serialization libraries.
 
 ## 1.0.1 (2016/09/23)
 

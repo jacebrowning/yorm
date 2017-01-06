@@ -67,6 +67,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Database',
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Version Control',
@@ -74,5 +75,8 @@ setuptools.setup(
         'Topic :: Text Editors :: Text Processing',
     ],
 
-    install_requires=open("requirements.txt").readlines(),
+    install_requires=[
+        'PyYAML ~= 3.11',
+        'simplejson ~= 3.8',
+    ],
 )

@@ -1,15 +1,11 @@
 """Integration tests for the package."""
 # pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant,attribute-defined-outside-init
 
-import logging
-
 import yorm
 from yorm.types import Object, String, Integer, Float, Boolean
 from yorm.types import Markdown, Dictionary, List
 
-from . import strip, refresh_file_modification_times
-
-log = logging.getLogger(__name__)
+from . import strip, refresh_file_modification_times, log
 
 
 # CLASSES ######################################################################
@@ -49,7 +45,7 @@ class SampleStandard:
 @yorm.attr(object=EmptyDictionary)
 @yorm.attr(string=String)
 @yorm.attr(truthy=Boolean)
-@yorm.sync("path/to/{self.category}/{self.name}.yml")
+@yorm.sync("tmp/{self.category}/{self.name}.yml")
 class SampleStandardDecorated:
     """Sample class using standard attribute types."""
 
@@ -96,7 +92,7 @@ class Level(String):
             return value
 
 
-@yorm.sync("path/to/directory/{UUID}.yml", attrs={'level': Level})
+@yorm.sync("tmp/directory/{UUID}.yml", attrs={'level': Level})
 class SampleCustomDecorated:
     """Sample class using custom attribute types."""
 
@@ -109,7 +105,7 @@ class SampleCustomDecorated:
 
 
 @yorm.attr(string=String)
-@yorm.sync("sample.yml", auto_save=False)
+@yorm.sync("tmp/sample.yml", auto_save=False)
 class SampleDecoratedAutoOff:
     """Sample class with automatic storage turned off."""
 
@@ -120,7 +116,7 @@ class SampleDecoratedAutoOff:
         return "<auto save off {}>".format(id(self))
 
 
-@yorm.sync("sample.yml", auto_track=True)
+@yorm.sync("tmp/sample.yml", auto_track=True)
 class SampleEmptyDecorated:
     """Sample class using standard attribute types."""
 
@@ -162,9 +158,9 @@ class TestStandard:
         """Verify standard attribute types dump/parse correctly (decorator)."""
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        assert "path/to/default/sample.yml" == sample.__mapper__.path
+        assert "tmp/default/sample.yml" == sample.__mapper__.path
 
-        log.info("Checking object default values...")
+        log("Checking object default values...")
         assert {} == sample.object
         assert [] == sample.array
         assert "" == sample.string
@@ -174,7 +170,7 @@ class TestStandard:
         assert False is sample.falsey
         assert None is sample.null
 
-        log.info("Changing object values...")
+        log("Changing object values...")
         sample.object = {'key2': 'value'}
         sample.array = [0, 1, 2]
         sample.string = "Hello, world!"
@@ -183,7 +179,7 @@ class TestStandard:
         sample.truthy = False
         sample.falsey = True
 
-        log.info("Checking file contents...")
+        log("Checking file contents...")
         assert strip("""
         array:
         - 0
@@ -197,7 +193,7 @@ class TestStandard:
         truthy: false
         """) == sample.__mapper__.text
 
-        log.info("Changing file contents...")
+        log("Changing file contents...")
         refresh_file_modification_times()
         sample.__mapper__.text = strip("""
         array: [4, 5, 6]
@@ -209,7 +205,7 @@ class TestStandard:
         truthy: null
         """)
 
-        log.info("Checking object values...")
+        log("Checking object values...")
         assert {'status': False} == sample.object
         assert [4, 5, 6] == sample.array
         assert "abc" == sample.string
@@ -229,8 +225,8 @@ class TestStandard:
                  'number_real': Float,
                  'truthy': Boolean,
                  'falsey': Boolean}
-        sample = yorm.sync(_sample, "path/to/directory/sample.yml", attrs)
-        assert "path/to/directory/sample.yml" == sample.__mapper__.path
+        sample = yorm.sync(_sample, "tmp/directory/sample.yml", attrs)
+        assert "tmp/directory/sample.yml" == sample.__mapper__.path
 
         # check defaults
         assert {'status': False} == sample.object
@@ -277,8 +273,8 @@ class TestStandard:
                  'number_real': Float,
                  'truthy': Boolean,
                  'falsey': Boolean}
-        sample = yorm.sync(_sample, "path/to/directory/sample.json", attrs)
-        assert "path/to/directory/sample.json" == sample.__mapper__.path
+        sample = yorm.sync(_sample, "tmp/directory/sample.json", attrs)
+        assert "tmp/directory/sample.json" == sample.__mapper__.path
 
         # check defaults
         assert {'status': False} == sample.object
@@ -343,7 +339,7 @@ class TestContainers:
         _sample = SampleNested()
         attrs = {'count': Integer,
                  'results': StatusDictionaryList}
-        sample = yorm.sync(_sample, "sample.yml", attrs, auto_track=True)
+        sample = yorm.sync(_sample, "tmp/sample.yml", attrs, auto_track=True)
 
         # check defaults
         assert 0 == sample.count
@@ -424,7 +420,7 @@ class TestExtended:
         tmpdir.chdir()
         _sample = SampleExtended()
         attrs = {'text': Markdown}
-        sample = yorm.sync(_sample, "path/to/directory/sample.yml", attrs)
+        sample = yorm.sync(_sample, "tmp/directory/sample.yml", attrs)
 
         # check defaults
         assert "" == sample.text

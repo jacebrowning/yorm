@@ -100,7 +100,7 @@ def parse(text, path):
     elif ext in ['yml', 'yaml']:
         data = _parse_yaml(text, path)
     else:
-        log.warning("Unrecognized file extension: %s", ext)
+        log.warning("Unrecognized file extension (.%s), assuming YAML", ext)
         data = _parse_yaml(text, path)
 
     if not isinstance(data, dict):
@@ -141,7 +141,7 @@ def dump(data, path):
         return json.dumps(data, indent=4, sort_keys=True)
 
     if ext not in ['yml', 'yaml']:
-        log.warning("Unrecognized file extension: %s", ext)
+        log.warning("Unrecognized file extension (.%s), assuming YAML", ext)
 
     return yaml.dump(data, default_flow_style=False, allow_unicode=True)
 

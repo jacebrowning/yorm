@@ -101,7 +101,7 @@ else ifdef LINUX
 endif
 	@ touch $@  # flag to indicate dependencies are installed
 
-$(DEPS_BASE): setup.py requirements.txt $(PYTHON)
+$(DEPS_BASE): setup.py $(PYTHON)
 	$(PYTHON) setup.py develop
 	@ touch $@  # flag to indicate dependencies are installed
 
@@ -146,7 +146,7 @@ COVERAGE_SPACE := $(BIN_)coverage.space
 
 RANDOM_SEED ?= $(shell date +%s)
 
-PYTEST_CORE_OPTS := --doctest-modules -r xXw -vv
+PYTEST_CORE_OPTS := --doctest-modules -ra -vv
 PYTEST_COV_OPTS := --cov=$(PACKAGE) --no-cov-on-fail --cov-report=term-missing --cov-report=html
 PYTEST_RANDOM_OPTS := --random --random-seed=$(RANDOM_SEED)
 

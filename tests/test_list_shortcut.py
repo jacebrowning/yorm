@@ -9,7 +9,7 @@ from . import strip
 
 
 @yorm.attr(things=List.of_type(Float))
-@yorm.sync("example.yml")
+@yorm.sync("tmp/example.yml")
 class Example:
     """An example class mapping a list using the shortened syntax."""
 
