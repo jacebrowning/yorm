@@ -38,6 +38,7 @@ Icon*
 /xmlreport
 /pyunit.xml
 *.tmp
+/tmp
 
 # Build and release directories
 *.spec
