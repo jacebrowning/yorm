@@ -74,5 +74,8 @@ setuptools.setup(
         'Topic :: Text Editors :: Text Processing',
     ],
 
-    install_requires=open("requirements.txt").readlines(),
+    install_requires=[
+        'PyYAML ~= 3.11',
+        'simplejson ~= 3.8',
+    ],
 )
