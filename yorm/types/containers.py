@@ -79,7 +79,7 @@ class Dictionary(Container, dict):
             msg = "Default value for missing nested object attribute: %s = %r"
             log.info(msg, name, value[name])
 
-        # Execute custom __init__ validations
+        # Execute custom initialization validators
         try:
             cls(**value)
         except TypeError as exception:

@@ -199,6 +199,7 @@ class Mapper:
                     issubclass(converter, Container))):
                 attr.update_value(data, auto_track=self.auto_track)
             else:
+                log.trace("Converting attribute %r to %r", name, converter)
                 attr = converter.to_value(data)
                 setattr(self._obj, name, attr)
             self._remap(attr, self)
@@ -206,17 +207,25 @@ class Mapper:
 
         # Add missing attributes
         for name, converter in attrs2.items():
-            if not hasattr(self._obj, name):
+            if hasattr(self._obj, name):
+                existing_attr = getattr(self._obj, name)
+                if not isinstance(existing_attr, converter):
+                    log.trace("Converting attribute %r to %r", name, converter)
+                    value = converter.create_default()
+                    setattr(self._obj, name, value)
+                    self._remap(value, self)
+            else:
                 value = converter.to_value(None)
                 msg = "Default value for missing object attribute: %s = %r"
                 log.warning(msg, name, value)
                 setattr(self._obj, name, value)
+                self._remap(value, self)
 
         # Set meta attributes
         self.modified = False
 
     def _remap(self, obj, root):
-        """Resave mapping on nested attributes."""
+        """Attach mapper on nested attributes."""
         if isinstance(obj, Container):
             common.set_mapper(obj, root)
 

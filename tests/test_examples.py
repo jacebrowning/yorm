@@ -1,15 +1,11 @@
 """Integration tests for the package."""
 # pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant,attribute-defined-outside-init
 
-import logging
-
 import yorm
 from yorm.types import Object, String, Integer, Float, Boolean
 from yorm.types import Markdown, Dictionary, List
 
-from . import strip, refresh_file_modification_times
-
-log = logging.getLogger(__name__)
+from . import strip, refresh_file_modification_times, log
 
 
 # CLASSES ######################################################################
@@ -164,7 +160,7 @@ class TestStandard:
         sample = SampleStandardDecorated('sample')
         assert "path/to/default/sample.yml" == sample.__mapper__.path
 
-        log.info("Checking object default values...")
+        log("Checking object default values...")
         assert {} == sample.object
         assert [] == sample.array
         assert "" == sample.string
@@ -174,7 +170,7 @@ class TestStandard:
         assert False is sample.falsey
         assert None is sample.null
 
-        log.info("Changing object values...")
+        log("Changing object values...")
         sample.object = {'key2': 'value'}
         sample.array = [0, 1, 2]
         sample.string = "Hello, world!"
@@ -183,7 +179,7 @@ class TestStandard:
         sample.truthy = False
         sample.falsey = True
 
-        log.info("Checking file contents...")
+        log("Checking file contents...")
         assert strip("""
         array:
         - 0
@@ -197,7 +193,7 @@ class TestStandard:
         truthy: false
         """) == sample.__mapper__.text
 
-        log.info("Changing file contents...")
+        log("Changing file contents...")
         refresh_file_modification_times()
         sample.__mapper__.text = strip("""
         array: [4, 5, 6]
@@ -209,7 +205,7 @@ class TestStandard:
         truthy: null
         """)
 
-        log.info("Checking object values...")
+        log("Checking object values...")
         assert {'status': False} == sample.object
         assert [4, 5, 6] == sample.array
         assert "abc" == sample.string

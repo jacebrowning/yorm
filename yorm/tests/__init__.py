@@ -51,3 +51,8 @@ def refresh_file_modification_times(seconds=1.1):
     logging.info("Delaying for %s second%s...", seconds,
                  "" if seconds == 1 else "s")
     time.sleep(seconds)
+
+
+def log(pattern, *args, width=60):
+    message = pattern % args
+    logging.info((' ' + message).rjust(width, '='))
