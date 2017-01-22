@@ -39,7 +39,7 @@ def describe_delete():
     @pytest.fixture
     def existing_path(tmpdir):
         tmpdir.chdir()
-        path = "path/to/file.ext"
+        path = "tmp/path/to/file.ext"
         os.makedirs(os.path.dirname(path))
         open(path, 'w').close()
         return path
@@ -47,7 +47,7 @@ def describe_delete():
     @pytest.fixture
     def existing_dirpath(tmpdir):
         tmpdir.chdir()
-        dirpath = "path/to/directory"
+        dirpath = "tmp/path/to/directory"
         os.makedirs(dirpath)
         return dirpath
 
@@ -56,7 +56,7 @@ def describe_delete():
         expect(os.path.exists(existing_path)).is_false()
 
     def it_ignores_missing_files():
-        diskutils.delete("path/to/non/file")
+        diskutils.delete("tmp/path/to/non/file")
 
     def it_deletes_directories(existing_dirpath):
         diskutils.delete(existing_dirpath)

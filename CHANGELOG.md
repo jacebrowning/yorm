@@ -3,6 +3,7 @@
 ## 1.3 (unreleased)
 
 - Optimized the formatting of empty lists to create consistent diffs.
+- Added `ModelMixin` to add ORM methods to mapped classes.
 
 ## 1.2 (2017/01/06)
 

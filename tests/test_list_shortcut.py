@@ -16,9 +16,7 @@ class Example:
 
 def test_list_mapping_using_shortened_syntax():
     obj = Example()
-    obj.things.append(1)
-    obj.things.append(2.0)
-    obj.things.append("3")
+    obj.things = [1, 2.0, "3"]
 
     expect(obj.__mapper__.text) == strip("""
     things:
