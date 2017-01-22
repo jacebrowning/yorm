@@ -9,6 +9,10 @@ class LiteralString(str):
     """Custom type for strings which should be dumped in the literal style."""
 
 
+def represent_none(self, _):
+    return self.represent_scalar('tag:yaml.org,2002:null', '')
+
+
 def represent_literalstring(dumper, data):
     return dumper.represent_scalar('tag:yaml.org,2002:str', data,
                                    style='|' if data else '')
@@ -26,5 +30,6 @@ def represent_ordereddict(dumper, data):
     return yaml.nodes.MappingNode('tag:yaml.org,2002:map', value)
 
 
-yaml.add_representer(OrderedDict, represent_ordereddict)
 yaml.add_representer(LiteralString, represent_literalstring)
+yaml.add_representer(OrderedDict, represent_ordereddict)
+yaml.add_representer(type(None), represent_none)

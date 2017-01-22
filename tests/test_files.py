@@ -131,7 +131,7 @@ class TestUpdate:
     def test_automatic_save_after_first_modification_on_list(self, tmpdir):
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        assert "array: []\n" in sample.__mapper__.text
+        assert "array:\n-\n" in sample.__mapper__.text
 
         sample.array.append(42)
         assert "array:\n- 42\n" in sample.__mapper__.text

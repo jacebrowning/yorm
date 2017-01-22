@@ -123,6 +123,7 @@ class TestList:
     data_value = [
         (obj, obj),
         (None, []),
+        ([None], []),
         ("a b c", ["a", "b", "c"]),
         ("a,b,c", ["a", "b", "c"]),
         ("abc", ["abc"]),
@@ -132,6 +133,7 @@ class TestList:
 
     value_data = [
         (obj, obj),
+        ([], [None]),
     ]
 
     @pytest.mark.parametrize("data,value", data_value)
@@ -223,7 +225,7 @@ class TestReservedNames:
         - foo
         """) == my_object.__mapper__.text
 
-        log.info("Writting new file contents...")
+        log.info("Writing new file contents...")
         my_object.__mapper__.text = strip("""
         items:
         - bar
