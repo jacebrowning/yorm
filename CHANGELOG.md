@@ -1,5 +1,9 @@
 # Revision History
 
+## 1.3 (unreleased)
+
+- Optimized the formatting of empty lists to create consistent diffs.
+
 ## 1.2 (2017/01/06)
 
 - Updated base class to hide `pytest` traceback in wrapped methods.

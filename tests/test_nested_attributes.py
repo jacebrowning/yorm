@@ -107,11 +107,13 @@ class TestNestedOnce:
         log("Checking text...")
         assert strip("""
         nested_dict:
-          nested_list_2: []
+          nested_list_2:
+          -
           number: 0.0
         nested_list:
         - nested_dict_3:
-            nested_list_3: []
+            nested_list_3:
+            -
             number: 0.0
           number: 1.0
         """) == top.__mapper__.text
@@ -121,22 +123,26 @@ class TestNestedOnce:
         top.nested_list = [{'number': 1.5}]
         assert strip("""
         nested_dict:
-          nested_list_2: []
+          nested_list_2:
+          -
           number: 0.0
         nested_list:
         - nested_dict_3:
-            nested_list_3: []
+            nested_list_3:
+            -
             number: 0.0
           number: 1.5
         """) == top.__mapper__.text
         top.nested_list[0] = {'number': 1.6}
         assert strip("""
         nested_dict:
-          nested_list_2: []
+          nested_list_2:
+          -
           number: 0.0
         nested_list:
         - nested_dict_3:
-            nested_list_3: []
+            nested_list_3:
+            -
             number: 0.0
           number: 1.6
         """) == top.__mapper__.text
@@ -154,26 +160,31 @@ class TestNestedOnce:
         top.nested_list = [{'number': 1.8}, {'number': 1.9}]
         assert strip("""
         nested_dict:
-          nested_list_2: []
+          nested_list_2:
+          -
           number: 0.0
         nested_list:
         - nested_dict_3:
-            nested_list_3: []
+            nested_list_3:
+            -
             number: 0.0
           number: 1.8
         - nested_dict_3:
-            nested_list_3: []
+            nested_list_3:
+            -
             number: 0.0
           number: 1.9
         """) == top.__mapper__.text
         del top.nested_list[0]
         assert strip("""
         nested_dict:
-          nested_list_2: []
+          nested_list_2:
+          -
           number: 0.0
         nested_list:
         - nested_dict_3:
-            nested_list_3: []
+            nested_list_3:
+            -
             number: 0.0
           number: 1.9
         """) == top.__mapper__.text
@@ -183,9 +194,11 @@ class TestNestedOnce:
         top.nested_dict.number = 2
         assert strip("""
         nested_dict:
-          nested_list_2: []
+          nested_list_2:
+          -
           number: 2.0
-        nested_list: []
+        nested_list:
+        -
         """) == top.__mapper__.text
 
 
@@ -197,22 +210,26 @@ class TestNestedTwice:
         top.nested_list = [{'number': 3}]
         assert strip("""
         nested_dict:
-          nested_list_2: []
+          nested_list_2:
+          -
           number: 0.0
         nested_list:
         - nested_dict_3:
-            nested_list_3: []
+            nested_list_3:
+            -
             number: 0.0
           number: 3.0
         """) == top.__mapper__.text
         top.nested_list[0].number = 4
         assert strip("""
         nested_dict:
-          nested_list_2: []
+          nested_list_2:
+          -
           number: 0.0
         nested_list:
         - nested_dict_3:
-            nested_list_3: []
+            nested_list_3:
+            -
             number: 0.0
           number: 4.0
         """) == top.__mapper__.text
@@ -225,7 +242,8 @@ class TestNestedTwice:
           nested_list_2:
           - 5.0
           number: 0.0
-        nested_list: []
+        nested_list:
+        -
         """) == top.__mapper__.text
         top.nested_dict.nested_list_2.append(6)
         assert strip("""
@@ -234,36 +252,40 @@ class TestNestedTwice:
           - 5.0
           - 6.0
           number: 0.0
-        nested_list: []
+        nested_list:
+        -
         """) == top.__mapper__.text
 
     def test_dict_in_list_value_change_triggers_save(self):
         top = Top()
         log("Appending to list...")
-        top.nested_list.append(None)
+        top.nested_list.append('foobar')
         log("Setting nested value...")
         top.nested_list[0].nested_dict_3.number = 8
         assert strip("""
         nested_dict:
-          nested_list_2: []
+          nested_list_2:
+          -
           number: 0.0
         nested_list:
         - nested_dict_3:
-            nested_list_3: []
+            nested_list_3:
+            -
             number: 8.0
           number: 0.0
         """) == top.__mapper__.text
 
     def test_list_in_dict_append_triggers_save(self):
         top = Top()
-        top.nested_list.append(None)
-        top.nested_list.append(None)
+        top.nested_list.append('foobar')
+        top.nested_list.append('foobar')
         for nested_dict_2 in top.nested_list:
             nested_dict_2.number = 9
             nested_dict_2.nested_dict_3.nested_list_3.append(10)
         assert strip("""
         nested_dict:
-          nested_list_2: []
+          nested_list_2:
+          -
           number: 0.0
         nested_list:
         - nested_dict_3:
@@ -327,7 +349,7 @@ def describe_aliases():
 
     def test_alias_dict_in_list():
         top = Top()
-        top.nested_list.append(None)
+        top.nested_list.append('foobar')
         ref1 = top.nested_list[0]
         ref2 = top.nested_list[0].nested_dict_3
         ref3 = top.nested_list[0].nested_dict_3.nested_list_3
