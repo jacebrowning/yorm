@@ -28,7 +28,7 @@ class IntegerList(List):
 @yorm.attr(object=EmptyDictionary)
 @yorm.attr(string=String)
 @yorm.attr(true=Boolean)
-@yorm.sync("path/to/{self.category}/{self.name}.yml")
+@yorm.sync("tmp/path/to/{self.category}/{self.name}.yml")
 class SampleStandardDecorated:
     """Sample class using standard attribute types."""
 
