@@ -1,6 +1,6 @@
 # Revision History
 
-## 1.3 (unreleased)
+## 1.3 (2017/01/24)
 
 - Optimized the formatting of empty lists to create consistent diffs.
 - Added `ModelMixin` to add ORM methods to mapped classes.
