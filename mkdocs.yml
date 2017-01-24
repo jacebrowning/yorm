@@ -8,8 +8,8 @@ theme: readthedocs
 pages:
 - Home: index.md
 - API:
-  - Class Mapping: api/class-mapping.md
   - Instance Mapping: api/instance-mapping.md
+  - Class Mapping: api/class-mapping.md
   - Builtin Types: api/builtin-types.md
   - Custom Types: api/custom-types.md
 - About:
