@@ -2,9 +2,11 @@
 PROJECT := YORM
 PACKAGE := yorm
 REPOSITORY := jacebrowning/yorm
+
+# Project paths
 PACKAGES := $(PACKAGE) tests
-CONFIG := $(shell ls *.py)
-MODULES := $(shell find $(PACKAGES) -name '*.py') $(CONFIG)
+CONFIG := $(wildcard *.py)
+MODULES := $(wildcard $(PACKAGE)/*.py)
 
 # Python settings
 ifndef TRAVIS
@@ -33,7 +35,11 @@ else
 endif
 
 # Virtual environment paths
-ENV := env
+ifdef TRAVIS
+	ENV := $(shell dirname $(shell dirname $(shell which $(SYS_PYTHON))))/
+else
+	ENV := env
+endif
 ifneq ($(findstring win32, $(PLATFORM)), )
 	BIN := $(ENV)/Scripts
 	ACTIVATE := $(BIN)/activate.bat
@@ -49,19 +55,16 @@ else
 endif
 
 # Virtual environment executables
-ifndef TRAVIS
-	BIN_ := $(BIN)/
-endif
-PYTHON := $(BIN_)python
-PIP := $(BIN_)pip
-EASY_INSTALL := $(BIN_)easy_install
-SNIFFER := $(BIN_)sniffer
-HONCHO := $(ACTIVATE) && $(BIN_)honcho
+PYTHON := $(BIN)/python
+PIP := $(BIN)/pip
+EASY_INSTALL := $(BIN)/easy_install
+SNIFFER := $(BIN)/sniffer
+HONCHO := $(ACTIVATE) && $(BIN)/honcho
 
 # MAIN TASKS ###################################################################
 
 .PHONY: all
-all: doc
+all: install
 
 .PHONY: ci
 ci: check test ## Run all tasks that determine CI status
@@ -70,12 +73,15 @@ ci: check test ## Run all tasks that determine CI status
 watch: install .clean-test ## Continuously run all CI tasks when files chanage
 	$(SNIFFER)
 
+.PHONY: run ## Start the program
+run: install
+	$(PYTHON) $(PACKAGE)/__main__.py
+
 # SYSTEM DEPENDENCIES ##########################################################
 
 .PHONY: doctor
 doctor:  ## Confirm system dependencies are available
-	@ echo "Checking Python version:"
-	@ python --version | tee /dev/stderr | grep -q "3.5."
+	bin/verchew
 
 # PROJECT DEPENDENCIES #########################################################
 
@@ -110,44 +116,39 @@ $(PIP): $(PYTHON)
 	@ touch $@
 
 $(PYTHON):
-	$(SYS_PYTHON) -m venv --clear $(ENV)
+	$(SYS_PYTHON) -m venv $(ENV)
 
 # CHECKS #######################################################################
 
-PEP8 := $(BIN_)pep8
-PEP8RADIUS := $(BIN_)pep8radius
-PEP257 := $(BIN_)pep257
-PYLINT := $(BIN_)pylint
+PYLINT := $(BIN)/pylint
+PYCODESTYLE := $(BIN)/pycodestyle
+PYDOCSTYLE := $(BIN)/pydocstyle
 
 .PHONY: check
-check: pep8 pep257 pylint ## Run linters and static analysis
-
-.PHONY: pep8
-pep8: install ## Check for convention issues
-	$(PEP8) $(PACKAGES) $(CONFIG) --config=.pep8rc
-
-.PHONY: pep257
-pep257: install ## Check for docstring issues
-	$(PEP257) $(PACKAGES) $(CONFIG)
+check: pylint pycodestyle pydocstyle ## Run linters and static analysis
 
 .PHONY: pylint
-pylint: install ## Check for code issues
-	$(PYLINT) $(PACKAGES) $(CONFIG) --rcfile=.pylintrc
+pylint: install
+	$(PYLINT) $(PACKAGES) $(CONFIG) --rcfile=.pylint.ini
 
-.PHONY: fix
-fix: install
-	$(PEP8RADIUS) --docformatter --in-place
+.PHONY: pycodestyle
+pycodestyle: install
+	$(PYCODESTYLE) $(PACKAGES) $(CONFIG) --config=.pycodestyle.ini
+
+.PHONY: pydocstyle
+pydocstyle: install
+	$(PYDOCSTYLE) $(PACKAGES) $(CONFIG)
 
 # TESTS ########################################################################
 
-PYTEST := $(BIN_)py.test
-COVERAGE := $(BIN_)coverage
-COVERAGE_SPACE := $(BIN_)coverage.space
+PYTEST := $(BIN)/py.test
+COVERAGE := $(BIN)/coverage
+COVERAGE_SPACE := $(BIN)/coverage.space
 
 RANDOM_SEED ?= $(shell date +%s)
 
 PYTEST_CORE_OPTS := -ra -vv
-PYTEST_COV_OPTS := --cov=$(PACKAGE) --no-cov-on-fail --cov-report=term-missing --cov-report=html
+PYTEST_COV_OPTS := --cov=$(PACKAGE) --no-cov-on-fail --cov-report=term-missing:skip-covered --cov-report=html
 PYTEST_RANDOM_OPTS := --random --random-seed=$(RANDOM_SEED)
 
 PYTEST_OPTS := $(PYTEST_CORE_OPTS) $(PYTEST_COV_OPTS) $(PYTEST_RANDOM_OPTS)
@@ -157,24 +158,26 @@ FAILURES := .cache/v/cache/lastfailed
 REPORTS ?= xmlreport
 
 .PHONY: test
-test: test-all
+test: test-all ## Run unit and integration tests
 
 .PHONY: test-unit
-test-unit: install ## Run the unit tests
+test-unit: install
 	@- mv $(FAILURES) $(FAILURES).bak
 	$(PYTEST) $(PYTEST_OPTS) $(PACKAGE) --junitxml=$(REPORTS)/unit.xml
 	@- mv $(FAILURES).bak $(FAILURES)
 	$(COVERAGE_SPACE) $(REPOSITORY) unit
 
 .PHONY: test-int
-test-int: install ## Run the integration tests
+test-int: install
 	@ if test -e $(FAILURES); then $(PYTEST) $(PYTEST_OPTS_FAILFAST) tests; fi
+	@ rm -rf $(FAILURES)
 	$(PYTEST) $(PYTEST_OPTS) tests --junitxml=$(REPORTS)/integration.xml
 	$(COVERAGE_SPACE) $(REPOSITORY) integration
 
 .PHONY: test-all
-test-all: install ## Run all the tests
+test-all: install
 	@ if test -e $(FAILURES); then $(PYTEST) $(PYTEST_OPTS_FAILFAST) $(PACKAGES); fi
+	@ rm -rf $(FAILURES)
 	$(PYTEST) $(PYTEST_OPTS) $(PACKAGES) --junitxml=$(REPORTS)/overall.xml
 	$(COVERAGE_SPACE) $(REPOSITORY) overall
 
@@ -184,31 +187,31 @@ read-coverage:
 
 # DOCUMENTATION ################################################################
 
-PYREVERSE := $(BIN_)pyreverse
-PDOC := $(PYTHON) $(BIN_)pdoc
-MKDOCS := $(BIN_)mkdocs
+PYREVERSE := $(BIN)/pyreverse
+PDOC := $(PYTHON) $(BIN)/pdoc
+MKDOCS := $(BIN)/mkdocs
 
 PDOC_INDEX := docs/apidocs/$(PACKAGE)/index.html
 MKDOCS_INDEX := site/index.html
 
 .PHONY: doc
-doc: uml pdoc mkdocs ## Run documentation generators
+doc: uml pdoc mkdocs ## Generate documentaiton
 
 .PHONY: uml
-uml: install docs/*.png ## Generate UML diagrams for classes and packages
+uml: install docs/*.png
 docs/*.png: $(MODULES)
 	$(PYREVERSE) $(PACKAGE) -p $(PACKAGE) -a 1 -f ALL -o png --ignore tests
 	- mv -f classes_$(PACKAGE).png docs/classes.png
 	- mv -f packages_$(PACKAGE).png docs/packages.png
 
 .PHONY: pdoc
-pdoc: install $(PDOC_INDEX)  ## Generate API documentaiton with pdoc
+pdoc: install $(PDOC_INDEX)
 $(PDOC_INDEX): $(MODULES)
 	$(PDOC) --html --overwrite $(PACKAGE) --html-dir docs/apidocs
 	@ touch $@
 
 .PHONY: mkdocs
-mkdocs: install $(MKDOCS_INDEX) ## Build the documentation site with mkdocs
+mkdocs: install $(MKDOCS_INDEX)
 $(MKDOCS_INDEX): mkdocs.yml docs/*.md
 	ln -sf `realpath README.md --relative-to=docs` docs/index.md
 	ln -sf `realpath CHANGELOG.md --relative-to=docs/about` docs/about/changelog.md
@@ -217,14 +220,14 @@ $(MKDOCS_INDEX): mkdocs.yml docs/*.md
 	$(MKDOCS) build --clean --strict
 
 .PHONY: mkdocs-live
-mkdocs-live: mkdocs ## Launch and continuously rebuild the mkdocs site
+mkdocs-live: mkdocs
 	eval "sleep 3; open http://127.0.0.1:8000" &
 	$(MKDOCS) serve
 
 # BUILD ########################################################################
 
-PYINSTALLER := $(BIN_)pyinstaller
-PYINSTALLER_MAKESPEC := $(BIN_)pyi-makespec
+PYINSTALLER := $(BIN)/pyinstaller
+PYINSTALLER_MAKESPEC := $(BIN)/pyi-makespec
 
 DIST_FILES := dist/*.tar.gz dist/*.whl
 EXE_FILES := dist/$(PROJECT).*
@@ -251,7 +254,7 @@ $(PROJECT).spec:
 
 # RELEASE ######################################################################
 
-TWINE := $(BIN_)twine
+TWINE := $(BIN)/twine
 
 .PHONY: register
 register: dist ## Register the project on PyPI

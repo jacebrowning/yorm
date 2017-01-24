@@ -5,11 +5,17 @@
 ### Requirements
 
 * Make:
-    * Windows: http://cygwin.com/install.html
-    * Mac: https://developer.apple.com/xcode
-    * Linux: http://www.gnu.org/software/make (likely already installed)
+    * Windows: http://mingw.org/download/installer
+    * Mac: http://developer.apple.com/xcode
+    * Linux: http://www.gnu.org/software/make
 * Pandoc: http://johnmacfarlane.net/pandoc/installing.html
 * Graphviz: http://www.graphviz.org/Download.php
+
+To confirm these system dependencies are configured correctly:
+
+```sh
+$ make doctor
+```
 
 ### Installation
 
