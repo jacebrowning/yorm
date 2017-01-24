@@ -1,5 +1,10 @@
 # Revision History
 
+## 1.3 (2017/01/24)
+
+- Optimized the formatting of empty lists to create consistent diffs.
+- Added `ModelMixin` to add ORM methods to mapped classes.
+
 ## 1.2 (2017/01/06)
 
 - Updated base class to hide `pytest` traceback in wrapped methods.

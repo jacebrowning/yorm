@@ -97,7 +97,8 @@ class TestMappable:
         var1: ''
         var2: 0
         var3: false
-        var4: []
+        var4:
+        -
         var5:
           status: false
         """) == text
@@ -132,7 +133,8 @@ class TestMappable:
         var1: 42
         var2: 1
         var3: false
-        var4: []
+        var4:
+        -
         var5:
           status: true
         """) == text

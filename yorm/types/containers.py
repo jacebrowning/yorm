@@ -123,6 +123,9 @@ class List(Container, list):
             for item in value2:
                 data.append(cls.item_type.to_data(item))  # pylint: disable=no-member
 
+        if not data:
+            data.append(None)
+
         return data
 
     def update_value(self, data, *, auto_track=True):
@@ -134,6 +137,9 @@ class List(Container, list):
 
         # Convert the parsed data
         for item in to_list(data):
+
+            if item is None:
+                continue
 
             try:
                 attr = self[len(value)]

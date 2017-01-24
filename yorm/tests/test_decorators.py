@@ -99,7 +99,7 @@ class TestSyncInstances:
         def __repr__(self):
             return "<decorated w/ UUID {}>".format(id(self))
 
-    @decorators.sync("path/to/{n}.yml", {'n': 'name'})
+    @decorators.sync("tmp/path/to/{n}.yml", {'n': 'name'})
     class SampleDecoratedAttributes:
         """Sample decorated class using an attribute value for paths."""
 
@@ -109,7 +109,7 @@ class TestSyncInstances:
         def __repr__(self):
             return "<decorated w/ specified attributes {}>".format(id(self))
 
-    @decorators.sync("path/to/{self.name}.yml")
+    @decorators.sync("tmp/path/to/{self.name}.yml")
     class SampleDecoratedAttributesAutomatic:
         """Sample decorated class using an attribute value for paths."""
 
@@ -166,15 +166,15 @@ class TestSyncInstances:
         """Verify attributes can be used to determine filename."""
         sample1 = self.SampleDecoratedAttributes('one')
         sample2 = self.SampleDecoratedAttributes('two')
-        assert "path/to/one.yml" == sample1.__mapper__.path
-        assert "path/to/two.yml" == sample2.__mapper__.path
+        assert "tmp/path/to/one.yml" == sample1.__mapper__.path
+        assert "tmp/path/to/two.yml" == sample2.__mapper__.path
 
     def test_filename_attributes_automatic(self):
         """Verify attributes can be used to determine filename (auto save)."""
         sample1 = self.SampleDecoratedAttributesAutomatic('one')
         sample2 = self.SampleDecoratedAttributesAutomatic('two')
-        assert "path/to/one.yml" == sample1.__mapper__.path
-        assert "path/to/two.yml" == sample2.__mapper__.path
+        assert "tmp/path/to/one.yml" == sample1.__mapper__.path
+        assert "tmp/path/to/two.yml" == sample2.__mapper__.path
 
     def test_filename_attributes_combination(self):
         """Verify attributes can be used to determine filename (combo)."""

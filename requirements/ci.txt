@@ -1,6 +1,6 @@
 # Linters
-pep8
-pep257
+pycodestyle
+pydocstyle
 pylint
 
 # Testing
@@ -12,4 +12,4 @@ pytest-random
 
 # Coverage
 coverage
-coverage.space >= 0.6.1
+coverage.space >= 0.6.2

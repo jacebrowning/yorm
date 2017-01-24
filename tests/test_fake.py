@@ -13,7 +13,7 @@ from . import strip
 
 
 @yorm.attr(value=yorm.types.standard.Integer)
-@yorm.sync("path/to/{self.name}.yml")
+@yorm.sync("tmp/path/to/{self.name}.yml")
 class Sample:
     """Sample class for fake mapping."""
 
@@ -37,7 +37,7 @@ class TestFake:
         sample = Sample('sample')
 
         # ensure no file is created
-        assert "path/to/sample.yml" == sample.__mapper__.path
+        assert "tmp/path/to/sample.yml" == sample.__mapper__.path
         assert not os.path.exists(sample.__mapper__.path)
 
         # change object values

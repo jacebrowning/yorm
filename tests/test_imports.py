@@ -16,6 +16,7 @@ def test_from_top_constants():
 def test_from_top_clases():
     from yorm import Mappable
     from yorm import Converter, Container
+    from yorm import ModelMixin
 
 
 def test_from_top_decorators():

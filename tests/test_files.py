@@ -28,7 +28,7 @@ class IntegerList(List):
 @yorm.attr(object=EmptyDictionary)
 @yorm.attr(string=String)
 @yorm.attr(true=Boolean)
-@yorm.sync("path/to/{self.category}/{self.name}.yml")
+@yorm.sync("tmp/path/to/{self.category}/{self.name}.yml")
 class SampleStandardDecorated:
     """Sample class using standard attribute types."""
 
@@ -131,7 +131,7 @@ class TestUpdate:
     def test_automatic_save_after_first_modification_on_list(self, tmpdir):
         tmpdir.chdir()
         sample = SampleStandardDecorated('sample')
-        assert "array: []\n" in sample.__mapper__.text
+        assert "array:\n-\n" in sample.__mapper__.text
 
         sample.array.append(42)
         assert "array:\n- 42\n" in sample.__mapper__.text
