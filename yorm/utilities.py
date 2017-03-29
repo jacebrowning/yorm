@@ -8,13 +8,13 @@ from . import common, exceptions
 log = logging.getLogger(__name__)
 
 
-def create(class_or_instance, *args, overwrite=False):
+def create(class_or_instance, *args, overwrite=False, **kwargs):
     """Create a new mapped object.
 
     NOTE: Calling this function is unnecessary with 'auto_create' enabled.
 
     """
-    instance = _instantiate(class_or_instance, *args)
+    instance = _instantiate(class_or_instance, *args, **kwargs)
     mapper = common.get_mapper(instance, expected=True)
 
     if mapper.exists and not overwrite:
@@ -24,9 +24,9 @@ def create(class_or_instance, *args, overwrite=False):
     return save(instance)
 
 
-def find(class_or_instance, *args, create=False):  # pylint: disable=redefined-outer-name
+def find(class_or_instance, *args, create=False, **kwargs):  # pylint: disable=redefined-outer-name
     """Find a matching mapped object or return None."""
-    instance = _instantiate(class_or_instance, *args)
+    instance = _instantiate(class_or_instance, *args, **kwargs)
     mapper = common.get_mapper(instance, expected=True)
 
     if mapper.exists:
@@ -86,9 +86,9 @@ def delete(instance):
     return None
 
 
-def _instantiate(class_or_instance, *args):
+def _instantiate(class_or_instance, *args, **kwargs):
     if inspect.isclass(class_or_instance):
-        instance = class_or_instance(*args)
+        instance = class_or_instance(*args, **kwargs)
     else:
         assert not args
         instance = class_or_instance

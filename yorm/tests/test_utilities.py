@@ -53,6 +53,11 @@ def describe_create():
 
         utilities.create(model_class, 'foo', 'bar', overwrite=True)
 
+    def it_supports_keyword_arguments(model_class):
+        instance = utilities.create(model_class, 'foo', key='bar')
+
+        expect(instance.__mapper__.exists) == True
+
     def it_can_also_be_called_with_an_instance(instance):
         expect(yorm.create(instance)) == instance
 
@@ -74,6 +79,11 @@ def describe_find():
     def it_allows_objects_to_be_created(model_class):
         expect(utilities.find(model_class, 'new', 'one', create=True)) == \
             model_class('new', 'one')
+
+    def it_supports_keyword_arguments(model_class, instance):
+        instance.__mapper__.create()
+
+        expect(utilities.find(model_class, 'foo', key='bar')) == instance
 
     def it_can_also_be_called_with_an_instance(instance):
         expect(yorm.find(instance, create=True)) == instance

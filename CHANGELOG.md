@@ -3,6 +3,7 @@
 ## 1.4 (unreleased)
 
 - Removed warnings about calling save/load unnecessarily.
+- Allow keyword arguments to be passed to class construction via `new` and `find` utilities.
 
 ## 1.3 (2017/01/24)
 
