@@ -2,7 +2,6 @@
 
 import inspect
 import logging
-import warnings
 
 from . import common, exceptions
 
@@ -10,13 +9,13 @@ log = logging.getLogger(__name__)
 
 
 def create(class_or_instance, *args, overwrite=False):
-    """Create a new mapped object."""
+    """Create a new mapped object.
+
+    NOTE: Calling this function is unnecessary with 'auto_create' enabled.
+
+    """
     instance = _instantiate(class_or_instance, *args)
     mapper = common.get_mapper(instance, expected=True)
-
-    if mapper.auto_create:
-        msg = "'create' is called automatically with 'auto_create' enabled"
-        warnings.warn(msg)
 
     if mapper.exists and not overwrite:
         msg = "{!r} already exists".format(mapper.path)
@@ -45,10 +44,13 @@ def match(cls, **kwargs):
 
 
 def load(instance):
-    """Force the loading of a mapped object's file."""
-    mapper = common.get_mapper(instance, expected=True)
+    """Force the loading of a mapped object's file.
 
-    warnings.warn("'load' is called automatically")
+    NOTE: Calling this function is unnecessary. It exists for the
+        aesthetic purpose of having symmetry between save and load.
+
+    """
+    mapper = common.get_mapper(instance, expected=True)
 
     mapper.load()
 
@@ -56,12 +58,12 @@ def load(instance):
 
 
 def save(instance):
-    """Save a mapped object to file."""
-    mapper = common.get_mapper(instance, expected=True)
+    """Save a mapped object to file.
 
-    if mapper.auto_save:
-        msg = "'save' is called automatically with 'auto_save' enabled"
-        warnings.warn(msg)
+    NOTE: Calling this function is unnecessary with 'auto_save' enabled.
+
+    """
+    mapper = common.get_mapper(instance, expected=True)
 
     if mapper.deleted:
         msg = "{!r} was deleted".format(mapper.path)

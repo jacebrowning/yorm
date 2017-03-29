@@ -1,5 +1,9 @@
 # Revision History
 
+## 1.4 (unreleased)
+
+- Removed warnings about calling save/load unnecessarily.
+
 ## 1.3 (2017/01/24)
 
 - Optimized the formatting of empty lists to create consistent diffs.
