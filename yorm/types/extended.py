@@ -145,9 +145,7 @@ class AttributeDictionary(Dictionary):
             msg = "AttributeDictionary class must be subclassed to use"
             raise NotImplementedError(msg)
 
-        obj = cls.__new__(cls)
-        obj.__dict__ = obj
-        return obj
+        return cls()
 
 
 class SortedList(List):
