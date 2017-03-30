@@ -4,6 +4,7 @@
 
 - Removed warnings about calling save/load unnecessarily.
 - Allow keyword arguments to be passed to class construction via `new` and `find` utilities.
+- Fixed missing attributes added in `__init__` on `AttributeDictionary`.
 
 ## 1.3 (2017/01/24)
 
