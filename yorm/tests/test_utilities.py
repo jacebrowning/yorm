@@ -41,6 +41,7 @@ def describe_create():
         instance = utilities.create(model_class, 'foo', 'bar')
 
         expect(instance.__mapper__.exists) == True
+        expect(instance.__mapper__.modified) == False
 
     def it_requires_files_to_not_yet_exist(model_class, instance):
         instance.__mapper__.create()

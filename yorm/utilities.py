@@ -21,7 +21,7 @@ def create(class_or_instance, *args, overwrite=False, **kwargs):
         msg = "{!r} already exists".format(mapper.path)
         raise exceptions.DuplicateMappingError(msg)
 
-    return save(instance)
+    return load(save(instance))
 
 
 def find(class_or_instance, *args, create=False, **kwargs):  # pylint: disable=redefined-outer-name
