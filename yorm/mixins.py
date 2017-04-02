@@ -5,7 +5,7 @@ class ModelMixin:
     """Adds ORM methods to a mapped class."""
 
     @classmethod
-    def new(cls, *args, **kwargs):
+    def create(cls, *args, **kwargs):
         return utilities.create(cls, *args, **kwargs)
 
     @classmethod
