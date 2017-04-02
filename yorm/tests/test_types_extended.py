@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring,unused-variable,expression-not-assigned
+# pylint: disable=missing-docstring,unused-variable,expression-not-assigned,singleton-comparison
 
 import pytest
 from expecter import expect
@@ -54,14 +54,31 @@ def describe_markdown():
 
 def describe_attribute_dictionary():
 
-    @attr(var1=Integer)
-    @attr(var2=String)
-    class SampleAttributeDictionary(AttributeDictionary):
-        """Sample attribute dictionary."""
+    @pytest.fixture
+    def cls():
+        @attr(var1=Integer)
+        @attr(var2=String)
+        class MyAttributeDictionary(AttributeDictionary): pass
+        return MyAttributeDictionary
 
     @pytest.fixture
-    def converter():
-        return SampleAttributeDictionary()
+    def cls_with_init():
+        @attr(var1=Integer)
+        class MyAttributeDictionary(AttributeDictionary):
+            def __init__(self, *args, var2="42", **kwargs):
+                super().__init__(*args, **kwargs)
+                self.var2 = var2
+        return MyAttributeDictionary
+
+    @pytest.fixture
+    def cls_with_args():
+        @attr(var1=Integer)
+        class MyAttributeDictionary(AttributeDictionary):
+            def __init__(self, var1, var2="42"):
+                super().__init__()
+                self.var1 = var1
+                self.var2 = var2
+        return MyAttributeDictionary
 
     def it_cannot_be_used_directly():
         with expect.raises(NotImplementedError):
@@ -69,10 +86,31 @@ def describe_attribute_dictionary():
         with expect.raises(NotImplementedError):
             AttributeDictionary.to_data(None)
 
-    def it_has_keys_available_as_attributes(converter):
+    def it_has_keys_available_as_attributes(cls):
+        converter = cls()
+
         value = converter.to_value({'var1': 1, 'var2': "2"})
+
         expect(value.var1) == 1
         expect(value.var2) == "2"
+
+    def it_adds_extra_attributes_from_init(cls_with_init):
+        converter = cls_with_init()
+
+        value = converter.to_value({'var1': 1})
+        print(value.__dict__)
+
+        expect(value.var1) == 1
+        expect(value.var2) == "42"
+
+    def it_allows_positional_arguments(cls_with_args):
+        converter = cls_with_args(99)
+
+        value = converter.to_value({'var1': 1})
+        print(value.__dict__)
+
+        expect(value.var1) == 1
+        expect(hasattr(value, 'var2')) == False
 
 
 def describe_sorted_list():

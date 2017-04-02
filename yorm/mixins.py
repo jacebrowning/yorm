@@ -1,3 +1,5 @@
+import warnings
+
 from yorm import utilities
 
 
@@ -5,7 +7,13 @@ class ModelMixin:
     """Adds ORM methods to a mapped class."""
 
     @classmethod
+    def create(cls, *args, **kwargs):
+        return utilities.create(cls, *args, **kwargs)
+
+    @classmethod
     def new(cls, *args, **kwargs):
+        msg = "ModelMixin.new() has been renamed to ModelMixin.create()"
+        warnings.warn(msg, DeprecationWarning)
         return utilities.create(cls, *args, **kwargs)
 
     @classmethod

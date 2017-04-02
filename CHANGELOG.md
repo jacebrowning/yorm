@@ -1,5 +1,13 @@
 # Revision History
 
+## 1.4 (2017/04/02)
+
+- Removed warnings about calling save/load unnecessarily.
+- Now allowing keyword arguments to be passed to class construction via `create` and `find` utilities.
+- Now adding additional attributes from `__init__` on `AttributeDictionary`.
+    - NOTE: For this feature to work, `__init__` must not use positional arguments.
+- **DEPRECIATION**: Renamed `ModelMixin.new` to `ModelMixin.create`.
+
 ## 1.3 (2017/01/24)
 
 - Optimized the formatting of empty lists to create consistent diffs.

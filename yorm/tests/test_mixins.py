@@ -25,8 +25,8 @@ def describe_model_mixin():
         return mixed_class()
 
     @patch('yorm.mixins.utilities')
-    def it_adds_a_new_method(utilities, mixed_class):
-        mixed_class.new('foobar', overwrite=True)
+    def it_adds_a_create_method(utilities, mixed_class):
+        mixed_class.create('foobar', overwrite=True)
 
         expect(utilities.mock_calls) == [
             call.create(mixed_class, 'foobar', overwrite=True)
