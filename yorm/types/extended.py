@@ -1,10 +1,14 @@
 """Converter classes for extensions to builtin types."""
 
 import re
+import logging
 
 from .standard import String, Integer, Float, Boolean
 from .containers import Dictionary, List
 from ._representers import LiteralString
+
+
+log = logging.getLogger(__name__)
 
 
 # NULLABLE BUILTINS ############################################################
@@ -145,7 +149,15 @@ class AttributeDictionary(Dictionary):
             msg = "AttributeDictionary class must be subclassed to use"
             raise NotImplementedError(msg)
 
-        return cls()
+        try:
+            obj = cls()
+        except TypeError as exc:
+            log.info("Default values in %s are not available when "
+                     "positional arguments are used: %s", cls.__name__, exc)
+            obj = cls.__new__(cls)
+            obj.__dict__ = obj
+
+        return obj
 
 
 class SortedList(List):

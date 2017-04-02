@@ -8,4 +8,4 @@ from .bases import Container, Converter, Mappable
 from .mixins import ModelMixin
 
 __project__ = 'YORM'
-__version__ = '2.0dev1'
+__version__ = '1.4b1'
