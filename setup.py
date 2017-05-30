@@ -79,5 +79,6 @@ setuptools.setup(
     install_requires=[
         'PyYAML ~= 3.11',
         'simplejson ~= 3.8',
+        'parse ~= 1.8.0',
     ],
 )

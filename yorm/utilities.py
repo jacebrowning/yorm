@@ -5,6 +5,7 @@ import logging
 import string
 import glob
 import types
+import parse
 
 from . import common, exceptions
 
@@ -66,19 +67,46 @@ class GlobFormatter(string.Formatter):
             return super().format_field(value, format_spec)
 
 
-def match(cls, **kwargs):
-    """Yield all matching mapped objects."""
-    log.debug((cls, kwargs))
+def _unpack_parsed_fields(pathfields):
+    return {
+        (k[len('self.'):] if k.startswith('self.') else k): v
+        for k, v in pathfields.items()
+    }
+
+
+def match(cls_or_path, factory=None, **kwargs):
+    """match(class, [callable], ...) -> instance, ...
+    match(str, callable, ...) -> instance, ...
+
+    Yield all matching mapped objects. Can be used two ways:
+    * With a YORM-decorated class, optionally with a factory callable
+    * With a Python 3-style string template and a factory callable
+
+    The factory callable must accept keyuword arguments, extracted from the file
+    name merged with those passed to match(). If no factory is given, the class
+    itself is used as the factory (same signature).
+    """
+    if isinstance(cls_or_path, type):
+        path_format = ...(cls_or_path)
+        if factory is None:
+            factory = cls_or_path
+    else:
+        path_format = cls_or_path
+        if factory is None:
+            raise TypeError("Factory must be given if a string template is used")
+
+    log.debug((path_format, factory, kwargs))
     gf = GlobFormatter()
     mock = types.SimpleNamespace(**kwargs)
 
-    pattern = gf.format(..., self=mock)  # FIXME: Get the path_format given the class
+    posix_pattern = gf.format(path_format, self=mock, **kwargs)
+    py_pattern = parse.compile(path_format)
 
-    for filename in glob.iglob(pattern, recursive=False):
-        pathfields = {...: ...}  # FIXME: Extract the fields from the path (pypi:parse)
-        inst = cls(...)  # FIXME: Thaw class without invoking a bunch of stuff
-        common.sync_object(inst, filename)
-        yield inst
+    for filename in glob.iglob(posix_pattern, recursive=False):
+        pathfields = py_pattern.parse(filename)
+        fields = _unpack_parsed_fields(pathfields)
+        fields.update(kwargs)
+        yield factory(**fields)
 
 
 def load(instance):
