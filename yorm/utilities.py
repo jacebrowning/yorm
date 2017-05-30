@@ -2,6 +2,9 @@
 
 import inspect
 import logging
+import string
+import glob
+import types
 
 from . import common, exceptions
 
@@ -37,10 +40,45 @@ def find(class_or_instance, *args, create=False, **kwargs):  # pylint: disable=r
         return None
 
 
+class GlobFormatter(string.Formatter):
+    """
+    Uses '*' for all unknown fields
+    """
+
+    WILDCARD = object()
+
+    def get_value(self, key, args, kwargs):
+        try:
+            return super().get_value(key, args, kwargs)
+        except (KeyError, IndexError):
+            return self.WILDCARD
+
+    def convert_field(self, value, conversion):
+        if value is self.WILDCARD:
+            return self.WILDCARD
+        else:
+            return super().convert_field(value, conversion)
+
+    def format_field(self, value, format_spec):
+        if value is self.WILDCARD:
+            return '*'
+        else:
+            return super().format_field(value, format_spec)
+
+
 def match(cls, **kwargs):
     """Yield all matching mapped objects."""
     log.debug((cls, kwargs))
-    raise NotImplementedError
+    gf = GlobFormatter()
+    mock = types.SimpleNamespace(**kwargs)
+
+    pattern = gf.format(..., self=mock)  # FIXME: Get the path_format given the class
+
+    for filename in glob.iglob(pattern, recursive=False):
+        pathfields = {...: ...}  # FIXME: Extract the fields from the path (pypi:parse)
+        inst = cls(...)  # FIXME: Thaw class without invoking a bunch of stuff
+        common.sync_object(inst, filename)
+        yield inst
 
 
 def load(instance):
