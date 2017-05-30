@@ -87,7 +87,8 @@ def match(cls_or_path, factory=None, **kwargs):
     itself is used as the factory (same signature).
     """
     if isinstance(cls_or_path, type):
-        path_format = ...(cls_or_path)
+        path_format = common.path_formats[cls_or_path]
+        # Let KeyError fail through
         if factory is None:
             factory = cls_or_path
     else:

@@ -80,6 +80,7 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
 
     def decorator(cls):
         """Class decorator to map instances to files."""
+        common.path_formats[cls] = path_format
         init = cls.__init__
 
         def modified_init(self, *_args, **_kwargs):
