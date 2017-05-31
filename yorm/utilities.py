@@ -101,10 +101,11 @@ def match(cls_or_path, factory=None, **kwargs):
     mock = types.SimpleNamespace(**kwargs)
 
     kwargs['self'] = mock
-    posix_pattern = gf.vformat(path_format, (), kwargs)
+    posix_pattern = gf.vformat(path_format, (), kwargs.copy())
+    del kwargs['self']
     py_pattern = parse.compile(path_format)
 
-    for filename in glob.iglob(posix_pattern, recursive=False):
+    for filename in glob.iglob(posix_pattern):
         pathfields = py_pattern.parse(filename).named
         fields = _unpack_parsed_fields(pathfields)
         fields.update(kwargs)
