@@ -2,8 +2,6 @@
 [![Coverage Status](http://img.shields.io/coveralls/jacebrowning/yorm/master.svg)](https://coveralls.io/r/jacebrowning/yorm)
 [![Scrutinizer Code Quality](http://img.shields.io/scrutinizer/g/jacebrowning/yorm.svg)](https://scrutinizer-ci.com/g/jacebrowning/yorm/?branch=master)
 [![PyPI Version](http://img.shields.io/pypi/v/yorm.svg)](https://pypi.python.org/pypi/yorm)
-[![PyPI Downloads](http://img.shields.io/pypi/dm/yorm.svg)](https://pypi.python.org/pypi/yorm)
-
 
 # Overview
 
@@ -25,13 +23,13 @@ View the talk from [PyOhio 2015](https://www.youtube.com/watch?v=0woNEKf-wAo).
 
 Install YORM with pip:
 
-```
+```sh
 $ pip install YORM
 ```
 
 or directly from the source code:
 
-```
+```sh
 $ git clone https://github.com/jacebrowning/yorm.git
 $ cd yorm
 $ python setup.py install
@@ -73,7 +71,7 @@ Modifications to each object's mapped attributes:
 
 are automatically reflected on the filesytem:
 
-```bash
+```sh
 $ cat students/GVSU/123.yml
 name: John Doe
 gpa: 3.0
@@ -83,7 +81,7 @@ year: 2009
 
 Modifications and new content in each mapped file:
 
-```bash
+```sh
 $ echo "name: John Doe
 > gpa: 1.8
 > year: 2010

@@ -1,4 +1,4 @@
-# pylint: disable=unused-variable,expression-not-assigned
+# pylint: disable=unused-variable,unused-argument,expression-not-assigned
 # pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
 
 import logging
@@ -21,11 +21,11 @@ class MockConverter(Converter):
         return None
 
     @classmethod
-    def to_value(cls, *_):
+    def to_value(cls, data):
         return None
 
     @classmethod
-    def to_data(cls, _):
+    def to_data(cls, value):
         return None
 
 

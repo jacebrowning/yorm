@@ -30,6 +30,7 @@ def test_attribute_order_is_maintained(tmpdir):
     sample.string = "Hello, world!"
     sample.number_int = 42
     sample.number_real = 4.2
+    # pylint: disable=duplicate-code
     sample.truthy = False
     sample.falsey = True
     sample.dictionary['status'] = 1
