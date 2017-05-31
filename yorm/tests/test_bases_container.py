@@ -23,7 +23,7 @@ class TestContainer:
         def to_data(cls, value):
             return str(value.value)
 
-        def update_value(self, data, *, auto_track=None):  # pylint: disable=unused-variable
+        def update_value(self, data, *, auto_track=None):  # pylint: disable=unused-argument
             self.value += int(data)
 
     def test_container_class_cannot_be_instantiated(self):

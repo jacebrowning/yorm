@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 def file_required(method):
-    """Decorator for methods that require the file to exist."""
+    """Decorate methods that require the file to exist."""
 
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
@@ -28,7 +28,7 @@ def file_required(method):
 
 
 def prevent_recursion(method):
-    """Decorator to prevent indirect recursive calls."""
+    """Decorate methods to prevent indirect recursive calls."""
 
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):

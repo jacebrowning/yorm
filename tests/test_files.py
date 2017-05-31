@@ -33,14 +33,17 @@ class SampleStandardDecorated:
     """Sample class using standard attribute types."""
 
     def __init__(self, name, category='default'):
+        # pylint: disable=duplicate-code
         self.name = name
         self.category = category
         # https://docs.python.org/3.4/library/json.html#json.JSONDecoder
         self.object = {}
         self.array = []
+        # pylint: disable=duplicate-code
         self.string = ""
         self.number_int = 0
         self.number_real = 0.0
+        # pylint: disable=duplicate-code
         self.true = True
         self.false = False
         self.null = None

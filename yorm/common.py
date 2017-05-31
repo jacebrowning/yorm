@@ -28,13 +28,15 @@ attrs = collections.defaultdict(collections.OrderedDict)
 # LOGGING ######################################################################
 
 
-def _trace(self, message, *args, **kwargs):  # pragma: no cover (manual test)
-    """Handler for a new TRACE logging level."""
+logging.addLevelName(logging.DEBUG - 1, 'TRACE')
+
+
+def _trace(self, message, *args, **kwargs):
     if self.isEnabledFor(logging.DEBUG - 1):
-        self._log(logging.DEBUG - 1, message, args, **kwargs)  # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        self._log(logging.DEBUG - 1, message, args, **kwargs)
 
 
-logging.addLevelName(logging.DEBUG - 1, "TRACE")
 logging.Logger.trace = _trace
 
 
