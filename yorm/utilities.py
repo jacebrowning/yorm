@@ -48,10 +48,16 @@ class GlobFormatter(string.Formatter):
 
     WILDCARD = object()
 
+    def get_field(self, field_name, args, kwargs):
+        try:
+            return super().get_field(field_name, args, kwargs)
+        except (KeyError, IndexError, AttributeError):
+            return self.WILDCARD, None
+
     def get_value(self, key, args, kwargs):
         try:
             return super().get_value(key, args, kwargs)
-        except (KeyError, IndexError):
+        except (KeyError, IndexError, AttributeError):
             return self.WILDCARD
 
     def convert_field(self, value, conversion):

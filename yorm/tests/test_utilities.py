@@ -96,7 +96,7 @@ def describe_find():
 
 def describe_match():
 
-    def basic_smoke(model_class, instance):
+    def class_factory(model_class, instance):
         instance.__mapper__.create()
         matches = list(
             utilities.match(
@@ -106,6 +106,61 @@ def describe_match():
                 key='bar',
             )
         )
+        assert matches == [instance]
+
+    def string_self_factory(model_class, instance):
+        instance.__mapper__.create()
+        matches = list(
+            utilities.match(
+                "data/{self.kind}/{self.key}.yml",
+                (lambda kind, key: model_class(kind, key)),
+                kind='foo',
+                key='bar',
+            )
+        )
+        assert matches == [instance]
+
+    def string_factory(model_class, instance):
+        instance.__mapper__.create()
+        matches = list(
+            utilities.match(
+                "data/{kind}/{key}.yml",
+                (lambda kind, key: model_class(kind, key)),
+                kind='foo',
+                key='bar',
+            )
+        )
+        assert matches == [instance]
+
+    def class_factory_wildcard(model_class, instance):
+        instance.__mapper__.create()
+        matches = list(
+            utilities.match(
+                model_class,
+                (lambda kind, key: model_class(kind, key)),
+            )
+        )
+        assert matches == [instance]
+
+    def string_self_factory_wildcard(model_class, instance):
+        instance.__mapper__.create()
+        matches = list(
+            utilities.match(
+                "data/{self.kind}/{self.key}.yml",
+                (lambda kind, key: model_class(kind, key)),
+            )
+        )
+        assert matches == [instance]
+
+    def string_factory_wildcard(model_class, instance):
+        instance.__mapper__.create()
+        matches = list(
+            utilities.match(
+                "data/{kind}/{key}.yml",
+                (lambda kind, key: model_class(kind, key)),
+            )
+        )
+        assert matches == [instance]
 
 
 def describe_load():
