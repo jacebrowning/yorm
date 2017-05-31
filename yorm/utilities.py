@@ -100,7 +100,8 @@ def match(cls_or_path, factory=None, **kwargs):
     gf = GlobFormatter()
     mock = types.SimpleNamespace(**kwargs)
 
-    posix_pattern = gf.format(path_format, self=mock, **kwargs)
+    kwargs['self'] = mock
+    posix_pattern = gf.vformat(path_format, (), kwargs)
     py_pattern = parse.compile(path_format)
 
     for filename in glob.iglob(posix_pattern, recursive=False):
