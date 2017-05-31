@@ -96,9 +96,7 @@ def describe_find():
 
 def describe_match():
 
-    def it_is_not_yet_implemented():
-        with expect.raises(NotImplementedError):
-            utilities.match(Mock)
+    pass
 
 
 def describe_load():
