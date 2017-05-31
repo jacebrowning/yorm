@@ -105,7 +105,7 @@ def match(cls_or_path, factory=None, **kwargs):
     py_pattern = parse.compile(path_format)
 
     for filename in glob.iglob(posix_pattern, recursive=False):
-        pathfields = py_pattern.parse(filename)
+        pathfields = py_pattern.parse(filename).named
         fields = _unpack_parsed_fields(pathfields)
         fields.update(kwargs)
         yield factory(**fields)
