@@ -96,7 +96,16 @@ def describe_find():
 
 def describe_match():
 
-    pass
+    def basic_smoke(model_class, instance):
+        instance.__mapper__.create()
+        matches = list(
+            utilities.match(
+                model_class,
+                (lambda kind, key: model_class(kind, key)),
+                kind='foo',
+                key='bar',
+            )
+        )
 
 
 def describe_load():
