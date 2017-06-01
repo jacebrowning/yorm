@@ -20,9 +20,12 @@ def model_class(tmpdir):
     @yorm.sync("data/{self.kind}/{self.key}.yml", auto_create=False)
     class Model:
 
-        def __init__(self, kind, key):
+        def __init__(self, kind, key, **kwargs):
             self.kind = kind
             self.key = key
+            assert 0 <= len(kwargs) < 2
+            if kwargs:
+                assert kwargs == {'test': 'test'}
 
         def __eq__(self, other):
             return (self.kind, self.key) == (other.kind, other.key)
@@ -33,6 +36,20 @@ def model_class(tmpdir):
 @pytest.fixture
 def instance(model_class):
     return model_class('foo', 'bar')
+
+
+@pytest.fixture
+def instance_pile(model_class):
+    instances = [
+        model_class(kind, key)
+        for kind in ('spam', 'egg')
+        for key in ('foo', 'bar')
+    ]
+    # mostly because this is used primarily by match tests
+    for inst in instances:
+        inst.__mapper__.create()
+
+    return instances
 
 
 def describe_create():
@@ -96,9 +113,100 @@ def describe_find():
 
 def describe_match():
 
-    def it_is_not_yet_implemented():
-        with expect.raises(NotImplementedError):
-            utilities.match(Mock)
+    def class_factory(model_class, instance_pile):
+        matches = list(
+            utilities.match(
+                model_class,
+                (lambda key, kind: model_class(kind, key, test="test")),
+                kind='spam',
+                key='foo',
+            )
+        )
+        assert len(matches) == 1
+        instance = matches[0]
+        assert instance.kind == 'spam'
+        assert instance.key == 'foo'
+        assert instance in instance_pile
+
+    def class_no_factory(model_class, instance_pile):
+        matches = list(
+            utilities.match(
+                model_class,
+                kind='spam',
+                key='foo',
+            )
+        )
+        assert len(matches) == 1
+        instance = matches[0]
+        assert instance.kind == 'spam'
+        assert instance.key == 'foo'
+        assert instance in instance_pile
+
+    def string_self_factory(model_class, instance_pile):
+        matches = list(
+            utilities.match(
+                "data/{self.kind}/{self.key}.yml",
+                (lambda key, kind: model_class(kind, key)),
+                kind='spam',
+                key='bar',
+            )
+        )
+        assert len(matches) == 1
+        instance = matches[0]
+        assert instance.kind == 'spam'
+        assert instance.key == 'bar'
+        assert instance in instance_pile
+
+    def string_factory(model_class, instance_pile):
+        matches = list(
+            utilities.match(
+                "data/{kind}/{key}.yml",
+                (lambda key, kind: model_class(kind, key)),
+                kind='egg',
+                key='foo',
+            )
+        )
+        assert len(matches) == 1
+        instance = matches[0]
+        assert instance.kind == 'egg'
+        assert instance.key == 'foo'
+        assert instance in instance_pile
+
+    def class_factory_wildcard(model_class, instance_pile):
+        matches = list(
+            utilities.match(
+                model_class,
+                (lambda key, kind: model_class(kind, key)),
+                kind='spam',
+            )
+        )
+        assert len(matches) == 2
+        assert all(i.kind == 'spam' for i in matches)
+        assert all(i in instance_pile for i in matches)
+
+    def string_self_factory_wildcard(model_class, instance_pile):
+        matches = list(
+            utilities.match(
+                "data/{self.kind}/{self.key}.yml",
+                (lambda key, kind: model_class(kind, key)),
+                kind='egg',
+            )
+        )
+        assert len(matches) == 2
+        assert all(i.kind == 'egg' for i in matches)
+        assert all(i in instance_pile for i in matches)
+
+    def string_factory_wildcard(model_class, instance_pile):
+        matches = list(
+            utilities.match(
+                "data/{kind}/{key}.yml",
+                (lambda key, kind: model_class(kind, key)),
+                key='foo',
+            )
+        )
+        assert len(matches) == 2
+        assert all(i.key == 'foo' for i in matches)
+        assert all(i in instance_pile for i in matches)
 
 
 def describe_load():
