@@ -20,9 +20,12 @@ def model_class(tmpdir):
     @yorm.sync("data/{self.kind}/{self.key}.yml", auto_create=False)
     class Model:
 
-        def __init__(self, kind, key):
+        def __init__(self, kind, key, **kwargs):
             self.kind = kind
             self.key = key
+            assert 0 <= len(kwargs) < 2
+            if kwargs:
+                assert kwargs == {'test': 'test'}
 
         def __eq__(self, other):
             return (self.kind, self.key) == (other.kind, other.key)
@@ -114,7 +117,21 @@ def describe_match():
         matches = list(
             utilities.match(
                 model_class,
-                (lambda kind, key: model_class(kind, key)),
+                (lambda kind, key: model_class(kind, key, test="test")),
+                kind='spam',
+                key='foo',
+            )
+        )
+        assert len(matches) == 1
+        instance = matches[0]
+        assert instance.kind == 'spam'
+        assert instance.key == 'foo'
+        assert instance in instance_pile
+
+    def class_no_factory(model_class, instance_pile):
+        matches = list(
+            utilities.match(
+                model_class,
                 kind='spam',
                 key='foo',
             )
