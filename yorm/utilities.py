@@ -5,6 +5,7 @@ import logging
 import string
 import glob
 import types
+
 import parse
 
 from . import common, exceptions
@@ -80,7 +81,7 @@ def _unpack_parsed_fields(pathfields):
     }
 
 
-def match(cls_or_path, factory=None, **kwargs):
+def match(cls_or_path, _factory=None, **kwargs):
     """match(class, [callable], ...) -> instance, ...
     match(str, callable, ...) -> instance, ...
 
@@ -91,18 +92,21 @@ def match(cls_or_path, factory=None, **kwargs):
     The factory callable must accept keyuword arguments, extracted from the file
     name merged with those passed to match(). If no factory is given, the class
     itself is used as the factory (same signature).
+
+    Keyword arguments are used to filter objects. Filtering is only done by
+    filename, so only fields that are part of the path_format can be filtered
+    against.
     """
     if isinstance(cls_or_path, type):
         path_format = common.path_formats[cls_or_path]
         # Let KeyError fail through
-        if factory is None:
-            factory = cls_or_path
+        if _factory is None:
+            _factory = cls_or_path
     else:
         path_format = cls_or_path
-        if factory is None:
+        if _factory is None:
             raise TypeError("Factory must be given if a string template is used")
 
-    log.debug((path_format, factory, kwargs))
     gf = GlobFormatter()
     mock = types.SimpleNamespace(**kwargs)
 
@@ -115,7 +119,7 @@ def match(cls_or_path, factory=None, **kwargs):
         pathfields = py_pattern.parse(filename).named
         fields = _unpack_parsed_fields(pathfields)
         fields.update(kwargs)
-        yield factory(**fields)
+        yield _factory(**fields)
 
 
 def load(instance):

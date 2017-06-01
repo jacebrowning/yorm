@@ -35,6 +35,20 @@ def instance(model_class):
     return model_class('foo', 'bar')
 
 
+@pytest.fixture
+def instance_pile(model_class):
+    instances = [
+        model_class(kind, key)
+        for kind in ('spam', 'egg')
+        for key in ('foo', 'bar')
+    ]
+    # mostly because this is used primarily by match tests
+    for inst in instances:
+        inst.__mapper__.create()
+
+    return instances
+
+
 def describe_create():
 
     def it_creates_files(model_class):
@@ -96,71 +110,80 @@ def describe_find():
 
 def describe_match():
 
-    def class_factory(model_class, instance):
-        instance.__mapper__.create()
+    def class_factory(model_class, instance_pile):
         matches = list(
             utilities.match(
                 model_class,
                 (lambda kind, key: model_class(kind, key)),
-                kind='foo',
-                key='bar',
+                kind='spam',
+                key='foo',
             )
         )
-        assert matches == [instance]
+        assert len(matches) == 1
+        instance = matches[0]
+        assert instance.kind == 'spam'
+        assert instance.key == 'foo'
 
-    def string_self_factory(model_class, instance):
-        instance.__mapper__.create()
+    def string_self_factory(model_class, instance_pile):
         matches = list(
             utilities.match(
                 "data/{self.kind}/{self.key}.yml",
                 (lambda kind, key: model_class(kind, key)),
-                kind='foo',
+                kind='spam',
                 key='bar',
             )
         )
-        assert matches == [instance]
+        assert len(matches) == 1
+        instance = matches[0]
+        assert instance.kind == 'spam'
+        assert instance.key == 'bar'
 
-    def string_factory(model_class, instance):
-        instance.__mapper__.create()
+    def string_factory(model_class, instance_pile):
         matches = list(
             utilities.match(
                 "data/{kind}/{key}.yml",
                 (lambda kind, key: model_class(kind, key)),
-                kind='foo',
-                key='bar',
+                kind='egg',
+                key='foo',
             )
         )
-        assert matches == [instance]
+        assert len(matches) == 1
+        instance = matches[0]
+        assert instance.kind == 'egg'
+        assert instance.key == 'foo'
 
-    def class_factory_wildcard(model_class, instance):
-        instance.__mapper__.create()
+    def class_factory_wildcard(model_class, instance_pile):
         matches = list(
             utilities.match(
                 model_class,
                 (lambda kind, key: model_class(kind, key)),
+                kind='spam',
             )
         )
-        assert matches == [instance]
+        assert len(matches) == 2
+        assert all(i.kind == 'spam' for i in matches)
 
-    def string_self_factory_wildcard(model_class, instance):
-        instance.__mapper__.create()
+    def string_self_factory_wildcard(model_class, instance_pile):
         matches = list(
             utilities.match(
                 "data/{self.kind}/{self.key}.yml",
                 (lambda kind, key: model_class(kind, key)),
+                kind='egg',
             )
         )
-        assert matches == [instance]
+        assert len(matches) == 2
+        assert all(i.kind == 'egg' for i in matches)
 
-    def string_factory_wildcard(model_class, instance):
-        instance.__mapper__.create()
+    def string_factory_wildcard(model_class, instance_pile):
         matches = list(
             utilities.match(
                 "data/{kind}/{key}.yml",
                 (lambda kind, key: model_class(kind, key)),
+                key='foo',
             )
         )
-        assert matches == [instance]
+        assert len(matches) == 2
+        assert all(i.key == 'foo' for i in matches)
 
 
 def describe_load():
