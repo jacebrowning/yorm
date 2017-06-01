@@ -12,6 +12,7 @@ pages:
   - Class Mapping: api/class-mapping.md
   - Builtin Types: api/builtin-types.md
   - Custom Types: api/custom-types.md
+  - Utilities: api/Utilities.md
 - About:
   - Release Notes: about/changelog.md
   - Contributing: about/contributing.md

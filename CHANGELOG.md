@@ -1,5 +1,9 @@
 # Revision History
 
+## 1.5 (unreleased)
+
+- Implemented `match` utility. (credit: @astronouth7303)
+
 ## 1.4 (2017/04/02)
 
 - Removed warnings about calling save/load unnecessarily.
@@ -62,7 +66,7 @@
 
 ## 0.6 (2015/02/23)
 
-- Added preliminary support for JSON serialization (@pr0xmeh).
+- Added preliminary support for JSON serialization. (credit: @pr0xmeh)
 - Renamed `yorm.converters` to `yorm.types`.
 - Now maintaining the signature on mapped objects.
 - Disabled attribute inference unless `strict=False`.

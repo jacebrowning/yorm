@@ -36,26 +36,4 @@ class Student:
     ...
 ```
 
-# ORM Methods
-
-If you would like your class and its instances to behave more like a traditional object-relational mapping (ORM) model, use the provided mixin class:
-
-```python
-import yorm
-
-class Student(yorm.ModelMixin):
-    ...
-```
-
-which will add the following class methods:
-
-- `new` - object factory
-- `find` - return a single matching object
-- `match` - return all matching objects
-
-and instance methods:
-
-- `load` - update the object from its file
-- `save` - update the file from its object
-- `delete` - delete the object's file
 
