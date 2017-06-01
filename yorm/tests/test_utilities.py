@@ -39,15 +39,14 @@ def instance(model_class):
 
 
 @pytest.fixture
-def instance_pile(model_class):
+def instances(model_class):
     instances = [
         model_class(kind, key)
         for kind in ('spam', 'egg')
         for key in ('foo', 'bar')
     ]
-    # mostly because this is used primarily by match tests
-    for inst in instances:
-        inst.__mapper__.create()
+    for instance in instances:
+        instance.__mapper__.create()
 
     return instances
 
@@ -113,7 +112,7 @@ def describe_find():
 
 def describe_match():
 
-    def class_factory(model_class, instance_pile):
+    def with_class_and_factory(model_class, instances):
         matches = list(
             utilities.match(
                 model_class,
@@ -122,13 +121,13 @@ def describe_match():
                 key='foo',
             )
         )
-        assert len(matches) == 1
+        expect(len(matches)) == 1
         instance = matches[0]
-        assert instance.kind == 'spam'
-        assert instance.key == 'foo'
-        assert instance in instance_pile
+        expect(instance.kind) == 'spam'
+        expect(instance.key) == 'foo'
+        expect(instances).contains(instance)
 
-    def class_no_factory(model_class, instance_pile):
+    def with_class_and_no_factory(model_class, instances):
         matches = list(
             utilities.match(
                 model_class,
@@ -136,77 +135,79 @@ def describe_match():
                 key='foo',
             )
         )
-        assert len(matches) == 1
+        expect(len(matches)) == 1
         instance = matches[0]
-        assert instance.kind == 'spam'
-        assert instance.key == 'foo'
-        assert instance in instance_pile
+        expect(instance.kind) == 'spam'
+        expect(instance.key) == 'foo'
+        expect(instances).contains(instance)
 
-    def string_self_factory(model_class, instance_pile):
+    def with_string(model_class, instances):
+        matches = list(
+            utilities.match(
+                "data/{kind}/{key}.yml",
+                (lambda key, kind: model_class(kind, key, test="test")),
+                kind='egg',
+                key='foo',
+            )
+        )
+        expect(len(matches)) == 1
+        instance = matches[0]
+        expect(instance.kind) == 'egg'
+        expect(instance.key) == 'foo'
+        expect(instances).contains(instance)
+
+    def with_self_string(model_class, instances):
         matches = list(
             utilities.match(
                 "data/{self.kind}/{self.key}.yml",
-                (lambda key, kind: model_class(kind, key)),
+                (lambda key, kind: model_class(kind, key, test="test")),
                 kind='spam',
                 key='bar',
             )
         )
-        assert len(matches) == 1
+        expect(len(matches)) == 1
         instance = matches[0]
-        assert instance.kind == 'spam'
-        assert instance.key == 'bar'
-        assert instance in instance_pile
+        expect(instance.kind) == 'spam'
+        expect(instance.key) == 'bar'
+        expect(instances).contains(instance)
 
-    def string_factory(model_class, instance_pile):
-        matches = list(
-            utilities.match(
-                "data/{kind}/{key}.yml",
-                (lambda key, kind: model_class(kind, key)),
-                kind='egg',
-                key='foo',
-            )
-        )
-        assert len(matches) == 1
-        instance = matches[0]
-        assert instance.kind == 'egg'
-        assert instance.key == 'foo'
-        assert instance in instance_pile
-
-    def class_factory_wildcard(model_class, instance_pile):
+    def with_class_and_partial_match(model_class, instances):
         matches = list(
             utilities.match(
                 model_class,
-                (lambda key, kind: model_class(kind, key)),
                 kind='spam',
             )
         )
-        assert len(matches) == 2
-        assert all(i.kind == 'spam' for i in matches)
-        assert all(i in instance_pile for i in matches)
+        expect(len(matches)) == 2
+        for instance in matches:
+            expect(instance.kind) == 'spam'
+            expect(instances).contains(instance)
 
-    def string_self_factory_wildcard(model_class, instance_pile):
-        matches = list(
-            utilities.match(
-                "data/{self.kind}/{self.key}.yml",
-                (lambda key, kind: model_class(kind, key)),
-                kind='egg',
-            )
-        )
-        assert len(matches) == 2
-        assert all(i.kind == 'egg' for i in matches)
-        assert all(i in instance_pile for i in matches)
-
-    def string_factory_wildcard(model_class, instance_pile):
+    def with_string_and_partial_match(model_class, instances):
         matches = list(
             utilities.match(
                 "data/{kind}/{key}.yml",
-                (lambda key, kind: model_class(kind, key)),
+                (lambda key, kind: model_class(kind, key, test="test")),
                 key='foo',
             )
         )
-        assert len(matches) == 2
-        assert all(i.key == 'foo' for i in matches)
-        assert all(i in instance_pile for i in matches)
+        expect(len(matches)) == 2
+        for instance in matches:
+            expect(instance.key) == 'foo'
+            expect(instances).contains(instance)
+
+    def with_self_string_and_partial_match(model_class, instances):
+        matches = list(
+            utilities.match(
+                "data/{self.kind}/{self.key}.yml",
+                (lambda key, kind: model_class(kind, key, test="test")),
+                kind='egg',
+            )
+        )
+        expect(len(matches)) == 2
+        for instance in matches:
+            expect(instance.kind) == 'egg'
+            expect(instances).contains(instance)
 
 
 def describe_load():

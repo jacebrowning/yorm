@@ -83,16 +83,18 @@ def match(cls_or_path, _factory=None, **kwargs):
     """Yield all matching mapped objects.
 
     Can be used two ways:
+
     * With a YORM-decorated class, optionally with a factory callable
     * With a Python 3-style string template and a factory callable
 
-    The factory callable must accept keyuword arguments, extracted from the file
+    The factory callable must accept keyword arguments, extracted from the file
     name merged with those passed to match(). If no factory is given, the class
     itself is used as the factory (same signature).
 
     Keyword arguments are used to filter objects. Filtering is only done by
     filename, so only fields that are part of the path_format can be filtered
     against.
+
     """
     if isinstance(cls_or_path, type):
         path_format = common.path_formats[cls_or_path]
