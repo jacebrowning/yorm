@@ -43,9 +43,7 @@ def find(class_or_instance, *args, create=False, **kwargs):  # pylint: disable=r
 
 
 class GlobFormatter(string.Formatter):
-    """
-    Uses '*' for all unknown fields
-    """
+    """Uses '*' for all unknown fields."""
 
     WILDCARD = object()
 
@@ -82,10 +80,9 @@ def _unpack_parsed_fields(pathfields):
 
 
 def match(cls_or_path, _factory=None, **kwargs):
-    """match(class, [callable], ...) -> instance, ...
-    match(str, callable, ...) -> instance, ...
+    """Yield all matching mapped objects.
 
-    Yield all matching mapped objects. Can be used two ways:
+    Can be used two ways:
     * With a YORM-decorated class, optionally with a factory callable
     * With a Python 3-style string template and a factory callable
 
