@@ -123,6 +123,7 @@ def describe_match():
         instance = matches[0]
         assert instance.kind == 'spam'
         assert instance.key == 'foo'
+        assert instance in instance_pile
 
     def string_self_factory(model_class, instance_pile):
         matches = list(
@@ -137,6 +138,7 @@ def describe_match():
         instance = matches[0]
         assert instance.kind == 'spam'
         assert instance.key == 'bar'
+        assert instance in instance_pile
 
     def string_factory(model_class, instance_pile):
         matches = list(
@@ -151,6 +153,7 @@ def describe_match():
         instance = matches[0]
         assert instance.kind == 'egg'
         assert instance.key == 'foo'
+        assert instance in instance_pile
 
     def class_factory_wildcard(model_class, instance_pile):
         matches = list(
@@ -162,6 +165,7 @@ def describe_match():
         )
         assert len(matches) == 2
         assert all(i.kind == 'spam' for i in matches)
+        assert all(i in instance_pile for i in matches)
 
     def string_self_factory_wildcard(model_class, instance_pile):
         matches = list(
@@ -173,6 +177,7 @@ def describe_match():
         )
         assert len(matches) == 2
         assert all(i.kind == 'egg' for i in matches)
+        assert all(i in instance_pile for i in matches)
 
     def string_factory_wildcard(model_class, instance_pile):
         matches = list(
@@ -184,6 +189,7 @@ def describe_match():
         )
         assert len(matches) == 2
         assert all(i.key == 'foo' for i in matches)
+        assert all(i in instance_pile for i in matches)
 
 
 def describe_load():

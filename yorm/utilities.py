@@ -105,7 +105,7 @@ def match(cls_or_path, _factory=None, **kwargs):
     else:
         path_format = cls_or_path
         if _factory is None:
-            raise TypeError("Factory must be given if a string template is used")
+            raise TypeError("Factory must be given if a path format is given")
 
     gf = GlobFormatter()
     mock = types.SimpleNamespace(**kwargs)
