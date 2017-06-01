@@ -117,7 +117,7 @@ def describe_match():
         matches = list(
             utilities.match(
                 model_class,
-                (lambda kind, key: model_class(kind, key, test="test")),
+                (lambda key, kind: model_class(kind, key, test="test")),
                 kind='spam',
                 key='foo',
             )
@@ -146,7 +146,7 @@ def describe_match():
         matches = list(
             utilities.match(
                 "data/{self.kind}/{self.key}.yml",
-                (lambda kind, key: model_class(kind, key)),
+                (lambda key, kind: model_class(kind, key)),
                 kind='spam',
                 key='bar',
             )
@@ -161,7 +161,7 @@ def describe_match():
         matches = list(
             utilities.match(
                 "data/{kind}/{key}.yml",
-                (lambda kind, key: model_class(kind, key)),
+                (lambda key, kind: model_class(kind, key)),
                 kind='egg',
                 key='foo',
             )
@@ -176,7 +176,7 @@ def describe_match():
         matches = list(
             utilities.match(
                 model_class,
-                (lambda kind, key: model_class(kind, key)),
+                (lambda key, kind: model_class(kind, key)),
                 kind='spam',
             )
         )
@@ -188,7 +188,7 @@ def describe_match():
         matches = list(
             utilities.match(
                 "data/{self.kind}/{self.key}.yml",
-                (lambda kind, key: model_class(kind, key)),
+                (lambda key, kind: model_class(kind, key)),
                 kind='egg',
             )
         )
@@ -200,7 +200,7 @@ def describe_match():
         matches = list(
             utilities.match(
                 "data/{kind}/{key}.yml",
-                (lambda kind, key: model_class(kind, key)),
+                (lambda key, kind: model_class(kind, key)),
                 key='foo',
             )
         )
