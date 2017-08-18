@@ -2,7 +2,8 @@
 
 ## 1.5 (unreleased)
 
-- Implemented `match` utility. (credit: @astronouth7303)
+- Implemented `match` utility (credit: @astronouth7303).
+- Including file contents in parse exceptions.
 
 ## 1.4 (2017/04/02)
 
