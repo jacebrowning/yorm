@@ -191,3 +191,10 @@ def describe_mapper():
             mapper.load()
 
             expect(obj.var2) == 42
+
+        def handles_invalid_content_if_enabled(mapper):
+            mapper.auto_resolve = True
+            mapper.create()
+            mapper.text = "abc"
+
+            expect(mapper.data) == {}

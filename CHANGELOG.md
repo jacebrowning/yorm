@@ -4,6 +4,7 @@
 
 - Implemented `match` utility (credit: @astronouth7303).
 - Including file contents in parse exceptions.
+- Added sync parameter `auto_resolve` to clean up file conflicts automatically.
 
 ## 1.4 (2017/04/02)
 
