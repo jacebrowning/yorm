@@ -1,8 +1,8 @@
 # Revision History
 
-## 1.5 (unreleased)
+## 1.5 (2017/10/22)
 
-- Implemented `match` utility (credit: @astronouth7303).
+- Implemented `match` utility (credit: [@astronouth7303](https://github.com/astronouth7303)).
 - Including file contents in parse exceptions.
 - Added sync parameter `auto_resolve` to clean up file conflicts automatically.
 
