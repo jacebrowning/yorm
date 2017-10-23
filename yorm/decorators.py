@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 def sync(*args, **kwargs):
-    """Convenience function to forward calls based on arguments.
+    """Decorate class or map object based on arguments.
 
     This function will call either:
 
@@ -64,7 +64,7 @@ def sync_object(instance, path, attrs=None, **kwargs):
 
 
 def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
-    """Class decorator to enable YAML mapping after instantiation.
+    """Decorate class to enable YAML mapping after instantiation.
 
     :param path_format: formatting string to create file paths for dump/parse
     :param format_spec: dictionary to use for string formatting
@@ -80,10 +80,10 @@ def sync_instances(path_format, format_spec=None, attrs=None, **kwargs):
 
     def decorator(cls):
         """Class decorator to map instances to files."""
+        common.path_formats[cls] = path_format
         init = cls.__init__
 
         def modified_init(self, *_args, **_kwargs):
-            """Modified class __init__ that maps the resulting instance."""
             init(self, *_args, **_kwargs)
 
             log.info("Mapping instance of %r to '%s'...", cls, path_format)

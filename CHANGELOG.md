@@ -1,5 +1,11 @@
 # Revision History
 
+## 1.5 (2017/10/22)
+
+- Implemented `match` utility (credit: [@astronouth7303](https://github.com/astronouth7303)).
+- Including file contents in parse exceptions.
+- Added sync parameter `auto_resolve` to clean up file conflicts automatically.
+
 ## 1.4 (2017/04/02)
 
 - Removed warnings about calling save/load unnecessarily.
@@ -62,7 +68,7 @@
 
 ## 0.6 (2015/02/23)
 
-- Added preliminary support for JSON serialization (@pr0xmeh).
+- Added preliminary support for JSON serialization. (credit: @pr0xmeh)
 - Renamed `yorm.converters` to `yorm.types`.
 - Now maintaining the signature on mapped objects.
 - Disabled attribute inference unless `strict=False`.

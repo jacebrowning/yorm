@@ -10,14 +10,13 @@ log = logging.getLogger(__name__)
 
 
 def load_before(method):
-    """Decorator for methods that should load before call."""
+    """Decorate methods that should load before call."""
 
     if getattr(method, '_load_before', False):
         return method
 
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
-        """Decorated method."""
         __tracebackhide__ = True  # pylint: disable=unused-variable
 
         if not _private_call(method, args):
@@ -37,14 +36,13 @@ def load_before(method):
 
 
 def save_after(method):
-    """Decorator for methods that should save after call."""
+    """Decorate methods that should save after call."""
 
     if getattr(method, '_save_after', False):
         return method
 
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
-        """Decorated method."""
         __tracebackhide__ = True  # pylint: disable=unused-variable
 
         result = method(self, *args, **kwargs)

@@ -23,18 +23,21 @@ OVERRIDE_MESSAGE = "Method must be implemented in subclasses"
 verbosity = 0  # global verbosity setting for controlling string formatting
 
 attrs = collections.defaultdict(collections.OrderedDict)
+path_formats = {}
 
 
 # LOGGING ######################################################################
 
 
-def _trace(self, message, *args, **kwargs):  # pragma: no cover (manual test)
-    """Handler for a new TRACE logging level."""
+logging.addLevelName(logging.DEBUG - 1, 'TRACE')
+
+
+def _trace(self, message, *args, **kwargs):
     if self.isEnabledFor(logging.DEBUG - 1):
-        self._log(logging.DEBUG - 1, message, args, **kwargs)  # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        self._log(logging.DEBUG - 1, message, args, **kwargs)
 
 
-logging.addLevelName(logging.DEBUG - 1, "TRACE")
 logging.Logger.trace = _trace
 
 

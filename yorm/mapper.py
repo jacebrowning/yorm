@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 def file_required(method):
-    """Decorator for methods that require the file to exist."""
+    """Decorate methods that require the file to exist."""
 
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
@@ -28,7 +28,7 @@ def file_required(method):
 
 
 def prevent_recursion(method):
-    """Decorator to prevent indirect recursive calls."""
+    """Decorate methods to prevent indirect recursive calls."""
 
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
@@ -72,13 +72,15 @@ class Mapper:
     """
 
     def __init__(self, obj, path, attrs, *,
-                 auto_create=True, auto_save=True, auto_track=False):
+                 auto_create=True, auto_save=True,
+                 auto_track=False, auto_resolve=False):
         self._obj = obj
         self.path = path
         self.attrs = attrs
         self.auto_create = auto_create
         self.auto_save = auto_save
         self.auto_track = auto_track
+        self.auto_resolve = auto_resolve
 
         self.exists = diskutils.exists(self.path)
         self.deleted = False
@@ -149,7 +151,17 @@ class Mapper:
     def data(self):
         """Get the file values as a dictionary."""
         text = self._read()
-        data = diskutils.parse(text, self.path)
+        try:
+            data = diskutils.parse(text, self.path)
+        except ValueError as e:
+            if not self.auto_resolve:
+                raise e from None
+
+            log.debug(e)
+            log.warning("Clearing invalid contents: %s", self.path)
+            self._write("")
+            return {}
+
         log.trace("Parsed data: \n%s", pformat(data))
         return data
 

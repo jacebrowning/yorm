@@ -113,17 +113,17 @@ def parse(text, path):
 def _parse_json(text, path):
     try:
         return json.loads(text) or {}
-    except json.JSONDecodeError as exc:
-        msg = "Invalid JSON contents: {}:\n{}".format(path, exc)
-        raise exceptions.FileContentError(msg) from None
+    except json.JSONDecodeError:
+        msg = "Invalid JSON contents: {}:\n{}".format(path, text)
+        raise exceptions.FileContentError(msg)
 
 
 def _parse_yaml(text, path):
     try:
         return yaml.load(text) or {}
-    except yaml.error.YAMLError as exc:
-        msg = "Invalid YAML contents: {}:\n{}".format(path, exc)
-        raise exceptions.FileContentError(msg) from None
+    except yaml.error.YAMLError:
+        msg = "Invalid YAML contents: {}:\n{}".format(path, text)
+        raise exceptions.FileContentError(msg)
 
 
 def dump(data, path):

@@ -29,7 +29,7 @@ def read_package_variable(key, filename='__init__.py'):
     sys.exit("'{0}' not found in '{1}'".format(key, module_path))
 
 
-def read_descriptions():
+def build_description():
     """Build a description for the project from documentation files."""
     try:
         readme = open("README.rst").read()
@@ -55,7 +55,7 @@ setuptools.setup(
 
     entry_points={'console_scripts': []},
 
-    long_description=read_descriptions(),
+    long_description=build_description(),
     license='MIT',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -79,5 +79,6 @@ setuptools.setup(
     install_requires=[
         'PyYAML ~= 3.11',
         'simplejson ~= 3.8',
+        'parse ~= 1.8.0',
     ],
 )
