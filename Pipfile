@@ -1,6 +1,16 @@
 [[source]]
+
 url = "https://pypi.python.org/simple"
 verify_ssl = true
+name = "pypi"
+
+[requires]
+
+python_version = "3"
+
+[packages]
+
+yorm = { path = ".", editable = true }
 
 [dev-packages]
 
@@ -10,9 +20,9 @@ pycodestyle = "~=2.3"
 pydocstyle = "~=2.0.0"
 
 # Testing
-pytest = "~=3.0.7"
-pytest-describe = "==0.11.0"
-pytest-expecter = "==0.2.2.post6"
+pytest = "~=3.3"
+pytest-describe = "*"
+pytest-expecter = "*"
 pytest-cov = "*"
 pytest-random = "*"
 
