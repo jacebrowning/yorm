@@ -1,5 +1,9 @@
 # Revision History
 
+## 1.5.1 (2018/03/07)
+
+- Fixed the `List` converter to accept tuples as lists.
+
 ## 1.5 (2017/10/22)
 
 - Implemented `match` utility (credit: [@astronouth7303](https://github.com/astronouth7303)).

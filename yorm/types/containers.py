@@ -206,7 +206,7 @@ def to_list(obj):
     []
 
     """
-    if isinstance(obj, list):
+    if isinstance(obj, (list, tuple)):
         return obj
     elif isinstance(obj, str):
         text = obj.strip()

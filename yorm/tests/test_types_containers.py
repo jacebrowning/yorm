@@ -129,6 +129,7 @@ class TestList:
         ("abc", ["abc"]),
         ("a\nb\nc", ["a", "b", "c"]),
         (4.2, ['4.2']),
+        (("a", "b"), ["a", "b"]),
     ]
 
     value_data = [
