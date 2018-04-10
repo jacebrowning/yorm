@@ -1,4 +1,5 @@
 """Integration tests for nested attributes."""
+
 # pylint: disable=missing-docstring,no-self-use,attribute-defined-outside-init,no-member
 # pylint: disable=unused-variable,misplaced-comparison-constant
 

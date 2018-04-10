@@ -1,4 +1,5 @@
 """Integration tests for the package."""
+
 # pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant,attribute-defined-outside-init
 
 import yorm

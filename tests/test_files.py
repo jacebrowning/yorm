@@ -1,4 +1,5 @@
 """Integration tests for file IO."""
+
 # pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
 
 import pytest
