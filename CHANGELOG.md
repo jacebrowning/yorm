@@ -1,5 +1,9 @@
 # Revision History
 
+## 1.6 (unreleased)
+
+- Added `Number` (and `NullableNumber`) type for floats that store as integers when possible.
+
 ## 1.5.1 (2018/03/07)
 
 - Fixed the `List` converter to accept tuples as lists.

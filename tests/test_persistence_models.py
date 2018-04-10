@@ -9,7 +9,7 @@ import yorm
 from yorm.types import String
 
 
-# CLASSES ######################################################################
+# CLASSES #####################################################################
 
 
 class Config:
@@ -51,7 +51,7 @@ class ConfigStore:
         return yorm.find(ConfigModel, self.root, key)
 
 
-# TESTS ########################################################################
+# TESTS #######################################################################
 
 
 class TestPersistanceMapping:  # pylint: disable=no-member
