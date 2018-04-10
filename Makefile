@@ -45,6 +45,7 @@ DEPENDENCIES := $(VENV)/.pipenv-$(shell bin/checksum Pipfile* setup.py)
 install: $(DEPENDENCIES)
 
 $(DEPENDENCIES):
+	pipenv run python setup.py develop
 	pipenv install --dev
 	@ touch $@
 
@@ -94,9 +95,9 @@ test: test-all ## Run unit and integration tests
 
 .PHONY: test-unit
 test-unit: install
-	@- mv $(FAILURES) $(FAILURES).bak
+	@ ( mv $(FAILURES) $(FAILURES).bak || true ) > /dev/null 2>&1
 	$(PYTEST) $(PYTEST_OPTIONS) $(PACKAGE) --junitxml=$(REPORTS)/unit.xml
-	@- mv $(FAILURES).bak $(FAILURES)
+	@ ( mv $(FAILURES).bak $(FAILURES) || true ) > /dev/null 2>&1
 	$(COVERAGE_SPACE) $(REPOSITORY) unit
 
 .PHONY: test-int

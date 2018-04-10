@@ -15,16 +15,16 @@ yorm = { path = ".", editable = true }
 [dev-packages]
 
 # Linters
-pylint = "~=1.7.1"
-pycodestyle = "~=2.3"
-pydocstyle = "~=2.0.0"
+pylint = "*"
+pycodestyle = "*"
+pydocstyle = "*"
 
 # Testing
 pytest = "~=3.3"
 pytest-describe = "*"
-pytest-expecter = "*"
-pytest-cov = "*"
+pytest-expecter = "~=1.1"
 pytest-random = "*"
+pytest-cov = "*"
 
 # Reports
 coverage-space = "*"
@@ -43,5 +43,5 @@ twine = "*"
 
 # Tooling
 sniffer = "*"
-pync = {version = "< 2.0", sys_platform = "== 'darwin'"}
-MacFSEvents = {version = "*", sys_platform = "== 'darwin'"}
+pync = { version = "<2.0", sys_platform = "== 'darwin'" }
+MacFSEvents = { version = "*", sys_platform = "== 'darwin'" }

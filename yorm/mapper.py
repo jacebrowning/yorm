@@ -34,7 +34,7 @@ def prevent_recursion(method):
     def wrapped(self, *args, **kwargs):
         # pylint: disable=protected-access
         if self._activity:
-            return
+            return None
         self._activity = True
         result = method(self, *args, **kwargs)
         self._activity = False
