@@ -44,7 +44,7 @@ logging.Logger.trace = _trace
 # DECORATORS ##################################################################
 
 
-class classproperty(object):
+class classproperty:
     """Read-only class property decorator."""
 
     def __init__(self, getter):
