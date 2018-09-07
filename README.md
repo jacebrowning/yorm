@@ -17,7 +17,7 @@ View the talk from [PyOhio 2015](https://www.youtube.com/watch?v=0woNEKf-wAo).
 
 ## Requirements
 
-* Python 3.3+
+* Python 3.5+
 
 ## Installation
 

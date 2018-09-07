@@ -5,8 +5,8 @@ from expecter import expect
 
 from yorm.decorators import attr
 from yorm.types.standard import Integer, String, Float
-from yorm.types.extended import (NullableString, Markdown,
-                                 AttributeDictionary, SortedList)
+from yorm.types.extended import (NullableString, Number, NullableNumber,
+                                 Markdown, AttributeDictionary, SortedList)
 
 
 def describe_nullable_string():
@@ -20,6 +20,24 @@ def describe_nullable_string():
 
         def it_allows_none():
             expect(NullableString.to_data(None)).is_none()
+
+
+def describe_number():
+
+    def when_int():
+        expect(Number.to_value(42)).isinstance(int)
+
+    def when_float():
+        expect(Number.to_value(4.2)).isinstance(float)
+
+    def when_float_lacking_decimal():
+        expect(Number.to_value(42)).isinstance(int)
+
+    def when_none():
+        expect(Number.to_value(None)).isinstance(int)
+
+    def when_none_and_nullable():
+        expect(NullableNumber.to_value(None)) == None
 
 
 def describe_markdown():

@@ -1,4 +1,5 @@
 """Integration tests for the `yorm.settings.fake` option."""
+
 # pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
 
 import os
@@ -9,7 +10,7 @@ import yorm
 from . import strip
 
 
-# CLASSES ######################################################################
+# CLASSES #####################################################################
 
 
 @yorm.attr(value=yorm.types.standard.Integer)
@@ -25,7 +26,7 @@ class Sample:
         return "<sample {}>".format(id(self))
 
 
-# TESTS ########################################################################
+# TESTS #######################################################################
 
 
 @patch('yorm.settings.fake', True)

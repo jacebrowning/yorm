@@ -1,4 +1,5 @@
-"""Integration tests to ensure a mapped object's signature remains unchanged."""
+"""Integration tests to ensure a mapped object's signature is unchanged."""
+
 # pylint: disable=redefined-outer-name,unused-variable,expression-not-assigned
 
 import pytest

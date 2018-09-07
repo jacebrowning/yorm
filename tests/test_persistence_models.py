@@ -1,4 +1,5 @@
 """Integration tests using YORM as a persistence model."""
+
 # pylint: disable=missing-docstring,no-self-use,misplaced-comparison-constant
 
 import os
@@ -9,7 +10,7 @@ import yorm
 from yorm.types import String
 
 
-# CLASSES ######################################################################
+# CLASSES #####################################################################
 
 
 class Config:
@@ -51,7 +52,7 @@ class ConfigStore:
         return yorm.find(ConfigModel, self.root, key)
 
 
-# TESTS ########################################################################
+# TESTS #######################################################################
 
 
 class TestPersistanceMapping:  # pylint: disable=no-member

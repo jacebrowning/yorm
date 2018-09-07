@@ -161,8 +161,6 @@ def delete(instance):
 
     mapper.delete()
 
-    return None
-
 
 def _instantiate(class_or_instance, *args, **kwargs):
     if inspect.isclass(class_or_instance):

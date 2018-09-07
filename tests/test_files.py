@@ -1,4 +1,5 @@
 """Integration tests for file IO."""
+
 # pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant
 
 import pytest
@@ -9,7 +10,7 @@ from yorm.types import Integer, String, Float, Boolean, Dictionary, List
 from . import refresh_file_modification_times, log
 
 
-# CLASSES ######################################################################
+# CLASSES #####################################################################
 
 
 class EmptyDictionary(Dictionary):
@@ -52,7 +53,7 @@ class SampleStandardDecorated:
         return "<decorated {}>".format(id(self))
 
 
-# TESTS ########################################################################
+# TESTS #######################################################################
 
 
 class TestCreate:

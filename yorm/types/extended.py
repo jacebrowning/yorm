@@ -11,7 +11,7 @@ from ._representers import LiteralString
 log = logging.getLogger(__name__)
 
 
-# NULLABLE BUILTINS ############################################################
+# NULLABLE BUILTINS ###########################################################
 
 
 class NullableString(String):
@@ -38,7 +38,24 @@ class NullableBoolean(Boolean):
     DEFAULT = None
 
 
-# CUSTOM TYPES #################################################################
+# CUSTOM TYPES ################################################################
+
+
+class Number(Float):
+
+    DEFAULT = 0
+
+    @classmethod
+    def to_value(cls, obj):
+        value = super().to_value(obj)
+        if value and int(value) == value:
+            return int(value)
+        return value
+
+
+class NullableNumber(Number):
+
+    DEFAULT = None
 
 
 class Markdown(String):
@@ -132,7 +149,7 @@ class Markdown(String):
             return ''
 
 
-# CUSTOM CONTAINERS ############################################################
+# CUSTOM CONTAINERS ###########################################################
 
 
 class AttributeDictionary(Dictionary):

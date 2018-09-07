@@ -41,7 +41,7 @@ class MockMapper(Mapper):
         self._mock_modified = changes
 
 
-# CLASSES ######################################################################
+# CLASSES #####################################################################
 
 @yorm.attr(all=Integer)
 class IntegerList(List):
@@ -80,7 +80,7 @@ class SampleMappable(Mappable):
         return "<sample {}>".format(id(self))
 
 
-# TESTS ########################################################################
+# TESTS #######################################################################
 
 
 class TestMappable:

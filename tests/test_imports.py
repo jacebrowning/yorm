@@ -1,4 +1,5 @@
 """Integration tests for the package namespace."""
+
 # pylint: disable=missing-docstring,no-self-use,unused-variable
 
 
@@ -36,7 +37,7 @@ def test_from_top_utilities():
 
 
 def test_from_nested():
-    from yorm.types import Integer
+    from yorm.types import Integer, Number
     from yorm.types.standard import String
     from yorm.types.extended import Markdown
     from yorm.types.containers import List

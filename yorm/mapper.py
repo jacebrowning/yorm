@@ -34,7 +34,7 @@ def prevent_recursion(method):
     def wrapped(self, *args, **kwargs):
         # pylint: disable=protected-access
         if self._activity:
-            return
+            return None
         self._activity = True
         result = method(self, *args, **kwargs)
         self._activity = False
@@ -211,7 +211,7 @@ class Mapper:
                     issubclass(converter, Container):
                 attr.update_value(data, auto_track=self.auto_track)
             else:
-                log.trace("Converting attribute %r to %r", name, converter)
+                log.trace("Converting attribute %r using %r", name, converter)
                 attr = converter.to_value(data)
                 setattr(self._obj, name, attr)
             self._remap(attr, self)
@@ -228,13 +228,17 @@ class Mapper:
                 setattr(self._obj, name, value)
                 self._remap(value, self)
             else:
-                if issubclass(converter, Container) and \
-                        not isinstance(existing_attr, converter):
-                    msg = "Converting container attribute %r to %r"
-                    log.trace(msg, name, converter)
-                    value = converter.create_default()
-                    setattr(self._obj, name, value)
-                    self._remap(value, self)
+                if issubclass(converter, Container):
+                    if isinstance(existing_attr, converter):
+                        pass  # TODO: Update 'existing_attr' values to replace None values
+                    else:
+                        msg = "Converting container attribute %r using %r"
+                        log.trace(msg, name, converter)
+                        value = converter.create_default()
+                        setattr(self._obj, name, value)
+                        self._remap(value, self)
+                else:
+                    pass  # TODO: Figure out when this case occurs
 
         # Set meta attributes
         self.modified = False

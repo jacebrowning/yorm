@@ -1,9 +1,12 @@
 language: python
 python:
-  - 3.3
-  - 3.4
   - 3.5
   - 3.6
+matrix:
+  include:
+    - python: 3.7
+      dist: xenial
+      sudo: true
 
 cache:
   pip: true
@@ -13,10 +16,9 @@ cache:
 env:
   global:
     - RANDOM_SEED=0
-    - PIPENV_NOSPIN=true
 
 before_install:
-  - pip install pipenv~=4.0.1
+  - pip install pipenv
   - make doctor
 
 install:

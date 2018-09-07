@@ -4,7 +4,7 @@ import collections
 import logging
 
 
-# CONSTANTS ####################################################################
+# CONSTANTS ###################################################################
 
 MAPPER = '__mapper__'
 ALL = 'all'
@@ -17,7 +17,7 @@ MAX_VERBOSITY = 4  # maximum verbosity level implemented
 OVERRIDE_MESSAGE = "Method must be implemented in subclasses"
 
 
-# GLOBALS ######################################################################
+# GLOBALS #####################################################################
 
 
 verbosity = 0  # global verbosity setting for controlling string formatting
@@ -26,7 +26,7 @@ attrs = collections.defaultdict(collections.OrderedDict)
 path_formats = {}
 
 
-# LOGGING ######################################################################
+# LOGGING #####################################################################
 
 
 logging.addLevelName(logging.DEBUG - 1, 'TRACE')
@@ -41,10 +41,10 @@ def _trace(self, message, *args, **kwargs):
 logging.Logger.trace = _trace
 
 
-# DECORATORS ###################################################################
+# DECORATORS ##################################################################
 
 
-class classproperty(object):
+class classproperty:
     """Read-only class property decorator."""
 
     def __init__(self, getter):
@@ -54,7 +54,7 @@ class classproperty(object):
         return self.getter(owner)
 
 
-# FUNCTIONS ####################################################################
+# FUNCTIONS ###################################################################
 
 
 def get_mapper(obj, *, expected=None):

@@ -1,4 +1,5 @@
 """Integration tests for the package."""
+
 # pylint: disable=missing-docstring,no-self-use,no-member,misplaced-comparison-constant,attribute-defined-outside-init
 
 import yorm
@@ -8,7 +9,7 @@ from yorm.types import Markdown, Dictionary, List
 from . import strip, refresh_file_modification_times, log
 
 
-# CLASSES ######################################################################
+# CLASSES #####################################################################
 
 
 class EmptyDictionary(Dictionary):
@@ -144,7 +145,7 @@ class SampleNested:
     def __repr__(self):
         return "<nested {}>".format(id(self))
 
-# TESTS ########################################################################
+# TESTS #######################################################################
 
 
 class TestStandard:
