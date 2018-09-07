@@ -72,7 +72,7 @@ pydocstyle: install
 
 # TESTS #######################################################################
 
-PYTEST := pipenv run py.test
+PYTEST := pipenv run pytest
 COVERAGE := pipenv run coverage
 COVERAGE_SPACE := pipenv run coverage.space
 
