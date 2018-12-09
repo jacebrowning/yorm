@@ -30,7 +30,7 @@ pytest-cov = "*"
 minilog = "*"
 
 # Reports
-coverage-space = "*"
+coveragespace = "*"
 
 # Documentation
 mkdocs = "*"
