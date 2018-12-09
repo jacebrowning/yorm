@@ -13,7 +13,7 @@ YORM enables automatic, bidirectional, human-friendly mappings of object attribu
 * storage of content in text files optimized for version control
 * extensible converters to customize formatting on complex classes
 
-View the talk from [PyOhio 2015](https://www.youtube.com/watch?v=0woNEKf-wAo).
+**NOTE**: This project is now in maintenance mode. Please check out [datafiles](https://github.com/jacebrowning/datafiles), its spiritual successor.
 
 ## Requirements
 
