@@ -4,8 +4,8 @@ import os
 import shutil
 import logging
 
-import simplejson as json
 import yaml
+import simplejson as json
 
 from . import exceptions
 
@@ -120,7 +120,7 @@ def _parse_json(text, path):
 
 def _parse_yaml(text, path):
     try:
-        return yaml.load(text) or {}
+        return yaml.safe_load(text) or {}
     except yaml.error.YAMLError:
         msg = "Invalid YAML contents: {}:\n{}".format(path, text)
         raise exceptions.FileContentError(msg)

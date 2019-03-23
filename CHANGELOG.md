@@ -1,5 +1,13 @@
 # Revision History
 
+## 1.6.2 (2019-03-23)
+
+- Fixed `YAMLLoadWarning` by using `yaml.safe_load()`.
+
+## 1.6.1 (2019-03-22)
+
+- Updated `PyYAML` to `5.1` for security fixes.
+
 ## 1.6 (2018-09-07)
 
 - Added `Number` (and `NullableNumber`) type for floats that store as integers when possible.

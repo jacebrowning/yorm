@@ -18,11 +18,10 @@ def file_required(method):
         if self.deleted:
             msg = "File deleted: {}".format(self.path)
             raise exceptions.DeletedFileError(msg)
-        elif self.missing and not settings.fake:
+        if self.missing and not settings.fake:
             msg = "File missing: {}".format(self.path)
             raise exceptions.MissingFileError(msg)
-        else:
-            return method(self, *args, **kwargs)
+        return method(self, *args, **kwargs)
 
     return wrapped
 
