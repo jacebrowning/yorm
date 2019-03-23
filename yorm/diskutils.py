@@ -4,8 +4,8 @@ import os
 import shutil
 import logging
 
-import simplejson as json
 import yaml
+import simplejson as json
 
 from . import exceptions
 
