@@ -1,5 +1,9 @@
 # Revision History
 
+## 1.6.2 (2019-03-23)
+
+- Fixed `YAMLLoadWarning` by using `yaml.safe_load()`.
+
 ## 1.6.1 (2019-03-22)
 
 - Updated `PyYAML` to `5.1` for security fixes.
