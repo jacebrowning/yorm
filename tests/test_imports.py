@@ -1,6 +1,6 @@
 """Integration tests for the package namespace."""
 
-# pylint: disable=missing-docstring,no-self-use,unused-variable
+# pylint: disable=missing-docstring,no-self-use,unused-variable,unused-import
 
 
 def test_top():

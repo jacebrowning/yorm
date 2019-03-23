@@ -5,7 +5,7 @@ repo_url: https://github.com/jacebrowning/yorm
 
 theme: readthedocs
 
-pages:
+nav:
 - Home: index.md
 - API:
   - Instance Mapping: api/instance-mapping.md
